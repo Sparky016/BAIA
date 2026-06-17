@@ -1,0 +1,89 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+    branches:
+      - '**'
+
+jobs:
+  ci:
+    name: Lint · Build · Test
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── 1. Checkout ────────────────────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ── 2. Node LTS + npm cache ────────────────────────────────────────────
+      - name: Set up Node.js (LTS)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+          cache: 'npm'
+
+      # ── 3. Chrome (for Karma / baia-ui tests) ─────────────────────────────
+      #   browser-actions/setup-chrome installs a pinned stable Chrome and
+      #   exports $CHROME_BIN so karma-chrome-launcher can find it.
+      - name: Install Chrome (headless)
+        uses: browser-actions/setup-chrome@v1
+        with:
+          chrome-version: stable
+
+      # ── 4. Playwright browser cache ────────────────────────────────────────
+      #   Cache Playwright's browser binaries between runs (baia-server depends
+      #   on playwright for Phase 1; browsers are NOT used by CI tests today
+      #   because Playwright calls are mocked, but caching avoids a slow
+      #   post-install download if playwright installs browsers automatically).
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
+
+      # ── 5. Install dependencies ─────────────────────────────────────────────
+      - name: Install dependencies
+        run: npm ci
+
+      # ── 6. Lint ─────────────────────────────────────────────────────────────
+      - name: Lint
+        run: npm run lint
+
+      # ── 7. Build ─────────────────────────────────────────────────────────────
+      - name: Build
+        run: npm run build
+
+      # ── 8. Test + coverage ───────────────────────────────────────────────────
+      #   Root `npm test` fans out to:
+      #     • baia-shared  → jest
+      #     • baia-server  → jest --coverage  (gate: ≥85% lines / ≥80% branches)
+      #     • baia-ui      → ng test --watch=false --browsers=ChromeHeadless
+      #                      (karma.conf.js gate: ≥85% lines / ≥80% branches)
+      #   CHROME_BIN is set by browser-actions/setup-chrome; ChromeHeadlessCI
+      #   launcher in karma.conf.js adds --no-sandbox for the container env.
+      - name: Test (with coverage)
+        run: npm test
+        env:
+          CHROME_BIN: ${{ env.CHROME_BIN }}
+
+      # ── 9. Upload coverage artifacts ─────────────────────────────────────────
+      - name: Upload baia-server coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: baia-server-coverage
+          path: baia-server/coverage/
+          retention-days: 14
+
+      - name: Upload baia-ui coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: baia-ui-coverage
+          path: baia-ui/coverage/
+          retention-days: 14

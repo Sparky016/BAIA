@@ -7,17 +7,20 @@
     "build": "tsc",
     "start": "node dist/main.js",
     "start:dev": "tsc --watch",
-    "test": "jest",
+    "test": "jest --coverage",
     "test:watch": "jest --watch",
-    "lint": "echo \"Lint placeholder (ESLint configured in DEV_TASK_3)\""
+    "lint": "eslint \"src/**/*.ts\"",
+    "format:check": "prettier --check src"
   },
   "dependencies": {
     "@nestjs/common": "^10.3.0",
     "@nestjs/config": "^3.1.1",
     "@nestjs/core": "^10.3.0",
     "@nestjs/platform-express": "^10.3.0",
+    "@octokit/rest": "^22.0.1",
     "class-validator": "^0.14.0",
     "dotenv": "^16.3.1",
+    "playwright": "^1.61.0",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.1"
   },

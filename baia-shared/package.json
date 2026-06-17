@@ -14,7 +14,8 @@
   "scripts": {
     "build": "tsc",
     "test": "jest",
-    "lint": "echo \"Lint placeholder for baia-shared (DEV_TASK_3 provides shared eslint config)\""
+    "lint": "eslint \"src/**/*.ts\"",
+    "format:check": "prettier --check src"
   },
   "devDependencies": {
     "@types/jest": "^29.5.0",

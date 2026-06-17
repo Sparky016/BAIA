@@ -11,6 +11,17 @@ export type {
   StepProvenance,
 } from './models/Gherkin';
 export type { BusinessRule } from './models/BusinessRule';
+export type {
+  Action,
+  AssertAction,
+  AssertKind,
+  ClickAction,
+  FillAction,
+  NavigateAction,
+  SelectAction,
+  WaitForAction,
+  WaitForKind,
+} from './models/action';
 
 // Guards
 export { isRunRequest, isValidRunStatus } from './guards';

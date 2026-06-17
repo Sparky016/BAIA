@@ -1,6 +1,6 @@
-import { RunStatus } from './RunStatus';
-import { GherkinDoc } from './Gherkin';
 import { BusinessRule } from './BusinessRule';
+import { GherkinDoc } from './Gherkin';
+import { RunStatus } from './RunStatus';
 
 export interface RunSummary {
   runId: string;
