@@ -1,0 +1,47 @@
+@model MyCMS.Models.ContentPage
+@{
+    ViewBag.Title = "Create Page";
+}
+
+<div class="card" style="max-width: 800px; margin: 0 auto;">
+    <h1 style="color: #fff; font-size: 2rem; margin-bottom: 0.5rem;">Create New Page</h1>
+    <p style="color: var(--text-muted); margin-bottom: 2rem;">Add a new dynamic page to the CMS.</p>
+
+    @using (Html.BeginForm())
+    {
+        @Html.AntiForgeryToken()
+
+        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.Title)
+            @Html.EditorFor(model => model.Title, new { htmlAttributes = new { @class = "form-control", placeholder = "e.g. Services" } })
+            @Html.ValidationMessageFor(model => model.Title, "", new { @class = "text-danger" })
+        </div>
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.Slug)
+            @Html.EditorFor(model => model.Slug, new { htmlAttributes = new { @class = "form-control", placeholder = "e.g. services" } })
+            <small style="color: var(--text-muted); display: block; margin-top: 0.25rem;">Only lowercase letters, numbers, and hyphens.</small>
+            @Html.ValidationMessageFor(model => model.Slug, "", new { @class = "text-danger" })
+        </div>
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.Content)
+            @Html.TextAreaFor(model => model.Content, new { @class = "form-control", rows = "10", placeholder = "HTML content is supported..." })
+            @Html.ValidationMessageFor(model => model.Content, "", new { @class = "text-danger" })
+        </div>
+
+        <div class="form-group" style="margin-top: 2rem; margin-bottom: 2rem;">
+            <label class="checkbox-label">
+                @Html.CheckBoxFor(model => model.IsPublished)
+                <span>Publish immediately</span>
+            </label>
+        </div>
+
+        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+            <button type="submit" class="btn btn-primary">Create Page</button>
+            <a href="/Admin" class="btn btn-outline">Cancel</a>
+        </div>
+    }
+</div>

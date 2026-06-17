@@ -1,0 +1,16 @@
+{
+  "name": "baia",
+  "version": "0.0.0",
+  "description": "Business Analyst AI - autonomous agent for UI behaviour capture and business rule extraction",
+  "private": true,
+  "workspaces": [
+    "baia-ui",
+    "baia-server",
+    "baia-shared"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present"
+  }
+}

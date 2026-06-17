@@ -1,0 +1,25 @@
+{
+  "name": "@baia/shared",
+  "version": "0.0.0",
+  "description": "Shared TypeScript types and DTOs for BAIA",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "lint": "echo \"Lint placeholder for baia-shared (DEV_TASK_3 provides shared eslint config)\""
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.0",
+    "typescript": "^5.4.0"
+  }
+}
