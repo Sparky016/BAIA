@@ -1,4 +1,5 @@
 # DEV_TASK_11 — S2-01: `LlmService` interface + DI
+**Status:** ✅ Complete
 
 **Section:** S2 — LLM Integration Layer (GitHub Copilot SDK)
 **Model tier:** O → Opus 4.8, high effort

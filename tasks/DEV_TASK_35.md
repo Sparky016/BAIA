@@ -1,4 +1,5 @@
 # DEV_TASK_35 — S7-04: Input form
+**Status:** ✅ Complete
 
 **Section:** S7 — Frontend: Shell, Input, Progress
 **Model tier:** S+ → Sonnet 4.6, high effort

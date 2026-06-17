@@ -1,4 +1,5 @@
 # DEV_TASK_4 — S0-04: Coverage configuration
+**Status:** ✅ Complete
 
 **Section:** S0 — Foundations & Tooling
 **Model tier:** S → Sonnet 4.6, medium effort

@@ -1,4 +1,5 @@
 # DEV_TASK_6 — S1-01: NestJS scaffold
+**Status:** ✅ Complete
 
 **Section:** S1 — Backend Core & API Contract
 **Model tier:** H → Haiku 4.5, low effort

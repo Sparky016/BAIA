@@ -1,4 +1,5 @@
 # DEV_TASK_16 — S3-02: Action vocabulary + executor
+**Status:** ✅ Complete
 
 **Section:** S3 — Phase 1: Exploratory Analyst
 **Model tier:** S+ → Sonnet 4.6, high effort

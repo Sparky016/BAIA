@@ -1,4 +1,5 @@
 # DEV_TASK_7 — S1-02: Run state machine
+**Status:** ✅ Complete
 
 **Section:** S1 — Backend Core & API Contract
 **Model tier:** O → Opus 4.8, high effort

@@ -1,4 +1,5 @@
 # DEV_TASK_29 — S6-01: Credential/secret handling
+**Status:** ✅ Complete
 
 **Section:** S6 — Integrations & Export
 **Model tier:** O → Opus 4.8, high effort

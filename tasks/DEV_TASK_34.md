@@ -1,4 +1,5 @@
 # DEV_TASK_34 — S7-03: API client services
+**Status:** ✅ Complete
 
 **Section:** S7 — Frontend: Shell, Input, Progress
 **Model tier:** S → Sonnet 4.6, medium effort

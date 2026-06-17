@@ -1,4 +1,5 @@
 # DEV_TASK_14 — S2-04: Token/chunk utilities
+**Status:** ✅ Complete
 
 **Section:** S2 — LLM Integration Layer (GitHub Copilot SDK)
 **Model tier:** O → Opus 4.8, high effort

@@ -1,4 +1,5 @@
 # DEV_TASK_36 — S7-05: Progress view
+**Status:** ✅ Complete
 
 **Section:** S7 — Frontend: Shell, Input, Progress
 **Model tier:** S+ → Sonnet 4.6, high effort

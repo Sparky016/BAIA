@@ -1,4 +1,5 @@
 # DEV_TASK_1 — S0-01: Monorepo + git init
+**Status:** ✅ Complete
 
 **Section:** S0 — Foundations & Tooling
 **Model tier:** H → Haiku 4.5, low effort

@@ -1,4 +1,5 @@
 # DEV_TASK_13 — S2-03: Prompt template registry
+**Status:** ✅ Complete
 
 **Section:** S2 — LLM Integration Layer (GitHub Copilot SDK)
 **Model tier:** S → Sonnet 4.6, medium effort

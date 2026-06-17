@@ -1,4 +1,5 @@
 # DEV_TASK_32 — S7-01: Routing + shell
+**Status:** ✅ Complete
 
 **Section:** S7 — Frontend: Shell, Input, Progress
 **Model tier:** H → Haiku 4.5, low effort

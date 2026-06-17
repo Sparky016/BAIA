@@ -1,4 +1,5 @@
 # DEV_TASK_2 — S0-02: `baia-shared` package
+**Status:** ✅ Complete
 
 **Section:** S0 — Foundations & Tooling
 **Model tier:** H → Haiku 4.5, low effort

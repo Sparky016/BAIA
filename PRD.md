@@ -1,7 +1,7 @@
-# Product Requirements Document (PRD): BAIA (Business Analyst AI)
+# Product Requirements Document (PRD): BAIA (Business AI Analyst)
 
 **Document Status:** Updated
-**Product Name:** BAIA (Business Analyst AI)
+**Product Name:** BAIA (Business AI Analyst)
 **Target Platform:** Web Application (Angular Frontend, Node.js/Python Backend Orchestrator)
 
 ---

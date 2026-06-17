@@ -1,4 +1,5 @@
 # DEV_TASK_21 — S4-01: Repo connector interface + GitHub
+**Status:** ✅ Complete
 
 **Section:** S4 — Phase 2: Code Analyst
 **Model tier:** S+ → Sonnet 4.6, high effort

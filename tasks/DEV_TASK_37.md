@@ -1,4 +1,5 @@
 # DEV_TASK_37 — S8-01: Gherkin viewer/editor
+**Status:** ✅ Complete
 
 **Section:** S8 — Frontend: Review Dashboard & Export UI
 **Model tier:** S+ → Sonnet 4.6, high effort

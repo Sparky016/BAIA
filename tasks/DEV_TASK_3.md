@@ -1,4 +1,5 @@
 # DEV_TASK_3 — S0-03: Lint/format baseline
+**Status:** ✅ Complete
 
 **Section:** S0 — Foundations & Tooling
 **Model tier:** H → Haiku 4.5, low effort

@@ -1,4 +1,5 @@
 # DEV_TASK_12 — S2-02: `CopilotLlmAdapter`
+**Status:** ✅ Complete
 
 **Section:** S2 — LLM Integration Layer (GitHub Copilot SDK)
 **Model tier:** S+ → Sonnet 4.6, high effort

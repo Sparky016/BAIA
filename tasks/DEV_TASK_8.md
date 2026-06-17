@@ -1,4 +1,5 @@
 # DEV_TASK_8 — S1-03: Runs module (REST)
+**Status:** ✅ Complete
 
 **Section:** S1 — Backend Core & API Contract
 **Model tier:** S+ → Sonnet 4.6, high effort

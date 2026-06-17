@@ -1,4 +1,5 @@
 # DEV_TASK_5 — S0-05: CI workflow
+**Status:** ✅ Complete
 
 **Section:** S0 — Foundations & Tooling
 **Model tier:** S → Sonnet 4.6, medium effort
