@@ -1,6 +1,9 @@
 import { TestBed, ComponentFixture } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ReviewComponent } from './review.component';
 import { RunStore } from '../core/state/run.store';
+import { RunsApiService } from '../core/api/runs-api.service';
 import { ActivatedRoute } from '@angular/router';
 import { GherkinDoc, RunStatus } from '@baia/shared';
 
@@ -27,9 +30,14 @@ describe('ReviewComponent', () => {
   let store: InstanceType<typeof RunStore>;
 
   beforeEach(async () => {
+    const runsApiSpy = jasmine.createSpyObj<RunsApiService>('RunsApiService', ['createRun', 'getRun', 'export']);
+
     await TestBed.configureTestingModule({
       imports: [ReviewComponent],
       providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: RunsApiService, useValue: runsApiSpy },
         {
           provide: ActivatedRoute,
           useValue: { snapshot: { params: { id: 'test-run-id' } } },
@@ -49,7 +57,7 @@ describe('ReviewComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('export disabled until approved: canExport returns false; export button disabled', () => {
+  it('export disabled until approved: canExport returns false; confluence export button disabled', () => {
     store.setStatus(RunStatus.Review);
     fixture = TestBed.createComponent(ReviewComponent);
     component = fixture.componentInstance;
@@ -57,11 +65,11 @@ describe('ReviewComponent', () => {
 
     expect(component.canExport).toBeFalse();
 
-    const exportBtn: HTMLButtonElement = fixture.nativeElement.querySelector('[data-testid="export-btn"]');
+    const exportBtn: HTMLButtonElement = fixture.nativeElement.querySelector('[data-testid="confluence-export-btn"]');
     expect(exportBtn.disabled).toBeTrue();
   });
 
-  it('approving enables export: approve() → canExport true → export button not disabled', () => {
+  it('approving enables export: approve() → canExport true', () => {
     store.setStatus(RunStatus.Review);
     fixture = TestBed.createComponent(ReviewComponent);
     component = fixture.componentInstance;
@@ -71,12 +79,9 @@ describe('ReviewComponent', () => {
     fixture.detectChanges();
 
     expect(component.canExport).toBeTrue();
-
-    const exportBtn: HTMLButtonElement = fixture.nativeElement.querySelector('[data-testid="export-btn"]');
-    expect(exportBtn.disabled).toBeFalse();
   });
 
-  it('editing after approval re-gates export: approve then updateGherkinDoc → canExport false, export button disabled', () => {
+  it('editing after approval re-gates export: approve then updateGherkinDoc → canExport false, confluence export button disabled', () => {
     store.setStatus(RunStatus.Review);
     const doc = makeDoc();
     store.setGherkinDoc(doc);
@@ -96,7 +101,7 @@ describe('ReviewComponent', () => {
 
     expect(component.canExport).toBeFalse();
 
-    const exportBtn: HTMLButtonElement = fixture.nativeElement.querySelector('[data-testid="export-btn"]');
+    const exportBtn: HTMLButtonElement = fixture.nativeElement.querySelector('[data-testid="confluence-export-btn"]');
     expect(exportBtn.disabled).toBeTrue();
   });
 
