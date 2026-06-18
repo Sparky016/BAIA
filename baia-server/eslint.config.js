@@ -3,6 +3,7 @@ const tsParser = require('@typescript-eslint/parser');
 const tsPlugin = require('@typescript-eslint/eslint-plugin');
 const importPlugin = require('eslint-plugin-import');
 const prettierPlugin = require('eslint-plugin-prettier');
+const globals = require('globals');
 
 const baseRules = {
   '@typescript-eslint/no-explicit-any': 'error',
@@ -65,8 +66,7 @@ module.exports = [
         sourceType: 'module',
       },
       globals: {
-        console: 'readonly',
-        process: 'readonly',
+        ...globals.node,
       },
     },
     plugins: {
@@ -89,8 +89,7 @@ module.exports = [
         sourceType: 'module',
       },
       globals: {
-        console: 'readonly',
-        process: 'readonly',
+        ...globals.node,
       },
     },
     plugins: {

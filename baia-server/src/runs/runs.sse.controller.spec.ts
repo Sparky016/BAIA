@@ -15,10 +15,7 @@ function makeTransition(from: RunStatus, to: RunStatus): RunTransitionEvent {
 }
 
 /** Build an ExploreEvent for test use. */
-function makeExploreEvent(
-  type: ExploreEvent['type'] = 'action',
-  message = 'msg',
-): ExploreEvent {
+function makeExploreEvent(type: ExploreEvent['type'] = 'action', message = 'msg'): ExploreEvent {
   return { timestamp: new Date('2024-01-01T00:00:00Z'), type, message };
 }
 
@@ -60,9 +57,7 @@ describe('RunsSseController', () => {
 
   beforeEach(() => {
     mockService = new MockRunsEventsService();
-    controller = new RunsSseController(
-      mockService as unknown as RunsEventsService,
-    );
+    controller = new RunsSseController(mockService as unknown as RunsEventsService);
   });
 
   // ---------------------------------------------------------------------------
@@ -215,9 +210,7 @@ describe('RunsSseController', () => {
         complete: () => {
           expect(received).toHaveLength(6);
 
-          const statuses = received.map(
-            (m) => (m.data as RunTransitionEvent).to,
-          );
+          const statuses = received.map((m) => (m.data as RunTransitionEvent).to);
           expect(statuses).toEqual([
             RunStatus.Exploring,
             RunStatus.Analyzing,

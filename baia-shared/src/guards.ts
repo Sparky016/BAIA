@@ -9,11 +9,11 @@ export function isRunRequest(obj: unknown): obj is RunRequest {
   const candidate = obj as Record<string, unknown>;
 
   return (
-    typeof candidate.targetUrl === 'string' &&
-    typeof candidate.instructions === 'string' &&
-    typeof candidate.repoUrl === 'string' &&
-    (candidate.repoProvider === 'github' || candidate.repoProvider === 'azure') &&
-    typeof candidate.credentialsRef === 'string'
+    typeof candidate['targetUrl'] === 'string' &&
+    typeof candidate['instructions'] === 'string' &&
+    typeof candidate['repoUrl'] === 'string' &&
+    (candidate['repoProvider'] === 'github' || candidate['repoProvider'] === 'azure') &&
+    typeof candidate['credentialsRef'] === 'string'
   );
 }
 

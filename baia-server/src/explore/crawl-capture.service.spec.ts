@@ -22,10 +22,7 @@ interface FakeResponse {
   text: () => Promise<string>;
 }
 
-function makeFakePage(overrides: {
-  url?: string;
-  content?: string;
-}): {
+function makeFakePage(overrides: { url?: string; content?: string }): {
   url: jest.Mock;
   content: jest.Mock;
   on: jest.Mock;
@@ -155,7 +152,8 @@ describe('CrawlCaptureService', () => {
     });
 
     it('redacts Bearer tokens in the DOM snapshot', async () => {
-      const dom = '<html><body>Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyIn0.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c</body></html>';
+      const dom =
+        '<html><body>Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyIn0.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c</body></html>';
       const page = makeFakePage({ content: dom });
       const step = await service.captureStep('run-1', page as never, 0, 'obs');
       expect(step.domSnapshot).not.toContain('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9');
@@ -265,14 +263,13 @@ describe('CrawlCaptureService', () => {
       const page = makeFakePage({});
       const captures = service.startNetworkCapture(page as never);
 
-      const body = 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyIn0.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c';
+      const body =
+        'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyIn0.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c';
       const response = makeFakeResponse({ contentType: 'text/plain', body });
       page._triggerResponse(response);
       await new Promise((r) => setTimeout(r, 10));
 
-      expect(captures[0].responseBody).not.toContain(
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9'
-      );
+      expect(captures[0].responseBody).not.toContain('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9');
     });
 
     it('does not capture responses with non-json/text content-type', async () => {

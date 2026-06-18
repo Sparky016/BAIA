@@ -1,11 +1,7 @@
 import { RunStatus } from '@baia/shared';
 
 import { RunTransitionEvent } from './run-events.types';
-import {
-  Clock,
-  IllegalRunTransitionError,
-  RunStateMachine,
-} from './run-state-machine';
+import { Clock, IllegalRunTransitionError, RunStateMachine } from './run-state-machine';
 
 /**
  * The single source of truth for the expected lifecycle, mirrored here so the
@@ -68,9 +64,7 @@ describe('RunStateMachine', () => {
         } else {
           it(`rejects illegal transition ${from} -> ${to}`, () => {
             expect(machine.canTransition(from, to)).toBe(false);
-            expect(() => machine.transition(RUN_ID, from, to)).toThrow(
-              IllegalRunTransitionError,
-            );
+            expect(() => machine.transition(RUN_ID, from, to)).toThrow(IllegalRunTransitionError);
           });
         }
       }
@@ -95,10 +89,7 @@ describe('RunStateMachine', () => {
     });
 
     it('is a real Error subclass with a usable stack', () => {
-      const err = new IllegalRunTransitionError(
-        RunStatus.Review,
-        RunStatus.Queued,
-      );
+      const err = new IllegalRunTransitionError(RunStatus.Review, RunStatus.Queued);
       expect(err).toBeInstanceOf(Error);
       expect(err.stack).toBeDefined();
     });
@@ -107,18 +98,13 @@ describe('RunStateMachine', () => {
   describe('terminal-state rejection', () => {
     const terminals = [RunStatus.Done, RunStatus.Failed];
 
-    it.each(terminals)(
-      'rejects every transition out of terminal "%s"',
-      (from) => {
-        expect(machine.allowedTransitions(from)).toEqual([]);
-        for (const to of ALL_STATES) {
-          expect(machine.canTransition(from, to)).toBe(false);
-          expect(() => machine.transition(RUN_ID, from, to)).toThrow(
-            IllegalRunTransitionError,
-          );
-        }
-      },
-    );
+    it.each(terminals)('rejects every transition out of terminal "%s"', (from) => {
+      expect(machine.allowedTransitions(from)).toEqual([]);
+      for (const to of ALL_STATES) {
+        expect(machine.canTransition(from, to)).toBe(false);
+        expect(() => machine.transition(RUN_ID, from, to)).toThrow(IllegalRunTransitionError);
+      }
+    });
   });
 
   describe('onTransition event emission', () => {
@@ -141,9 +127,9 @@ describe('RunStateMachine', () => {
       const listener = jest.fn();
       machine.onTransition(listener);
 
-      expect(() =>
-        machine.transition(RUN_ID, RunStatus.Queued, RunStatus.Done),
-      ).toThrow(IllegalRunTransitionError);
+      expect(() => machine.transition(RUN_ID, RunStatus.Queued, RunStatus.Done)).toThrow(
+        IllegalRunTransitionError
+      );
 
       expect(listener).not.toHaveBeenCalled();
     });
@@ -235,11 +221,7 @@ describe('RunStateMachine', () => {
     it('stamps events with Date.now() when no clock is injected', () => {
       const defaultMachine = new RunStateMachine();
       const before = Date.now();
-      const event = defaultMachine.transition(
-        RUN_ID,
-        RunStatus.Queued,
-        RunStatus.Exploring,
-      );
+      const event = defaultMachine.transition(RUN_ID, RunStatus.Queued, RunStatus.Exploring);
       const after = Date.now();
 
       expect(event.at).toBeGreaterThanOrEqual(before);

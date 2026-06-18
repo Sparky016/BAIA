@@ -3,6 +3,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { chunk, Chunk } from '../llm/chunking';
 import { LLM_SERVICE } from '../llm/llm.constants';
 import { LlmService } from '../llm/llm.service';
+
 import { REPO_CONNECTOR, RepoConnector } from './repo-connector';
 
 // ── Public types ────────────────────────────────────────────────────────────
@@ -35,24 +36,9 @@ const INCLUDE_PATH_SEGMENTS = [
   'Validators/',
 ];
 
-const INCLUDE_EXTENSIONS = [
-  '.cs',
-  '.ts',
-  '.js',
-  '.py',
-  '.java',
-  '.rb',
-  '.go',
-];
+const INCLUDE_EXTENSIONS = ['.cs', '.ts', '.js', '.py', '.java', '.rb', '.go'];
 
-const EXCLUDE_PATH_SEGMENTS = [
-  'bin/',
-  'obj/',
-  'node_modules/',
-  '.git/',
-  'dist/',
-  'coverage/',
-];
+const EXCLUDE_PATH_SEGMENTS = ['bin/', 'obj/', 'node_modules/', '.git/', 'dist/', 'coverage/'];
 
 const EXCLUDE_EXTENSIONS = [
   '.min.js',

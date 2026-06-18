@@ -2,7 +2,11 @@ import { Action, ClickAction, FillAction, NavigateAction, SelectAction } from '@
 
 import { LlmError, LlmService } from '../llm/llm.service';
 import { ActionPlanningOutput } from '../llm/prompts/action-planning.prompt';
-import { ActionPlannerInput, ActionPlannerResult, ActionPlannerService } from './action-planner.service';
+import {
+  ActionPlannerInput,
+  ActionPlannerResult,
+  ActionPlannerService,
+} from './action-planner.service';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -56,7 +60,9 @@ const BASE_INPUT: ActionPlannerInput = {
   domSnapshot: '<input id="u"/><input id="p"/><button>Login</button>',
 };
 
-function buildService(llm: Pick<LlmService, 'completeJson' | 'complete' | 'countTokens'>): ActionPlannerService {
+function buildService(
+  llm: Pick<LlmService, 'completeJson' | 'complete' | 'countTokens'>
+): ActionPlannerService {
   return new ActionPlannerService(llm as LlmService);
 }
 
@@ -87,10 +93,7 @@ describe('ActionPlannerService', () => {
     });
 
     it('click: maps action correctly', async () => {
-      const llm = makeLlm([
-        clickResponse('#submit'),
-        emptyResponse(),
-      ]);
+      const llm = makeLlm([clickResponse('#submit'), emptyResponse()]);
       const service = buildService(llm);
       const result = await service.planActions(BASE_INPUT);
 
@@ -102,7 +105,9 @@ describe('ActionPlannerService', () => {
     it('fill: maps action with value', async () => {
       const llm = makeLlm([
         {
-          actions: [{ action: 'fill', selector: '#username', value: 'alice', reason: 'enter name' }],
+          actions: [
+            { action: 'fill', selector: '#username', value: 'alice', reason: 'enter name' },
+          ],
           goalSummary: 'Fill',
         },
         emptyResponse(),
@@ -210,10 +215,7 @@ describe('ActionPlannerService', () => {
     });
 
     it('accumulates all actions across iterations and includes prior in prompt', async () => {
-      const llm = makeLlm([
-        clickResponse('#a'),
-        emptyResponse(),
-      ]);
+      const llm = makeLlm([clickResponse('#a'), emptyResponse()]);
       const service = buildService(llm);
       const result = await service.planActions({ ...BASE_INPUT, previousActions: ['start'] });
 
@@ -276,7 +278,10 @@ describe('ActionPlannerService', () => {
     });
 
     it('returns goal-reached when LLM returns empty after prior actions', async () => {
-      const llm = makeLlm([clickResponse('#btn', 'Click and done'), emptyResponse('Click and done')]);
+      const llm = makeLlm([
+        clickResponse('#btn', 'Click and done'),
+        emptyResponse('Click and done'),
+      ]);
       const service = buildService(llm);
       const result = await service.planActions(BASE_INPUT);
 

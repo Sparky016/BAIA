@@ -23,9 +23,7 @@ function makeFakePage(overrides: Partial<Record<string, jest.Mock>> = {}): {
 } {
   return {
     goto: jest.fn().mockResolvedValue(null),
-    screenshot: jest
-      .fn()
-      .mockResolvedValue(Buffer.from('PNG')),
+    screenshot: jest.fn().mockResolvedValue(Buffer.from('PNG')),
     url: jest.fn().mockReturnValue('https://example.com'),
     close: jest.fn().mockResolvedValue(undefined),
     setDefaultNavigationTimeout: jest.fn(),
@@ -144,7 +142,7 @@ describe('PlaywrightRunnerService', () => {
     it('should throw when called before launch()', async () => {
       const { service } = await buildTestBed();
       await expect(service.navigate('https://example.com')).rejects.toThrow(
-        'browser session not started',
+        'browser session not started'
       );
     });
   });
@@ -172,9 +170,7 @@ describe('PlaywrightRunnerService', () => {
 
     it('should throw when called before launch()', async () => {
       const { service } = await buildTestBed();
-      await expect(service.captureScreenshot()).rejects.toThrow(
-        'browser session not started',
-      );
+      await expect(service.captureScreenshot()).rejects.toThrow('browser session not started');
     });
   });
 
@@ -184,9 +180,15 @@ describe('PlaywrightRunnerService', () => {
       await service.launch();
 
       const callOrder: string[] = [];
-      page.close.mockImplementation(async () => { callOrder.push('page'); });
-      context.close.mockImplementation(async () => { callOrder.push('context'); });
-      browser.close.mockImplementation(async () => { callOrder.push('browser'); });
+      page.close.mockImplementation(async () => {
+        callOrder.push('page');
+      });
+      context.close.mockImplementation(async () => {
+        callOrder.push('context');
+      });
+      browser.close.mockImplementation(async () => {
+        callOrder.push('browser');
+      });
 
       await service.teardown();
 
@@ -258,7 +260,7 @@ describe('PlaywrightRunnerService', () => {
       await expect(
         service.withTeardown(async () => {
           throw new Error('operation failed');
-        }),
+        })
       ).rejects.toThrow('operation failed');
 
       // teardown must have run despite the error
@@ -306,7 +308,7 @@ describe('PlaywrightRunnerService', () => {
       await expect(
         service.withTeardown(async () => {
           await service.navigate('https://broken.example.com');
-        }),
+        })
       ).rejects.toThrow('Navigation timeout');
 
       expect(browser.close).toHaveBeenCalledTimes(1);
@@ -322,7 +324,7 @@ describe('PlaywrightRunnerService', () => {
         service.withTeardown(async () => {
           await service.navigate('https://example.com');
           await service.captureScreenshot();
-        }),
+        })
       ).rejects.toThrow('Screenshot failed');
 
       expect(browser.close).toHaveBeenCalledTimes(1);

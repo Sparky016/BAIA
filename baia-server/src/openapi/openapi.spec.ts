@@ -77,9 +77,7 @@ describe('OpenAPI contract', () => {
     const eventsEndpoint = document.paths['/runs/{id}/events']['get'] as {
       parameters: Array<{ name: string; in: string }>;
     };
-    const idParam = eventsEndpoint.parameters?.find(
-      (p) => p.name === 'id' && p.in === 'path'
-    );
+    const idParam = eventsEndpoint.parameters?.find((p) => p.name === 'id' && p.in === 'path');
     expect(idParam).toBeDefined();
   });
 });

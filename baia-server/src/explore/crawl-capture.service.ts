@@ -2,8 +2,8 @@ import { ExploreEvent } from '@baia/shared';
 import { Injectable } from '@nestjs/common';
 import { Page, Response } from 'playwright';
 
-import { redactString } from '../security/redaction';
 import { RunsEventsService } from '../runs/runs.events';
+import { redactString } from '../security/redaction';
 
 export interface NetworkCapture {
   url: string;
@@ -69,8 +69,7 @@ export class CrawlCaptureService {
     page.on('response', (response: Response) => {
       const contentType = response.headers()['content-type'] ?? '';
       const isCaptureable =
-        contentType.includes('application/json') ||
-        contentType.includes('text/');
+        contentType.includes('application/json') || contentType.includes('text/');
 
       if (!isCaptureable) {
         return;
