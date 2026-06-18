@@ -1,4 +1,5 @@
 import { Controller, MessageEvent, Param, Sse } from '@nestjs/common';
+import { ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
@@ -18,6 +19,7 @@ import { RunsEventsService } from './runs.events';
  * (DEV_TASK orchestration wave); this controller registers itself only via
  * the module that imports it.
  */
+@ApiTags('runs')
 @Controller('runs')
 export class RunsSseController {
   constructor(private readonly eventsService: RunsEventsService) {}
@@ -33,6 +35,8 @@ export class RunsSseController {
    * @returns   Observable of SSE `MessageEvent` frames, one per run event.
    */
   @Sse(':id/events')
+  @ApiOperation({ summary: 'Stream Server-Sent Events for a run' })
+  @ApiParam({ name: 'id', description: 'The run identifier', example: 'run-0001' })
   streamEvents(@Param('id') id: string): Observable<MessageEvent> {
     return this.eventsService.stream(id).pipe(
       map(

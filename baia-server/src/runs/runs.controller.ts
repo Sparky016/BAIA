@@ -1,5 +1,6 @@
 import { RunSummary } from '@baia/shared';
 import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post } from '@nestjs/common';
+import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { RunsService } from './runs.service';
 
@@ -13,6 +14,7 @@ import { RunsService } from './runs.service';
  * Validation and 404 errors are thrown by `RunsService`; NestJS exception
  * filters translate them to the appropriate HTTP responses automatically.
  */
+@ApiTags('runs')
 @Controller('runs')
 export class RunsController {
   constructor(private readonly runsService: RunsService) {}
@@ -25,6 +27,9 @@ export class RunsController {
    */
   @Post()
   @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Create a new run' })
+  @ApiResponse({ status: 201, description: 'Run created successfully.' })
+  @ApiResponse({ status: 400, description: 'Validation failed.' })
   createRun(@Body() body: unknown): RunSummary {
     return this.runsService.createRun(body);
   }
@@ -35,6 +40,8 @@ export class RunsController {
    * Returns 200 OK with an array of `RunSummary`.
    */
   @Get()
+  @ApiOperation({ summary: 'List all runs' })
+  @ApiResponse({ status: 200, description: 'Array of run summaries.' })
   getAllRuns(): RunSummary[] {
     return this.runsService.getAllRuns();
   }
@@ -46,6 +53,10 @@ export class RunsController {
    * Returns 404 Not Found when the id is unknown.
    */
   @Get(':id')
+  @ApiOperation({ summary: 'Get a single run by id' })
+  @ApiParam({ name: 'id', description: 'The run identifier', example: 'run-0001' })
+  @ApiResponse({ status: 200, description: 'Run summary for the requested id.' })
+  @ApiResponse({ status: 404, description: 'Run not found.' })
   getRun(@Param('id') id: string): RunSummary {
     return this.runsService.getRun(id);
   }

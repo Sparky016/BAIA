@@ -1,0 +1,22 @@
+<div class="review-page">
+  <header>
+    <h1>Review Gherkin</h1>
+    <div class="actions">
+      <button
+        class="btn-approve"
+        (click)="approve()"
+        [disabled]="isApproved"
+        [attr.aria-pressed]="isApproved">
+        {{ isApproved ? 'Approved' : 'Approve' }}
+      </button>
+      <button
+        class="btn-export"
+        [disabled]="!canExport"
+        [title]="exportTooltip"
+        data-testid="export-btn">
+        Export to Confluence
+      </button>
+    </div>
+  </header>
+  <app-gherkin-editor />
+</div>
