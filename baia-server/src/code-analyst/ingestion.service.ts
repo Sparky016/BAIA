@@ -3,6 +3,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { chunk, Chunk } from '../llm/chunking';
 import { LLM_SERVICE } from '../llm/llm.constants';
 import { LlmService } from '../llm/llm.service';
+
 import { REPO_CONNECTOR, RepoConnector } from './repo-connector';
 
 // ── Public types ────────────────────────────────────────────────────────────

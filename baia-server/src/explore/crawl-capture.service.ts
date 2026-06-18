@@ -2,8 +2,8 @@ import { ExploreEvent } from '@baia/shared';
 import { Injectable } from '@nestjs/common';
 import { Page, Response } from 'playwright';
 
-import { redactString } from '../security/redaction';
 import { RunsEventsService } from '../runs/runs.events';
+import { redactString } from '../security/redaction';
 
 export interface NetworkCapture {
   url: string;
