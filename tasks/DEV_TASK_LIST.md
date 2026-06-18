@@ -8,8 +8,8 @@
 
 | Status | Count |
 |--------|-------|
-| ✅ Complete | 23 |
-| ⏳ Not started | 19 |
+| ✅ Complete | 26 |
+| ⏳ Not started | 16 |
 
 ---
 
@@ -44,7 +44,7 @@
 | 13 | S2-03 Prompt template registry | S | ✅ Complete |
 | 14 | S2-04 Token/chunk utilities | O | ✅ Complete |
 
-### S3 — Phase 1: Exploratory Analyst (2/6 ✅)
+### S3 — Phase 1: Exploratory Analyst (3/6 ✅)
 
 | # | Unit | Tier | Status |
 |---|------|------|--------|
@@ -52,17 +52,17 @@
 | 16 | S3-02 Action vocabulary + executor | S+ | ✅ Complete |
 | 17 | S3-03 NL→action planner | O | ⏳ Not started |
 | 18 | S3-04 Crawl & capture | S+ | ⏳ Not started |
-| 19 | S3-05 Gherkin generator | O | ⏳ Not started |
+| 19 | S3-05 Gherkin generator | O | ✅ Complete |
 | 20 | S3-06 Wire Phase 1 into runs | S | ⏳ Not started |
 
-### S4 — Phase 2: Code Analyst (1/5 ✅)
+### S4 — Phase 2: Code Analyst (2/5 ✅)
 
 | # | Unit | Tier | Status |
 |---|------|------|--------|
 | 21 | S4-01 Repo connector interface + GitHub | S+ | ✅ Complete |
 | 22 | S4-02 Azure Repos connector | S | ⏳ Not started |
 | 23 | S4-03 Ingestion & chunking | S+ | ⏳ Not started |
-| 24 | S4-04 Rule extraction | O | ⏳ Not started |
+| 24 | S4-04 Rule extraction | O | ✅ Complete |
 | 25 | S4-05 Wire Phase 2 into runs | S | ⏳ Not started |
 
 ### S5 — Reconciliation & Merge (0/3 ⏳)
@@ -91,13 +91,13 @@
 | 35 | S7-04 Input form | S+ | ✅ Complete |
 | 36 | S7-05 Progress view | S+ | ✅ Complete |
 
-### S8 — Frontend: Review Dashboard & Export UI (1/3 ✅)
+### S8 — Frontend: Review Dashboard & Export UI (2/3 ✅)
 
 | # | Unit | Tier | Status |
 |---|------|------|--------|
 | 37 | S8-01 Gherkin viewer/editor | S+ | ✅ Complete |
 | 38 | S8-02 Approve workflow | S | ⏳ Not started |
-| 39 | S8-03 Confluence export UI | S | ⏳ Not started |
+| 39 | S8-03 Confluence export UI | S | ✅ Complete |
 
 ### S9 — End-to-End Integration & Demo (0/3 ⏳)
 
@@ -123,7 +123,7 @@ Wave 8:  27, 28, 31
 Wave 9:  40 → 41 → 42
 ```
 
-**Completed waves:** 1, 2, 3, 4 — ready for waves 5–9.
+**Completed waves:** 1, 2, 3, 4 — wave 6 (tasks 19, 24, 39) complete — ready for wave 7.
 
 ---
 
