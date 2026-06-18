@@ -1,0 +1,23 @@
+<div class="gherkin-editor" *ngIf="editableDoc; else noDoc">
+  <div *ngFor="let feature of editableDoc.features; let fi = index" class="feature">
+    <div class="feature-header">
+      <span class="keyword">Feature:</span>
+      <input [value]="feature.name" (input)="updateFeatureName(fi, $any($event.target).value)" />
+    </div>
+    <p *ngIf="feature.description" class="description">{{ feature.description }}</p>
+    <div *ngFor="let scenario of feature.scenarios; let si = index" class="scenario">
+      <div class="scenario-header">
+        <span class="keyword">Scenario:</span>
+        <input [value]="scenario.name" (input)="updateScenarioName(fi, si, $any($event.target).value)" />
+      </div>
+      <div *ngFor="let step of scenario.steps; let sti = index" class="step">
+        <span class="keyword provenance-{{ step.provenance }}">{{ step.keyword }}</span>
+        <input [value]="step.text" (input)="updateStepText(fi, si, sti, $any($event.target).value)" />
+        <span class="provenance-badge" [attr.data-provenance]="step.provenance">{{ step.provenance }}</span>
+      </div>
+    </div>
+  </div>
+</div>
+<ng-template #noDoc>
+  <p>No Gherkin document available.</p>
+</ng-template>

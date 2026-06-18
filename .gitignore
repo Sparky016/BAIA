@@ -8,6 +8,7 @@ build/
 
 # Coverage reports
 coverage/
+coverage-*/
 .nyc_output/
 
 # Environment variables
