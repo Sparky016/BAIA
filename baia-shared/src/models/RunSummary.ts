@@ -1,6 +1,7 @@
 import { BusinessRule } from './BusinessRule';
 import { GherkinDoc } from './Gherkin';
 import { RunStatus } from './RunStatus';
+import { UnifiedDoc } from './unified-doc';
 
 export interface RunSummary {
   runId: string;
@@ -8,6 +9,7 @@ export interface RunSummary {
   targetUrl: string;
   gherkinDoc?: GherkinDoc;
   businessRules?: BusinessRule[];
+  unifiedDoc?: UnifiedDoc;
   createdAt: Date;
   updatedAt: Date;
   completedAt?: Date;

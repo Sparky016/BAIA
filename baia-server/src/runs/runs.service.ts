@@ -1,4 +1,4 @@
-import { BusinessRule, GherkinDoc, RunRequest, RunStatus, RunSummary } from '@baia/shared';
+import { BusinessRule, GherkinDoc, RunRequest, RunStatus, RunSummary, UnifiedDoc } from '@baia/shared';
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 
 import { RunStateMachine } from './run-state-machine';
@@ -161,6 +161,17 @@ export class RunsService {
   storeBusinessRules(runId: string, rules: BusinessRule[]): RunSummary {
     const run = this.getRun(runId);
     const updated: RunSummary = { ...run, businessRules: rules, updatedAt: new Date() };
+    this.runs.set(runId, updated);
+    return updated;
+  }
+
+  /**
+   * Attach a reconciled `UnifiedDoc` to an existing run.
+   * Throws `NotFoundException` for unknown ids.
+   */
+  storeUnifiedDoc(runId: string, doc: UnifiedDoc): RunSummary {
+    const run = this.getRun(runId);
+    const updated: RunSummary = { ...run, unifiedDoc: doc, updatedAt: new Date() };
     this.runs.set(runId, updated);
     return updated;
   }

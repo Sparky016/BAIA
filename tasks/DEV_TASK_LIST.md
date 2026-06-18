@@ -8,8 +8,8 @@
 
 | Status | Count |
 |--------|-------|
-| ✅ Complete | 30 |
-| ⏳ Not started | 12 |
+| ✅ Complete | 31 |
+| ⏳ Not started | 11 |
 
 ---
 
@@ -65,13 +65,13 @@
 | 24 | S4-04 Rule extraction | O | ✅ Complete |
 | 25 | S4-05 Wire Phase 2 into runs | S | ✅ Complete |
 
-### S5 — Reconciliation & Merge (1/3 ✅)
+### S5 — Reconciliation & Merge (3/3 ✅)
 
 | # | Unit | Tier | Status |
 |---|------|------|--------|
 | 26 | S5-01 Reconciliation engine | O | ✅ Complete |
 | 27 | S5-02 Unified document model | S | ✅ Complete |
-| 28 | S5-03 Wire reconcile into runs | S | ⏳ Not started |
+| 28 | S5-03 Wire reconcile into runs | S | ✅ Complete |
 
 ### S6 — Integrations & Export (2/3 ✅)
 
@@ -123,7 +123,7 @@ Wave 8:  27, 28, 31
 Wave 9:  40 → 41 → 42
 ```
 
-**Completed waves:** 1, 2, 3, 4 — wave 6 (tasks 19, 24, 39) complete — wave 7 in progress (tasks 25, 26 done).
+**Completed waves:** 1, 2, 3, 4 — wave 6 (tasks 19, 24, 39) complete — wave 7 in progress (tasks 25, 26, 27, 28 done).
 
 ---
 
