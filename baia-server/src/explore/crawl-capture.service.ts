@@ -69,8 +69,7 @@ export class CrawlCaptureService {
     page.on('response', (response: Response) => {
       const contentType = response.headers()['content-type'] ?? '';
       const isCaptureable =
-        contentType.includes('application/json') ||
-        contentType.includes('text/');
+        contentType.includes('application/json') || contentType.includes('text/');
 
       if (!isCaptureable) {
         return;

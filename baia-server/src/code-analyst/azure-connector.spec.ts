@@ -60,10 +60,7 @@ function spyOnLogger(): {
   };
 }
 
-function assertTokenNotLogged(
-  spies: ReturnType<typeof spyOnLogger>,
-  token: string
-): void {
+function assertTokenNotLogged(spies: ReturnType<typeof spyOnLogger>, token: string): void {
   const allCalls = [
     ...spies.logSpy.mock.calls,
     ...spies.warnSpy.mock.calls,
@@ -122,9 +119,7 @@ describe('AzureConnector', () => {
 
     it('throws RepoConnectorError(AUTH_FAILED) when the API returns HTTP 401', async () => {
       const client = makeMockClient({
-        getProfile: jest
-          .fn()
-          .mockRejectedValue({ status: 401, message: 'Unauthorized' }),
+        getProfile: jest.fn().mockRejectedValue({ status: 401, message: 'Unauthorized' }),
       });
       const connector = makeConnector(client);
 
@@ -205,9 +200,9 @@ describe('AzureConnector', () => {
 
     it('readFile() throws AUTH_FAILED', async () => {
       const connector = makeConnector(makeMockClient());
-      await expect(
-        connector.readFile('Controllers/HomeController.cs')
-      ).rejects.toMatchObject({ code: 'AUTH_FAILED' });
+      await expect(connector.readFile('Controllers/HomeController.cs')).rejects.toMatchObject({
+        code: 'AUTH_FAILED',
+      });
     });
 
     it('clone() throws AUTH_FAILED', async () => {
@@ -234,9 +229,9 @@ describe('AzureConnector', () => {
 
     it('passes subPath to getItems', async () => {
       const client = makeMockClient({
-        getItems: jest.fn().mockResolvedValue([
-          { path: '/Controllers/HomeController.cs', gitObjectType: 'blob' },
-        ]),
+        getItems: jest
+          .fn()
+          .mockResolvedValue([{ path: '/Controllers/HomeController.cs', gitObjectType: 'blob' }]),
       });
       const connector = makeConnector(client);
       await connector.auth(VALID_CREDS);
@@ -306,9 +301,7 @@ describe('AzureConnector', () => {
   describe('readFile()', () => {
     it('returns file content', async () => {
       const client = makeMockClient({
-        getItemContent: jest
-          .fn()
-          .mockResolvedValue('namespace MyCMS.Controllers { }'),
+        getItemContent: jest.fn().mockResolvedValue('namespace MyCMS.Controllers { }'),
       });
       const connector = makeConnector(client);
       await connector.auth(VALID_CREDS);
@@ -325,9 +318,9 @@ describe('AzureConnector', () => {
       const connector = makeConnector(client);
       await connector.auth(VALID_CREDS);
 
-      await expect(
-        connector.readFile('missing/file.cs')
-      ).rejects.toMatchObject({ code: 'NOT_FOUND' });
+      await expect(connector.readFile('missing/file.cs')).rejects.toMatchObject({
+        code: 'NOT_FOUND',
+      });
     });
 
     it('throws AUTH_FAILED (HTTP 403) when token loses permission', async () => {
@@ -338,9 +331,9 @@ describe('AzureConnector', () => {
       const connector = makeConnector(client);
       await connector.auth(VALID_CREDS);
 
-      await expect(
-        connector.readFile('Controllers/HomeController.cs')
-      ).rejects.toMatchObject({ code: 'AUTH_FAILED' });
+      await expect(connector.readFile('Controllers/HomeController.cs')).rejects.toMatchObject({
+        code: 'AUTH_FAILED',
+      });
     });
 
     it('throws RATE_LIMITED for HTTP 429', async () => {
@@ -351,9 +344,9 @@ describe('AzureConnector', () => {
       const connector = makeConnector(client);
       await connector.auth(VALID_CREDS);
 
-      await expect(
-        connector.readFile('Controllers/HomeController.cs')
-      ).rejects.toMatchObject({ code: 'RATE_LIMITED' });
+      await expect(connector.readFile('Controllers/HomeController.cs')).rejects.toMatchObject({
+        code: 'RATE_LIMITED',
+      });
     });
 
     it('throws UNKNOWN for unexpected errors', async () => {
@@ -363,9 +356,9 @@ describe('AzureConnector', () => {
       const connector = makeConnector(client);
       await connector.auth(VALID_CREDS);
 
-      await expect(
-        connector.readFile('Controllers/HomeController.cs')
-      ).rejects.toMatchObject({ code: 'UNKNOWN' });
+      await expect(connector.readFile('Controllers/HomeController.cs')).rejects.toMatchObject({
+        code: 'UNKNOWN',
+      });
     });
 
     it('does not log the token during file read', async () => {
@@ -398,9 +391,9 @@ describe('AzureConnector', () => {
 
     it('fetches correct content for each blob', async () => {
       const client = makeMockClient({
-        getItems: jest.fn().mockResolvedValue([
-          { path: '/Controllers/HomeController.cs', gitObjectType: 'blob' },
-        ]),
+        getItems: jest
+          .fn()
+          .mockResolvedValue([{ path: '/Controllers/HomeController.cs', gitObjectType: 'blob' }]),
         getItemContent: jest.fn().mockResolvedValue('public class HomeController {}'),
       });
       const connector = makeConnector(client);

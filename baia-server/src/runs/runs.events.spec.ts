@@ -9,18 +9,14 @@ const RUN_ID = 'run-abc-123';
 const OTHER_RUN_ID = 'run-xyz-789';
 
 /** Build a minimal RunTransitionEvent for test use. */
-function makeTransition(
-  from: RunStatus,
-  to: RunStatus,
-  runId = RUN_ID,
-): RunTransitionEvent {
+function makeTransition(from: RunStatus, to: RunStatus, runId = RUN_ID): RunTransitionEvent {
   return { runId, from, to, at: Date.now() };
 }
 
 /** Build a minimal ExploreEvent for test use. */
 function makeExploreEvent(
   type: ExploreEvent['type'] = 'action',
-  message = 'test message',
+  message = 'test message'
 ): ExploreEvent {
   return { timestamp: new Date(), type, message };
 }
@@ -40,12 +36,15 @@ describe('RunsEventsService', () => {
     it('delivers a single RunTransitionEvent to a subscriber', (done) => {
       const event = makeTransition(RunStatus.Queued, RunStatus.Exploring);
 
-      service.stream(RUN_ID).pipe(take(1)).subscribe({
-        next: (received) => {
-          expect(received).toEqual(event);
-          done();
-        },
-      });
+      service
+        .stream(RUN_ID)
+        .pipe(take(1))
+        .subscribe({
+          next: (received) => {
+            expect(received).toEqual(event);
+            done();
+          },
+        });
 
       service.emit(RUN_ID, event);
     });
@@ -53,12 +52,15 @@ describe('RunsEventsService', () => {
     it('delivers a single ExploreEvent to a subscriber', (done) => {
       const event = makeExploreEvent('observation', 'clicked button');
 
-      service.stream(RUN_ID).pipe(take(1)).subscribe({
-        next: (received) => {
-          expect(received).toEqual(event);
-          done();
-        },
-      });
+      service
+        .stream(RUN_ID)
+        .pipe(take(1))
+        .subscribe({
+          next: (received) => {
+            expect(received).toEqual(event);
+            done();
+          },
+        });
 
       service.emit(RUN_ID, event);
     });
@@ -363,12 +365,15 @@ describe('RunsEventsService', () => {
     it('stream() before any emit() receives events emitted afterward', (done) => {
       const expected = makeExploreEvent('action', 'late event');
 
-      service.stream(RUN_ID).pipe(take(1)).subscribe({
-        next: (e) => {
-          expect(e).toEqual(expected);
-          done();
-        },
-      });
+      service
+        .stream(RUN_ID)
+        .pipe(take(1))
+        .subscribe({
+          next: (e) => {
+            expect(e).toEqual(expected);
+            done();
+          },
+        });
 
       // Emit after subscription (normal SSE client flow)
       service.emit(RUN_ID, expected);

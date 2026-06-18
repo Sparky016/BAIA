@@ -29,8 +29,14 @@ function testConfig(overrides?: Partial<CopilotAdapterConfig>): CopilotAdapterCo
 /** Minimal mock implementing the {@link CopilotClient} interface. */
 function makeMockClient(): jest.Mocked<CopilotClient> {
   return {
-    complete: jest.fn<Promise<CopilotCompletion>, [readonly { role: string; content: string }[], unknown?]>(),
-    stream: jest.fn<AsyncIterable<string>, [readonly { role: string; content: string }[], unknown?]>(),
+    complete: jest.fn<
+      Promise<CopilotCompletion>,
+      [readonly { role: string; content: string }[], unknown?]
+    >(),
+    stream: jest.fn<
+      AsyncIterable<string>,
+      [readonly { role: string; content: string }[], unknown?]
+    >(),
   };
 }
 
@@ -60,7 +66,12 @@ describe('CopilotLlmAdapter — config / auth init', () => {
 
   beforeEach(() => {
     // Snapshot and clear relevant env vars.
-    for (const key of ['COPILOT_TOKEN', 'COPILOT_MODEL', 'COPILOT_MAX_RETRIES', 'COPILOT_RETRY_DELAY_MS']) {
+    for (const key of [
+      'COPILOT_TOKEN',
+      'COPILOT_MODEL',
+      'COPILOT_MAX_RETRIES',
+      'COPILOT_RETRY_DELAY_MS',
+    ]) {
       realEnv[key] = process.env[key];
       delete process.env[key];
     }
@@ -250,7 +261,9 @@ describe('CopilotLlmAdapter — completeJson()', () => {
     const err = await buildAdapter(client)
       .completeJson('p', schema)
       .then(
-        () => { throw new Error('expected rejection'); },
+        () => {
+          throw new Error('expected rejection');
+        },
         (e: LlmError) => e
       );
 
@@ -452,9 +465,7 @@ describe('CopilotLlmAdapter — retry-with-backoff', () => {
     const client = makeMockClient();
     // Network error has no status field — should be treated as transient / retriable.
     const networkErr = { message: 'ECONNRESET' };
-    client.complete
-      .mockRejectedValueOnce(networkErr)
-      .mockResolvedValueOnce({ text: 'recovered' });
+    client.complete.mockRejectedValueOnce(networkErr).mockResolvedValueOnce({ text: 'recovered' });
 
     const adapter = buildAdapter(client, testConfig({ maxRetries: 2, retryDelayMs: 0 }));
     const result = await adapter.complete('p');
@@ -512,7 +523,9 @@ describe('CopilotLlmAdapter — error mapping', () => {
 
     const adapter = buildAdapter(client, testConfig({ maxRetries: 1, retryDelayMs: 0 }));
     const err = await adapter.complete('p').then(
-      () => { throw new Error('expected rejection'); },
+      () => {
+        throw new Error('expected rejection');
+      },
       (e: LlmError) => e
     );
 

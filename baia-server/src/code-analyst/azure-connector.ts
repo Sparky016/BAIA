@@ -44,7 +44,10 @@ interface FetchError {
 }
 
 function throwForStatus(status: number, url: string): never {
-  const err: FetchError = { status, message: `Azure DevOps API returned HTTP ${status} for ${url}` };
+  const err: FetchError = {
+    status,
+    message: `Azure DevOps API returned HTTP ${status} for ${url}`,
+  };
   throw err;
 }
 
@@ -76,9 +79,10 @@ export async function buildAzureApiClientFactory(): Promise<AzureApiClientFactor
 
     return {
       async getProfile() {
-        const data = (await apiFetch(
-          `${baseUrl}/_apis/profile/profiles/me?api-version=6.0`
-        )) as { id: string; displayName: string };
+        const data = (await apiFetch(`${baseUrl}/_apis/profile/profiles/me?api-version=6.0`)) as {
+          id: string;
+          displayName: string;
+        };
         return { id: data.id, displayName: data.displayName };
       },
 
@@ -226,18 +230,12 @@ export class AzureConnector implements RepoConnector {
     try {
       const items = await client.getItems(coords.project, coords.repoId);
       const blobs = items.filter((item) => item.gitObjectType === 'blob');
-      this.logger.log(
-        `Fetching ${blobs.length} files from ${coords.project}/${coords.repoId}`
-      );
+      this.logger.log(`Fetching ${blobs.length} files from ${coords.project}/${coords.repoId}`);
 
       const files = new Map<string, string>();
       for (const item of blobs) {
         const normalizedPath = item.path.replace(/^\//, '');
-        const content = await client.getItemContent(
-          coords.project,
-          coords.repoId,
-          item.path
-        );
+        const content = await client.getItemContent(coords.project, coords.repoId, item.path);
         files.set(normalizedPath, content);
       }
 

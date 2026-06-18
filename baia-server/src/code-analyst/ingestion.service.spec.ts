@@ -20,9 +20,12 @@ const MYCMS_TREE: TreeEntry[] = [
 ];
 
 const FILE_CONTENTS: Record<string, string> = {
-  'Controllers/HomeController.cs': 'public class HomeController : Controller {\n  public IActionResult Index() { return View(); }\n}',
-  'Controllers/AdminController.cs': 'public class AdminController : Controller {\n  public IActionResult Dashboard() { return View(); }\n}',
-  'Models/ContentPage.cs': 'public class ContentPage {\n  public int Id { get; set; }\n  public string Title { get; set; }\n}',
+  'Controllers/HomeController.cs':
+    'public class HomeController : Controller {\n  public IActionResult Index() { return View(); }\n}',
+  'Controllers/AdminController.cs':
+    'public class AdminController : Controller {\n  public IActionResult Dashboard() { return View(); }\n}',
+  'Models/ContentPage.cs':
+    'public class ContentPage {\n  public int Id { get; set; }\n  public string Title { get; set; }\n}',
   'Views/Home/Index.cshtml': '@{ ViewData["Title"] = "Home"; }\n<h1>Welcome</h1>',
   'Startup.cs': 'public class Startup {\n  public void Configure(IApplicationBuilder app) { }\n}',
   'README.md': '# MyCMS\nA simple CMS built on ASP.NET Core.',

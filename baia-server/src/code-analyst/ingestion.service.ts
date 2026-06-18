@@ -35,24 +35,9 @@ const INCLUDE_PATH_SEGMENTS = [
   'Validators/',
 ];
 
-const INCLUDE_EXTENSIONS = [
-  '.cs',
-  '.ts',
-  '.js',
-  '.py',
-  '.java',
-  '.rb',
-  '.go',
-];
+const INCLUDE_EXTENSIONS = ['.cs', '.ts', '.js', '.py', '.java', '.rb', '.go'];
 
-const EXCLUDE_PATH_SEGMENTS = [
-  'bin/',
-  'obj/',
-  'node_modules/',
-  '.git/',
-  'dist/',
-  'coverage/',
-];
+const EXCLUDE_PATH_SEGMENTS = ['bin/', 'obj/', 'node_modules/', '.git/', 'dist/', 'coverage/'];
 
 const EXCLUDE_EXTENSIONS = [
   '.min.js',
