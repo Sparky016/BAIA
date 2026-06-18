@@ -99,11 +99,23 @@ export class IngestionService {
   ) {}
 
   async ingestRepo(options: IngestionOptions = {}): Promise<IngestedRepo> {
+    return this.ingestWithConnector(this.connector, options);
+  }
+
+  /**
+   * Ingest a repository using an explicitly supplied connector instead of the
+   * injected default. Used by `AnalyzeOrchestrator` to select GitHub vs Azure
+   * at runtime based on the run's `repoProvider`.
+   */
+  async ingestWithConnector(
+    connector: RepoConnector,
+    options: IngestionOptions = {}
+  ): Promise<IngestedRepo> {
     const maxTokens = options.maxTokensPerChunk ?? 3000;
     const rawOverlap = options.overlapTokens ?? 200;
     const overlap = Math.min(rawOverlap, maxTokens - 1);
 
-    const entries = await this.connector.listTree();
+    const entries = await connector.listTree();
     const fileEntries = entries.filter((e) => e.type === 'file');
 
     const includedPaths: string[] = [];
@@ -129,7 +141,7 @@ export class IngestionService {
     let totalChunks = 0;
 
     for (const path of includedPaths) {
-      const content = await this.connector.readFile(path);
+      const content = await connector.readFile(path);
 
       if (Buffer.byteLength(content, 'utf8') > MAX_FILE_SIZE_BYTES) {
         skippedFiles.push(path);

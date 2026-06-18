@@ -1,7 +1,12 @@
 import { Module } from '@nestjs/common';
 
 import { LlmModule } from '../llm/llm.module';
+import { RunsEventsService } from '../runs/runs.events';
+import { RunStateMachine } from '../runs/run-state-machine';
+import { RunsService } from '../runs/runs.service';
+import { CredentialStoreService } from '../security';
 
+import { AnalyzeOrchestrator } from './analyze.orchestrator';
 import {
   AZURE_API_CLIENT_FACTORY,
   AzureConnector,
@@ -35,7 +40,19 @@ import { RuleExtractorService } from './rule-extractor.service';
     },
     IngestionService,
     RuleExtractorService,
+    RunStateMachine,
+    RunsService,
+    RunsEventsService,
+    CredentialStoreService,
+    AnalyzeOrchestrator,
   ],
-  exports: [REPO_CONNECTOR, GitHubConnector, AzureConnector, IngestionService, RuleExtractorService],
+  exports: [
+    REPO_CONNECTOR,
+    GitHubConnector,
+    AzureConnector,
+    IngestionService,
+    RuleExtractorService,
+    AnalyzeOrchestrator,
+  ],
 })
 export class CodeAnalystModule {}

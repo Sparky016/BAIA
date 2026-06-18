@@ -9,6 +9,8 @@ export interface GherkinStep {
 export interface GherkinScenario {
   name: string;
   steps: GherkinStep[];
+  /** Set when reconciliation identifies a contradiction between this scenario and a code rule. */
+  conflictNote?: string;
 }
 
 export interface GherkinFeature {

@@ -8,8 +8,8 @@
 
 | Status | Count |
 |--------|-------|
-| ✅ Complete | 26 |
-| ⏳ Not started | 16 |
+| ✅ Complete | 28 |
+| ⏳ Not started | 14 |
 
 ---
 
@@ -44,7 +44,7 @@
 | 13 | S2-03 Prompt template registry | S | ✅ Complete |
 | 14 | S2-04 Token/chunk utilities | O | ✅ Complete |
 
-### S3 — Phase 1: Exploratory Analyst (3/6 ✅)
+### S3 — Phase 1: Exploratory Analyst (4/6 ✅)
 
 | # | Unit | Tier | Status |
 |---|------|------|--------|
@@ -53,9 +53,9 @@
 | 17 | S3-03 NL→action planner | O | ⏳ Not started |
 | 18 | S3-04 Crawl & capture | S+ | ⏳ Not started |
 | 19 | S3-05 Gherkin generator | O | ✅ Complete |
-| 20 | S3-06 Wire Phase 1 into runs | S | ⏳ Not started |
+| 20 | S3-06 Wire Phase 1 into runs | S | ✅ Complete |
 
-### S4 — Phase 2: Code Analyst (2/5 ✅)
+### S4 — Phase 2: Code Analyst (3/5 ✅)
 
 | # | Unit | Tier | Status |
 |---|------|------|--------|
@@ -63,13 +63,13 @@
 | 22 | S4-02 Azure Repos connector | S | ⏳ Not started |
 | 23 | S4-03 Ingestion & chunking | S+ | ⏳ Not started |
 | 24 | S4-04 Rule extraction | O | ✅ Complete |
-| 25 | S4-05 Wire Phase 2 into runs | S | ⏳ Not started |
+| 25 | S4-05 Wire Phase 2 into runs | S | ✅ Complete |
 
-### S5 — Reconciliation & Merge (0/3 ⏳)
+### S5 — Reconciliation & Merge (1/3 ✅)
 
 | # | Unit | Tier | Status |
 |---|------|------|--------|
-| 26 | S5-01 Reconciliation engine | O | ⏳ Not started |
+| 26 | S5-01 Reconciliation engine | O | ✅ Complete |
 | 27 | S5-02 Unified document model | S | ⏳ Not started |
 | 28 | S5-03 Wire reconcile into runs | S | ⏳ Not started |
 
@@ -123,7 +123,7 @@ Wave 8:  27, 28, 31
 Wave 9:  40 → 41 → 42
 ```
 
-**Completed waves:** 1, 2, 3, 4 — wave 6 (tasks 19, 24, 39) complete — ready for wave 7.
+**Completed waves:** 1, 2, 3, 4 — wave 6 (tasks 19, 24, 39) complete — wave 7 in progress (tasks 25, 26 done).
 
 ---
 

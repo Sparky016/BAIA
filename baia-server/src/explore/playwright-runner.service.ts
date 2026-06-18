@@ -176,6 +176,14 @@ export class PlaywrightRunnerService {
     }
   }
 
+  /**
+   * Returns the active Playwright `Page`, or `null` if not yet launched.
+   * Intended for orchestrators that need to pass the page to other services.
+   */
+  getPage(): Page | null {
+    return this.page;
+  }
+
   // -- internal --------------------------------------------------------------
 
   private assertReady(): void {

@@ -1,4 +1,4 @@
-import { RunRequest, RunStatus, RunSummary } from '@baia/shared';
+import { BusinessRule, GherkinDoc, RunRequest, RunStatus, RunSummary } from '@baia/shared';
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 
 import { RunStateMachine } from './run-state-machine';
@@ -139,6 +139,28 @@ export class RunsService {
     const run = this.getRun(runId);
     this.stateMachine.transition(runId, run.status, to);
     const updated: RunSummary = { ...run, status: to, updatedAt: new Date() };
+    this.runs.set(runId, updated);
+    return updated;
+  }
+
+  /**
+   * Attach a generated `GherkinDoc` to an existing run.
+   * Throws `NotFoundException` for unknown ids.
+   */
+  storeGherkinDoc(runId: string, doc: GherkinDoc): RunSummary {
+    const run = this.getRun(runId);
+    const updated: RunSummary = { ...run, gherkinDoc: doc, updatedAt: new Date() };
+    this.runs.set(runId, updated);
+    return updated;
+  }
+
+  /**
+   * Attach extracted `BusinessRule[]` to an existing run.
+   * Throws `NotFoundException` for unknown ids.
+   */
+  storeBusinessRules(runId: string, rules: BusinessRule[]): RunSummary {
+    const run = this.getRun(runId);
+    const updated: RunSummary = { ...run, businessRules: rules, updatedAt: new Date() };
     this.runs.set(runId, updated);
     return updated;
   }

@@ -1,28 +1,23 @@
 import { Module } from '@nestjs/common';
 import { chromium } from 'playwright';
 
+import { GherkinModule } from '../gherkin/gherkin.module';
 import { RunsEventsService } from '../runs/runs.events';
+import { RunStateMachine } from '../runs/run-state-machine';
+import { RunsService } from '../runs/runs.service';
 
+import { ActionExecutorService } from './action-executor.service';
 import { ActionPlannerService } from './action-planner.service';
 import { CrawlCaptureService } from './crawl-capture.service';
+import { ExploreOrchestrator } from './explore.orchestrator';
 import {
   CHROMIUM_LAUNCHER,
   DEFAULT_PLAYWRIGHT_CONFIG,
   PlaywrightRunnerService,
 } from './playwright-runner.service';
 
-/**
- * NestJS module for the Phase 1 "Exploratory Analyst" domain.
- *
- * `CHROMIUM_LAUNCHER` is bound to `playwright.chromium` at module level so
- * that all consumers of `PlaywrightRunnerService` receive the real launcher
- * in production while tests can override it via `useValue` / `useFactory`.
- *
- * `RunsEventsService` is provided here directly because `RunsModule` does not
- * yet exist as a standalone module. Promote this to a module import once
- * `runs.module.ts` is created.
- */
 @Module({
+  imports: [GherkinModule],
   providers: [
     {
       provide: CHROMIUM_LAUNCHER,
@@ -32,10 +27,20 @@ import {
       provide: PlaywrightRunnerService,
       useFactory: () => new PlaywrightRunnerService(chromium, DEFAULT_PLAYWRIGHT_CONFIG),
     },
+    RunStateMachine,
+    RunsService,
     RunsEventsService,
+    ActionExecutorService,
     ActionPlannerService,
     CrawlCaptureService,
+    ExploreOrchestrator,
   ],
-  exports: [PlaywrightRunnerService, ActionPlannerService, CrawlCaptureService],
+  exports: [
+    PlaywrightRunnerService,
+    ActionExecutorService,
+    ActionPlannerService,
+    CrawlCaptureService,
+    ExploreOrchestrator,
+  ],
 })
 export class ExploreModule {}
