@@ -14,6 +14,7 @@ import {
 } from './github-connector';
 import { IngestionService } from './ingestion.service';
 import { REPO_CONNECTOR } from './repo-connector';
+import { RuleExtractorService } from './rule-extractor.service';
 
 @Module({
   imports: [LlmModule],
@@ -33,7 +34,8 @@ import { REPO_CONNECTOR } from './repo-connector';
       useClass: GitHubConnector,
     },
     IngestionService,
+    RuleExtractorService,
   ],
-  exports: [REPO_CONNECTOR, GitHubConnector, AzureConnector, IngestionService],
+  exports: [REPO_CONNECTOR, GitHubConnector, AzureConnector, IngestionService, RuleExtractorService],
 })
 export class CodeAnalystModule {}
