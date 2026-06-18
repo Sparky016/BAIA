@@ -8,8 +8,8 @@
 
 | Status | Count |
 |--------|-------|
-| ✅ Complete | 28 |
-| ⏳ Not started | 14 |
+| ✅ Complete | 30 |
+| ⏳ Not started | 12 |
 
 ---
 
@@ -70,15 +70,15 @@
 | # | Unit | Tier | Status |
 |---|------|------|--------|
 | 26 | S5-01 Reconciliation engine | O | ✅ Complete |
-| 27 | S5-02 Unified document model | S | ⏳ Not started |
+| 27 | S5-02 Unified document model | S | ✅ Complete |
 | 28 | S5-03 Wire reconcile into runs | S | ⏳ Not started |
 
-### S6 — Integrations & Export (1/3 ✅)
+### S6 — Integrations & Export (2/3 ✅)
 
 | # | Unit | Tier | Status |
 |---|------|------|--------|
 | 29 | S6-01 Credential/secret handling | O | ✅ Complete |
-| 30 | S6-02 Confluence REST adapter | S+ | ⏳ Not started |
+| 30 | S6-02 Confluence REST adapter | S+ | ✅ Complete |
 | 31 | S6-03 Export endpoint + wiring | S | ⏳ Not started |
 
 ### S7 — Frontend: Shell/Input/Progress (5/5 ✅)

@@ -23,5 +23,13 @@ export type {
   WaitForKind,
 } from './models/action';
 
+export type {
+  DocConflict,
+  UnifiedDoc,
+  UnifiedFeature,
+  UnifiedScenario,
+  UnifiedStep,
+} from './models/unified-doc';
+
 // Guards
 export { isRunRequest, isValidRunStatus } from './guards';
