@@ -59,7 +59,7 @@
             "scripts": [],
             "codeCoverage": true,
             "codeCoverageExclude": [],
-            "browsers": ["ChromeHeadlessCI"]
+            "browsers": "ChromeHeadlessCI"
           }
         }
       }
