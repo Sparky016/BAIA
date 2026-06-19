@@ -13,11 +13,11 @@ module.exports = function (config) {
     jasmineHtmlReporter: { suppressAll: true },
     coverageReporter: { dir: require('path').join(__dirname, './coverage/baia-ui'), subdir: '.', reporters: [{ type: 'html' }, { type: 'text-summary' }, { type: 'json-summary', file: 'coverage-summary.json' }] },
     reporters: ['progress', 'kjhtml'],
-    browsers: ['ChromeHeadlessCI'],
+    browsers: [process.env.CI ? 'ChromeHeadlessCI' : 'ChromeHeadless'],
     customLaunchers: {
       ChromeHeadlessCI: {
         base: 'ChromeHeadless',
-        flags: ['--no-sandbox', '--disable-gpu']
+        flags: ['--no-sandbox', '--disable-gpu', '--disable-software-rasterizer', '--disable-dev-shm-usage']
       }
     },
     restartOnFileChange: true

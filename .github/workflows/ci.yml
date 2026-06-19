@@ -62,13 +62,14 @@ jobs:
       #   Root `npm test` fans out to:
       #     • baia-shared  → jest
       #     • baia-server  → jest --coverage  (gate: ≥85% lines / ≥80% branches)
-      #     • baia-ui      → ng test --watch=false --browsers=ChromeHeadless
+      #     • baia-ui      → ng test --watch=false --browsers=ChromeHeadlessCI
       #                      (karma.conf.js gate: ≥85% lines / ≥80% branches)
       #   CHROME_BIN is set by browser-actions/setup-chrome; ChromeHeadlessCI
       #   launcher in karma.conf.js adds --no-sandbox for the container env.
       - name: Test (with coverage)
         run: npm test
         env:
+          CI: true
           CHROME_BIN: ${{ env.CHROME_BIN }}
 
       # ── 9. Upload coverage artifacts ─────────────────────────────────────────
