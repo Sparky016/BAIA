@@ -11,7 +11,7 @@ module.exports = function (config) {
     ],
     client: { jasmine: { random: true }, clearContext: false },
     jasmineHtmlReporter: { suppressAll: true },
-    coverageReporter: { dir: require('path').join(__dirname, './coverage/baia-ui'), subdir: '.', reporters: [{ type: 'html' }, { type: 'text-summary' }] },
+    coverageReporter: { dir: require('path').join(__dirname, './coverage/baia-ui'), subdir: '.', reporters: [{ type: 'html' }, { type: 'text-summary' }, { type: 'json-summary', file: 'coverage-summary.json' }] },
     reporters: ['progress', 'kjhtml'],
     browsers: ['ChromeHeadless'],
     restartOnFileChange: true

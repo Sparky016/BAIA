@@ -8,8 +8,9 @@
 
 | Status | Count |
 |--------|-------|
-| ✅ Complete | 41 |
-| ⏳ Not started | 1 |
+| ✅ Complete | 39 |
+| ❌ Blocked / needs fix | 3 |
+| ⏳ Not started | 0 |
 
 ---
 
@@ -91,7 +92,7 @@
 | 35 | S7-04 Input form | S+ | ✅ Complete |
 | 36 | S7-05 Progress view | S+ | ✅ Complete |
 
-### S8 — Frontend: Review Dashboard & Export UI (3/3 ✅)
+### S8 — Frontend: Review Dashboard & Export UI (2/3 ✅)
 
 | # | Unit | Tier | Status |
 |---|------|------|--------|
@@ -99,13 +100,13 @@
 | 38 | S8-02 Approve workflow | S | ✅ Complete |
 | 39 | S8-03 Confluence export UI | S | ✅ Complete |
 
-### S9 — End-to-End Integration & Demo (2/3 ✅)
+### S9 — End-to-End Integration & Demo (0/3)
 
 | # | Unit | Tier | Status |
 |---|------|------|--------|
-| 40 | S9-01 FE↔BE wiring & contract test | S+ | ✅ Complete |
-| 41 | S9-02 E2E against `MyCMS` fixture | O | ✅ Complete |
-| 42 | S9-03 Full-system Section-Eval | S | ⏳ Not started |
+| 40 | S9-01 FE↔BE wiring & contract test | S+ | ❌ `e2e/` workspace missing |
+| 41 | S9-02 E2E against `MyCMS` fixture | O | ❌ `e2e/` workspace missing |
+| 42 | S9-03 Full-system Section-Eval | S | ❌ Blocked by 40, 41 |
 
 ---
 
@@ -123,7 +124,7 @@ Wave 8:  27, 28, 31
 Wave 9:  40 → 41 → 42
 ```
 
-**Completed waves:** 1, 2, 3, 4, 6, 7, 8 — wave 5 blocked (tasks 10, 17 not started; tasks 18, 38 ✅) — wave 9 partial: task 40 ✅, task 41 ✅, task 42 ⏳.
+**Completed waves:** 1–8 (with exceptions noted below). Wave 9 is blocked.
 
 ---
 
@@ -131,39 +132,76 @@ Wave 9:  40 → 41 → 42
 
 ---
 
-## Next Phase
+## Section-Eval Results (2026-06-19, updated 2026-06-19)
 
-### Current state
+### Gates checked
 
-Waves 1–4, 6, 7, 8 are fully complete. **Wave 5** (6 tasks) was skipped while later waves landed out of order — it is now the only blocker before Wave 9 can start. Wave 9 is the final integration and demo gate.
+| Gate | Result | Detail |
+|------|--------|--------|
+| `npm run build` | ✅ PASS | All three workspaces build cleanly. Zero errors. |
+| `baia-server` tests | ✅ PASS | 802 tests, 33 suites — all green. |
+| `baia-server` coverage | ✅ PASS | 91.9% lines / 89.5% branches — exceeds ≥85%/≥80% gates. |
+| `baia-ui` tests | ✅ PASS | 89 tests — all green (FIX-B + FIX-C added 36 new tests). |
+| `baia-ui` branch coverage | ✅ PASS | 89.47% branches (gate ≥80%). FIX-B + FIX-C raised from 76% to 89.47%. |
+| `npm run lint` | ❌ FAIL | 284+ CRLF errors across `baia-server/src/**/*.ts` and `baia-shared/src/**/*.ts`. Prettier `endOfLine: lf` violated by Windows line endings. |
+| E2E (`npm run test:e2e`) | ❌ FAIL | `e2e/` workspace directory does not exist. |
 
-### Wave 5 — Finish the gaps (parallel, all unblocked)
+---
 
-| Task | Unit | Tier | Effort | Key deliverable |
-|------|------|------|--------|-----------------|
-| 10 | S1-05 OpenAPI contract | S | M | `GET /api-docs` + decorated DTOs; enables FE contract test |
-| 17 | S3-03 NL→action planner | O | L | `ActionPlannerService` — LLM loop with bounded steps/stop conditions |
-| 18 | S3-04 Crawl & capture | S+ | M | Playwright crawl driver; appends screenshots + DOM snapshots to trace |
-| 38 | S8-02 Approve workflow | S | S | Gate export behind explicit approve; re-gate on post-approval edit |
+## Remaining Tasks for Developers
 
-All six can run in parallel. Start with **17** (Opus, longest) and **10** (enables contract test) to front-load the critical path.
+The following items must be resolved before the project can be considered shippable (Wave 9 / S9).
 
-### Wave 9 — End-to-End Integration & Demo (sequential)
+### FIX-A — CRLF line endings (Blocker for CI lint gate)
 
-Begins only after every S1–S8 task is ✅.
+**Priority: High. Affects: `baia-server`, `baia-shared`.**
+
+Every `.ts` file in `baia-server/src/` and `baia-shared/src/` has Windows CRLF line endings, violating the Prettier `endOfLine: lf` rule. The CI lint step will fail on every push until this is fixed.
+
+**Fix:** Run in the repo root:
+```bash
+cd baia-server && npx prettier --write "src/**/*.ts" && cd ../baia-shared && npx prettier --write "src/**/*.ts"
+```
+Or configure `.gitattributes` with `*.ts text eol=lf` and re-checkout files.
+Verify with: `npm run lint`
+
+---
+
+### ~~FIX-B — Frontend branch coverage below gate~~ ✅ RESOLVED (2026-06-19)
+
+Added missing test cases to `review.component.spec.ts` (exportTooltip branches), `gherkin-editor.component.spec.ts` (null editableDoc + out-of-bounds guards), and `export-panel.component.spec.ts` (error fallback message). Branch coverage: 76% → 89.47%.
+
+---
+
+### ~~FIX-C — Input form and Progress view are stub placeholders~~ ✅ RESOLVED (2026-06-19)
+
+Implemented `input.component.ts` (reactive form with URL validation, instructions, repo + credentials fields, Start BAIA button → createRun → navigate to `/progress/:id`) and `progress.component.ts` (EventSource SSE, RunTransitionEvent/ExploreEvent handling, auto-navigate to `/review/:id` on Review status). Both have full Karma/Jasmine spec files (11 + 12 tests respectively). All 89 baia-ui tests green; branch coverage 89.47%.
+
+---
+
+### FIX-D — `e2e/` workspace missing (S9 entirely blocked)
+
+**Priority: High. Affects: DEV_TASK_40, DEV_TASK_41, DEV_TASK_42.**
+
+The `e2e/` directory is declared as a workspace in `package.json` and referenced in both the CI workflow and the root `verify` script, but the directory was never created. `npm run test:e2e` will fail with a workspace resolution error.
+
+**Fix:** Create the `e2e/` workspace with:
+- `package.json` declaring `@playwright/test` and a `test` script (`playwright test`)
+- `playwright.config.ts` — base URL pointing at the local `baia-server` + `baia-ui` dev servers; uses `e2e-server.ts` for the backend fixture
+- `tests/baia.spec.ts` — end-to-end scenario: Input form → Start run → Progress SSE → Review page → Approve → Export to mock Confluence
+- CI will install browsers via `npm run install:browsers --workspace=e2e` before running
+
+The backend E2E fixture (`baia-server/src/e2e/`) already exists (mock orchestrators, `e2e-server.ts`). The Playwright tests in `e2e/tests/` should target the real HTTP endpoints served by `e2e-server.ts`.
+
+---
+
+### Sequencing
 
 ```
-40 (FE↔BE wiring) → 41 (E2E MyCMS) → 42 (Full-system eval)
+FIX-A (lint)  ─── can run immediately, independent
+FIX-B         ─── ✅ Done
+FIX-C         ─── ✅ Done
+FIX-D (e2e)   ─── start now (FIX-B/-C are green); DEV_TASK_40→41→42 in order
 ```
 
-| Task | Unit | Tier | Effort | Key deliverable |
-|------|------|------|--------|-----------------|
-| 40 | S9-01 FE↔BE wiring & contract test | S+ | M | Proxy config + contract test validating client shapes against OpenAPI spec |
-| 41 | S9-02 E2E against `MyCMS` fixture | O | L | Playwright E2E: Input → Progress → Review → Export to mock Confluence |
-| 42 | S9-03 Full-system Section-Eval | S | M | Root `verify` script; aggregate ≥85 % coverage; E2E added to CI |
-
-### Suggested execution order
-
-1. **Parallelise Wave 5** — assign tasks 10, 17, 18, 38 concurrently (task 17 is largest; start it first).
-2. **Once all Wave 5 tasks are green**, open Wave 9: run task 40, then 41, then 42 strictly in order.
-3. **Task 42 is the final gate** — all lint/build/test/coverage/E2E thresholds must pass before the project is considered shippable.
+Once FIX-A and FIX-D are green, run `npm run verify` to confirm the full pipeline (lint + build + test + coverage:aggregate + test:e2e) passes end-to-end.

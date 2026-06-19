@@ -87,3 +87,49 @@ jobs:
           name: baia-ui-coverage
           path: baia-ui/coverage/
           retention-days: 14
+
+      # ── 10. Aggregate coverage ───────────────────────────────────────────────
+      - name: Aggregate coverage report
+        run: npm run coverage:aggregate
+
+  # ════════════════════════════════════════════════════════════════════════════
+  # E2E job — runs only after all unit tests pass
+  # ════════════════════════════════════════════════════════════════════════════
+  e2e:
+    name: E2E (Playwright)
+    runs-on: ubuntu-latest
+    needs: ci
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js (LTS)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Build all workspaces so baia-server/dist/e2e-server.js exists
+      - name: Build
+        run: npm run build
+
+      # Install only the Chromium browser used by E2E tests
+      - name: Install Playwright browsers
+        run: npm run install:browsers --workspace=e2e
+
+      - name: Run E2E tests
+        run: npm run test:e2e
+        env:
+          CI: 'true'
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: e2e/playwright-report/
+          retention-days: 14

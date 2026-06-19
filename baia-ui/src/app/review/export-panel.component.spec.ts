@@ -145,4 +145,22 @@ describe('ExportPanelComponent', () => {
 
     expect(component.canExport).toBeFalse();
   });
+
+  it('failure path: error without message falls back to "Export failed"', () => {
+    store.setStatus(RunStatus.Review);
+    store.approve();
+    createComponent();
+
+    component.baseUrl = 'https://mycompany.atlassian.net';
+    component.spaceKey = 'ENG';
+    component.credentialsRef = 'cred-ref';
+    runsApiSpy['export'].and.returnValue(throwError(() => ({ message: undefined })));
+
+    component.export();
+    fixture.detectChanges();
+
+    expect(component.exportError).toBe('Export failed');
+    expect(component.exportUrl).toBeNull();
+    expect(component.isExporting).toBeFalse();
+  });
 });

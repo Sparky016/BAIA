@@ -1,0 +1,29 @@
+<div class="progress-page">
+  <h1>BAIA Analysis in Progress</h1>
+
+  <div class="run-info">
+    <span class="run-id-label">Run:</span>
+    <code data-testid="run-id">{{ runId }}</code>
+  </div>
+
+  <div class="run-status" data-testid="run-status">
+    <span class="status-label">Status:</span>
+    <span class="status-value" [attr.data-status]="store.status()">{{ store.status() }}</span>
+  </div>
+
+  <div class="events-log" data-testid="events-log" *ngIf="store.events().length > 0">
+    <div
+      *ngFor="let event of store.events()"
+      class="event"
+      [attr.data-event-type]="event.type"
+    >
+      <span class="event-time">{{ event.timestamp | date: 'HH:mm:ss' }}</span>
+      <span class="event-type badge badge-{{ event.type }}">{{ event.type }}</span>
+      <span class="event-message">{{ event.message }}</span>
+    </div>
+  </div>
+
+  <p class="no-events" *ngIf="store.events().length === 0" data-testid="no-events">
+    Waiting for events&hellip;
+  </p>
+</div>

@@ -1,0 +1,82 @@
+<div class="input-page">
+  <h1>Start BAIA Analysis</h1>
+
+  <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <div class="form-group">
+      <label for="targetUrl">Target URL</label>
+      <input
+        id="targetUrl"
+        type="url"
+        formControlName="targetUrl"
+        placeholder="https://example.com"
+        data-testid="target-url"
+      />
+      <span
+        class="field-error"
+        *ngIf="form.get('targetUrl')?.invalid && form.get('targetUrl')?.touched"
+        data-testid="url-error"
+      >
+        Enter a valid URL starting with http:// or https://
+      </span>
+    </div>
+
+    <div class="form-group">
+      <label for="instructions">Instructions</label>
+      <textarea
+        id="instructions"
+        formControlName="instructions"
+        rows="6"
+        placeholder="Describe what BAIA should explore and document..."
+        data-testid="instructions"
+      ></textarea>
+      <span
+        class="field-error"
+        *ngIf="form.get('instructions')?.invalid && form.get('instructions')?.touched"
+        data-testid="instructions-error"
+      >
+        Instructions are required
+      </span>
+    </div>
+
+    <div class="form-group">
+      <label for="repoUrl">Repository URL</label>
+      <input
+        id="repoUrl"
+        type="url"
+        formControlName="repoUrl"
+        placeholder="https://github.com/org/repo"
+        data-testid="repo-url"
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="repoProvider">Repository Provider</label>
+      <select id="repoProvider" formControlName="repoProvider" data-testid="repo-provider">
+        <option value="github">GitHub</option>
+        <option value="azure">Azure Repos</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="credentialsRef">Credentials Reference</label>
+      <input
+        id="credentialsRef"
+        type="text"
+        formControlName="credentialsRef"
+        placeholder="e.g. my-pat-secret"
+        data-testid="credentials-ref"
+      />
+    </div>
+
+    <p class="submit-error" *ngIf="submitError" data-testid="submit-error">{{ submitError }}</p>
+
+    <button
+      type="submit"
+      class="btn-start"
+      [disabled]="form.invalid || isSubmitting"
+      data-testid="start-btn"
+    >
+      {{ isSubmitting ? 'Starting…' : 'Start BAIA' }}
+    </button>
+  </form>
+</div>

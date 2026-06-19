@@ -13,7 +13,9 @@
     "build": "npm run build --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
-    "test:e2e": "npm run test --workspace=e2e"
+    "test:e2e": "npm run test --workspace=e2e",
+    "coverage:aggregate": "node scripts/aggregate-coverage.mjs",
+    "verify": "npm run lint && npm run build && npm run test && npm run coverage:aggregate && npm run test:e2e"
   },
   "devDependencies": {
     "@angular-eslint/eslint-plugin": "^22.0.0",

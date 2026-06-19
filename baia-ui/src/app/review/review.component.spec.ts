@@ -130,4 +130,27 @@ describe('ReviewComponent', () => {
     const approveBtn: HTMLButtonElement = fixture.nativeElement.querySelector('.btn-approve');
     expect(approveBtn.textContent?.trim()).toBe('Approved');
   });
+
+  it('exportTooltip returns prompt text when not approved', () => {
+    store.setStatus(RunStatus.Review);
+    fixture = TestBed.createComponent(ReviewComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    expect(component.isApproved).toBeFalse();
+    expect(component.exportTooltip).toBe('Review and approve the Gherkin before exporting');
+  });
+
+  it('exportTooltip returns ready text when approved', () => {
+    store.setStatus(RunStatus.Review);
+    fixture = TestBed.createComponent(ReviewComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    component.approve();
+    fixture.detectChanges();
+
+    expect(component.isApproved).toBeTrue();
+    expect(component.exportTooltip).toBe('Ready to export');
+  });
 });

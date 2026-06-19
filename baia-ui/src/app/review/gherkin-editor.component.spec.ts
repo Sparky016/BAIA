@@ -134,4 +134,76 @@ describe('GherkinEditorComponent', () => {
     const el: HTMLElement = fixture.nativeElement;
     expect(el.textContent).toContain('No Gherkin document available.');
   });
+
+  it('updateStepText is a no-op when editableDoc is null', () => {
+    fixture = TestBed.createComponent(GherkinEditorComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    spyOn(store, 'updateGherkinDoc');
+    component.updateStepText(0, 0, 0, 'text');
+    expect(store.updateGherkinDoc).not.toHaveBeenCalled();
+  });
+
+  it('updateFeatureName is a no-op when editableDoc is null', () => {
+    fixture = TestBed.createComponent(GherkinEditorComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    spyOn(store, 'updateGherkinDoc');
+    component.updateFeatureName(0, 'name');
+    expect(store.updateGherkinDoc).not.toHaveBeenCalled();
+  });
+
+  it('updateScenarioName is a no-op when editableDoc is null', () => {
+    fixture = TestBed.createComponent(GherkinEditorComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    spyOn(store, 'updateGherkinDoc');
+    component.updateScenarioName(0, 0, 'name');
+    expect(store.updateGherkinDoc).not.toHaveBeenCalled();
+  });
+
+  it('updateStepText is a no-op when step index is out of bounds', () => {
+    const doc = makeDoc();
+    store.setGherkinDoc(doc);
+    store.setStatus(RunStatus.Review);
+
+    fixture = TestBed.createComponent(GherkinEditorComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    spyOn(store, 'updateGherkinDoc');
+    component.updateStepText(0, 0, 99, 'text');
+    expect(store.updateGherkinDoc).not.toHaveBeenCalled();
+  });
+
+  it('updateFeatureName is a no-op when feature index is out of bounds', () => {
+    const doc = makeDoc();
+    store.setGherkinDoc(doc);
+    store.setStatus(RunStatus.Review);
+
+    fixture = TestBed.createComponent(GherkinEditorComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    spyOn(store, 'updateGherkinDoc');
+    component.updateFeatureName(99, 'name');
+    expect(store.updateGherkinDoc).not.toHaveBeenCalled();
+  });
+
+  it('updateScenarioName is a no-op when scenario index is out of bounds', () => {
+    const doc = makeDoc();
+    store.setGherkinDoc(doc);
+    store.setStatus(RunStatus.Review);
+
+    fixture = TestBed.createComponent(GherkinEditorComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    spyOn(store, 'updateGherkinDoc');
+    component.updateScenarioName(0, 99, 'name');
+    expect(store.updateGherkinDoc).not.toHaveBeenCalled();
+  });
 });
