@@ -26,6 +26,9 @@ playwright/.cache/
 MyCMS/bin/
 MyCMS/obj/
 
+# Angular
+.angular/
+
 # IDE
 .vscode/
 .idea/

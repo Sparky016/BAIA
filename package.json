@@ -6,12 +6,14 @@
   "workspaces": [
     "baia-ui",
     "baia-server",
-    "baia-shared"
+    "baia-shared",
+    "e2e"
   ],
   "scripts": {
     "build": "npm run build --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
-    "test": "npm run test --workspaces --if-present"
+    "test": "npm run test --workspaces --if-present",
+    "test:e2e": "npm run test --workspace=e2e"
   },
   "devDependencies": {
     "@angular-eslint/eslint-plugin": "^22.0.0",

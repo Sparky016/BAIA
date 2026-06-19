@@ -4,8 +4,10 @@ import { Observable } from 'rxjs';
 import { RunSummary, RunRequest } from '@baia/shared';
 
 export interface ExportRequest {
+  baseUrl: string;
   spaceKey: string;
-  title: string;
+  credentialsRef: string;
+  parentPageId?: string;
 }
 
 export interface ExportResult {

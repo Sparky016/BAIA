@@ -74,7 +74,7 @@ describe('RunsApiService', () => {
   describe('export', () => {
     it('POSTs to /api/runs/:id/export and returns ExportResult on success', () => {
       const runId = 'run-xyz';
-      const exportRequest = { spaceKey: 'ENG', title: 'My Page' };
+      const exportRequest = { baseUrl: 'https://mycompany.atlassian.net', spaceKey: 'ENG', credentialsRef: 'cred-ref' };
       const mockResponse = { url: 'https://confluence.example.com/ENG/My+Page' };
 
       let result: unknown;
@@ -90,7 +90,7 @@ describe('RunsApiService', () => {
 
     it('propagates HTTP errors on export failure', () => {
       const runId = 'run-err';
-      const exportRequest = { spaceKey: 'ENG', title: 'My Page' };
+      const exportRequest = { baseUrl: 'https://mycompany.atlassian.net', spaceKey: 'ENG', credentialsRef: 'cred-ref' };
 
       let error: unknown;
       service.export(runId, exportRequest).subscribe({

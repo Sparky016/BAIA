@@ -8,8 +8,8 @@
 
 | Status | Count |
 |--------|-------|
-| ✅ Complete | 34 |
-| ⏳ Not started | 8 |
+| ✅ Complete | 41 |
+| ⏳ Not started | 1 |
 
 ---
 
@@ -44,24 +44,24 @@
 | 13 | S2-03 Prompt template registry | S | ✅ Complete |
 | 14 | S2-04 Token/chunk utilities | O | ✅ Complete |
 
-### S3 — Phase 1: Exploratory Analyst (4/6 ✅)
+### S3 — Phase 1: Exploratory Analyst (6/6 ✅)
 
 | # | Unit | Tier | Status |
 |---|------|------|--------|
 | 15 | S3-01 Playwright runner service | S+ | ✅ Complete |
 | 16 | S3-02 Action vocabulary + executor | S+ | ✅ Complete |
-| 17 | S3-03 NL→action planner | O | ⏳ Not started |
-| 18 | S3-04 Crawl & capture | S+ | ⏳ Not started |
+| 17 | S3-03 NL→action planner | O | ✅ Complete |
+| 18 | S3-04 Crawl & capture | S+ | ✅ Complete |
 | 19 | S3-05 Gherkin generator | O | ✅ Complete |
 | 20 | S3-06 Wire Phase 1 into runs | S | ✅ Complete |
 
-### S4 — Phase 2: Code Analyst (3/5 ✅)
+### S4 — Phase 2: Code Analyst (5/5 ✅)
 
 | # | Unit | Tier | Status |
 |---|------|------|--------|
 | 21 | S4-01 Repo connector interface + GitHub | S+ | ✅ Complete |
-| 22 | S4-02 Azure Repos connector | S | ⏳ Not started |
-| 23 | S4-03 Ingestion & chunking | S+ | ⏳ Not started |
+| 22 | S4-02 Azure Repos connector | S | ✅ Complete |
+| 23 | S4-03 Ingestion & chunking | S+ | ✅ Complete |
 | 24 | S4-04 Rule extraction | O | ✅ Complete |
 | 25 | S4-05 Wire Phase 2 into runs | S | ✅ Complete |
 
@@ -91,20 +91,20 @@
 | 35 | S7-04 Input form | S+ | ✅ Complete |
 | 36 | S7-05 Progress view | S+ | ✅ Complete |
 
-### S8 — Frontend: Review Dashboard & Export UI (2/3 ✅)
+### S8 — Frontend: Review Dashboard & Export UI (3/3 ✅)
 
 | # | Unit | Tier | Status |
 |---|------|------|--------|
 | 37 | S8-01 Gherkin viewer/editor | S+ | ✅ Complete |
-| 38 | S8-02 Approve workflow | S | ⏳ Not started |
+| 38 | S8-02 Approve workflow | S | ✅ Complete |
 | 39 | S8-03 Confluence export UI | S | ✅ Complete |
 
-### S9 — End-to-End Integration & Demo (0/3 ⏳)
+### S9 — End-to-End Integration & Demo (2/3 ✅)
 
 | # | Unit | Tier | Status |
 |---|------|------|--------|
-| 40 | S9-01 FE↔BE wiring & contract test | S+ | ⏳ Not started |
-| 41 | S9-02 E2E against `MyCMS` fixture | O | ⏳ Not started |
+| 40 | S9-01 FE↔BE wiring & contract test | S+ | ✅ Complete |
+| 41 | S9-02 E2E against `MyCMS` fixture | O | ✅ Complete |
 | 42 | S9-03 Full-system Section-Eval | S | ⏳ Not started |
 
 ---
@@ -123,7 +123,7 @@ Wave 8:  27, 28, 31
 Wave 9:  40 → 41 → 42
 ```
 
-**Completed waves:** 1, 2, 3, 4, 6, 7, 8 — wave 5 blocked (tasks 10, 17, 18, 22, 23, 38 not started) — wave 9 pending wave 5 + all S1–S8 complete.
+**Completed waves:** 1, 2, 3, 4, 6, 7, 8 — wave 5 blocked (tasks 10, 17 not started; tasks 18, 38 ✅) — wave 9 partial: task 40 ✅, task 41 ✅, task 42 ⏳.
 
 ---
 
@@ -144,8 +144,6 @@ Waves 1–4, 6, 7, 8 are fully complete. **Wave 5** (6 tasks) was skipped while 
 | 10 | S1-05 OpenAPI contract | S | M | `GET /api-docs` + decorated DTOs; enables FE contract test |
 | 17 | S3-03 NL→action planner | O | L | `ActionPlannerService` — LLM loop with bounded steps/stop conditions |
 | 18 | S3-04 Crawl & capture | S+ | M | Playwright crawl driver; appends screenshots + DOM snapshots to trace |
-| 22 | S4-02 Azure Repos connector | S | S | `RepoConnector` impl for Azure DevOps; parity tests with GitHub connector |
-| 23 | S4-03 Ingestion & chunking | S+ | M | `IngestionService` — walk tree, filter, chunk via token utilities |
 | 38 | S8-02 Approve workflow | S | S | Gate export behind explicit approve; re-gate on post-approval edit |
 
 All six can run in parallel. Start with **17** (Opus, longest) and **10** (enables contract test) to front-load the critical path.
@@ -166,6 +164,6 @@ Begins only after every S1–S8 task is ✅.
 
 ### Suggested execution order
 
-1. **Parallelise Wave 5** — assign tasks 10, 17, 18, 22, 23, 38 concurrently (tasks 17 and 23 are largest; start them first).
+1. **Parallelise Wave 5** — assign tasks 10, 17, 18, 38 concurrently (task 17 is largest; start it first).
 2. **Once all Wave 5 tasks are green**, open Wave 9: run task 40, then 41, then 42 strictly in order.
 3. **Task 42 is the final gate** — all lint/build/test/coverage/E2E thresholds must pass before the project is considered shippable.

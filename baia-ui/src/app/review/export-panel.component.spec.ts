@@ -51,8 +51,9 @@ describe('ExportPanelComponent', () => {
     createComponent();
 
     store.approve();
+    component.baseUrl = 'https://mycompany.atlassian.net';
     component.spaceKey = 'ENG';
-    component.title = 'My Page';
+    component.credentialsRef = 'cred-ref';
     fixture.detectChanges();
 
     expect(component.canExport).toBeTrue();
@@ -66,8 +67,9 @@ describe('ExportPanelComponent', () => {
     store.approve();
     createComponent();
 
+    component.baseUrl = 'https://mycompany.atlassian.net';
     component.spaceKey = 'ENG';
-    component.title = 'My Page';
+    component.credentialsRef = 'cred-ref';
     const confluenceUrl = 'https://confluence.example.com/ENG/My+Page';
     runsApiSpy['export'].and.returnValue(of({ url: confluenceUrl }));
 
@@ -89,8 +91,9 @@ describe('ExportPanelComponent', () => {
     store.approve();
     createComponent();
 
+    component.baseUrl = 'https://mycompany.atlassian.net';
     component.spaceKey = 'ENG';
-    component.title = 'My Page';
+    component.credentialsRef = 'cred-ref';
     runsApiSpy['export'].and.returnValue(throwError(() => new Error('Network error')));
 
     component.export();
@@ -104,25 +107,40 @@ describe('ExportPanelComponent', () => {
     expect(errorEl.textContent?.trim()).toBe('Network error');
   });
 
-  it('disabled when spaceKey empty: approved but spaceKey="" → canExport false', () => {
+  it('disabled when baseUrl empty: approved but baseUrl="" → canExport false', () => {
     store.setStatus(RunStatus.Review);
     store.approve();
     createComponent();
 
-    component.spaceKey = '';
-    component.title = 'My Page';
+    component.baseUrl = '';
+    component.spaceKey = 'ENG';
+    component.credentialsRef = 'cred-ref';
     fixture.detectChanges();
 
     expect(component.canExport).toBeFalse();
   });
 
-  it('disabled when title empty: approved but title="" → canExport false', () => {
+  it('disabled when spaceKey empty: approved but spaceKey="" → canExport false', () => {
     store.setStatus(RunStatus.Review);
     store.approve();
     createComponent();
 
+    component.baseUrl = 'https://mycompany.atlassian.net';
+    component.spaceKey = '';
+    component.credentialsRef = 'cred-ref';
+    fixture.detectChanges();
+
+    expect(component.canExport).toBeFalse();
+  });
+
+  it('disabled when credentialsRef empty: approved but credentialsRef="" → canExport false', () => {
+    store.setStatus(RunStatus.Review);
+    store.approve();
+    createComponent();
+
+    component.baseUrl = 'https://mycompany.atlassian.net';
     component.spaceKey = 'ENG';
-    component.title = '';
+    component.credentialsRef = '';
     fixture.detectChanges();
 
     expect(component.canExport).toBeFalse();

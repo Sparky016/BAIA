@@ -14,7 +14,7 @@ const RUN_REQUEST_SCHEMA = {
     repoProvider: { type: 'string', enum: ['github', 'azure'], example: 'github' },
     credentialsRef: { type: 'string', example: 'my-creds' },
   },
-} as const;
+};
 
 const RUN_SUMMARY_SCHEMA = {
   type: 'object',
@@ -31,7 +31,7 @@ const RUN_SUMMARY_SCHEMA = {
     updatedAt: { type: 'string', format: 'date-time' },
     completedAt: { type: 'string', format: 'date-time' },
   },
-} as const;
+};
 
 @ApiTags('runs')
 @Controller('runs')
