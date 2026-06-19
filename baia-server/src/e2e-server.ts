@@ -10,6 +10,8 @@ async function bootstrap(): Promise<void> {
   app.enableCors({ origin: '*' });
   app.setGlobalPrefix('api');
 
+  app.enableShutdownHooks();
+
   const port = parseInt(process.env['PORT'] ?? '3001', 10);
   await app.listen(port);
   // Signal to the parent process / webServer wait logic that the server is up.

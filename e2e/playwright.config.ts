@@ -22,6 +22,7 @@ export default defineConfig({
       cwd: ROOT,
       reuseExistingServer: !process.env['CI'],
       stdout: 'pipe',
+      stderr: 'pipe',
     },
     {
       command: 'node e2e/helpers/mock-confluence-server.mjs',
@@ -29,6 +30,7 @@ export default defineConfig({
       cwd: ROOT,
       reuseExistingServer: !process.env['CI'],
       stdout: 'pipe',
+      stderr: 'pipe',
     },
     {
       command: `node ${path.join(BAIA_SERVER_DIST, 'e2e-server.js')}`,
@@ -36,6 +38,7 @@ export default defineConfig({
       cwd: ROOT,
       reuseExistingServer: !process.env['CI'],
       stdout: 'pipe',
+      stderr: 'pipe',
       env: {
         PORT: '3001',
         CREDENTIAL_ENCRYPTION_KEY,
