@@ -58,7 +58,8 @@
             "styles": ["src/styles.css"],
             "scripts": [],
             "codeCoverage": true,
-            "codeCoverageExclude": []
+            "codeCoverageExclude": [],
+            "browsers": ["ChromeHeadlessCI"]
           }
         }
       }
