@@ -147,9 +147,7 @@ describe('ExploreOrchestrator', () => {
 
       const trace = makeTrace(runId);
       crawler.createTrace.mockReturnValue(trace);
-      crawler.captureStep.mockImplementation(async (_rid, _page, stepIndex) =>
-        makeStep(stepIndex)
-      );
+      crawler.captureStep.mockImplementation(async (_rid, _page, stepIndex) => makeStep(stepIndex));
 
       executor.execute.mockImplementation(async (_page, action) => {
         if (action.type === 'navigate') return makeNavResult();

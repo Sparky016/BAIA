@@ -67,7 +67,7 @@ export class MockExploreOrchestrator {
 
   constructor(
     private readonly runsService: RunsService,
-    private readonly runsEvents: RunsEventsService,
+    private readonly runsEvents: RunsEventsService
   ) {}
 
   async executePhase1(runId: string, _targetUrl: string, _instructions: string): Promise<void> {

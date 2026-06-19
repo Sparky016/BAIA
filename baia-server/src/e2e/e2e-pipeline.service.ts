@@ -14,7 +14,7 @@ export class E2ePipelineService {
   constructor(
     private readonly exploreOrchestrator: ExploreOrchestrator,
     private readonly analyzeOrchestrator: AnalyzeOrchestrator,
-    private readonly reconcileOrchestrator: ReconcileOrchestrator,
+    private readonly reconcileOrchestrator: ReconcileOrchestrator
   ) {}
 
   async runFullPipeline(
@@ -23,7 +23,7 @@ export class E2ePipelineService {
     instructions: string,
     repoUrl: string,
     repoProvider: 'github' | 'azure',
-    credentialsRef: string,
+    credentialsRef: string
   ): Promise<void> {
     await this.exploreOrchestrator.executePhase1(runId, targetUrl, instructions);
     await this.analyzeOrchestrator.executePhase2(runId, repoUrl, repoProvider, credentialsRef);

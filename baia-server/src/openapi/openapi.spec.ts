@@ -83,12 +83,24 @@ describe('OpenAPI contract', () => {
 
   it('POST /runs request body schema includes required RunRequest fields', () => {
     const postRuns = document.paths['/runs']['post'] as {
-      requestBody: { content: { 'application/json': { schema: { required: string[]; properties: Record<string, unknown> } } } };
+      requestBody: {
+        content: {
+          'application/json': {
+            schema: { required: string[]; properties: Record<string, unknown> };
+          };
+        };
+      };
     };
     const schema = postRuns.requestBody?.content?.['application/json']?.schema;
     expect(schema).toBeDefined();
     expect(schema.required).toEqual(
-      expect.arrayContaining(['targetUrl', 'instructions', 'repoUrl', 'repoProvider', 'credentialsRef']),
+      expect.arrayContaining([
+        'targetUrl',
+        'instructions',
+        'repoUrl',
+        'repoProvider',
+        'credentialsRef',
+      ])
     );
     expect(schema.properties['targetUrl']).toBeDefined();
     expect(schema.properties['repoProvider']).toBeDefined();
@@ -96,7 +108,10 @@ describe('OpenAPI contract', () => {
 
   it('POST /runs 201 response schema includes RunSummary fields', () => {
     const postRuns = document.paths['/runs']['post'] as {
-      responses: Record<string, { content?: { 'application/json': { schema: { properties: Record<string, unknown> } } } }>;
+      responses: Record<
+        string,
+        { content?: { 'application/json': { schema: { properties: Record<string, unknown> } } } }
+      >;
     };
     const schema = postRuns.responses['201']?.content?.['application/json']?.schema;
     expect(schema).toBeDefined();

@@ -1,5 +1,11 @@
+import {
+  BusinessRule,
+  GherkinDoc,
+  GherkinFeature,
+  GherkinScenario,
+  GherkinStep,
+} from '@baia/shared';
 import { Inject, Injectable } from '@nestjs/common';
-import { BusinessRule, GherkinDoc, GherkinFeature, GherkinScenario, GherkinStep } from '@baia/shared';
 
 import { LLM_SERVICE } from '../llm/llm.constants';
 import { LlmError, LlmService } from '../llm/llm.service';
@@ -21,7 +27,7 @@ const VALID_KEYWORDS = new Set<string>(['Given', 'When', 'Then', 'And', 'But']);
 export class ReconciliationError extends Error {
   constructor(
     message: string,
-    public readonly cause?: unknown,
+    public readonly cause?: unknown
   ) {
     super(message);
     this.name = 'ReconciliationError';
@@ -41,7 +47,7 @@ function mapEnrichedScenario(scenario: EnrichedScenario): GherkinScenario {
         keyword: toKeyword(step.keyword),
         text: step.text,
         provenance: step.supportedBy && step.supportedBy.length > 0 ? 'merged' : 'ui',
-      }),
+      })
     ),
   };
   if (scenario.status === 'conflict') {
@@ -95,8 +101,8 @@ export class ReconciliationService {
         (s): ObservedScenario => ({
           title: s.name,
           steps: s.steps.map((step) => ({ keyword: step.keyword, text: step.text })),
-        }),
-      ),
+        })
+      )
     );
 
     const codeRules: CodeRule[] = rules.map(
@@ -105,7 +111,7 @@ export class ReconciliationService {
         statement: r.description,
         severity: 'medium',
         category: r.category,
-      }),
+      })
     );
 
     const input: ReconciliationInput = { featureName, observedScenarios, codeRules };
@@ -116,7 +122,7 @@ export class ReconciliationService {
       try {
         const output = await this.llm.completeJson<ReconciliationOutput>(
           prompt,
-          RECONCILIATION_OUTPUT_SCHEMA,
+          RECONCILIATION_OUTPUT_SCHEMA
         );
         return this.buildDoc(output, featureName);
       } catch (err) {
@@ -125,7 +131,7 @@ export class ReconciliationService {
         if (!isRetryable) {
           throw new ReconciliationError(
             `Reconciliation failed: ${err instanceof Error ? err.message : String(err)}`,
-            err,
+            err
           );
         }
       }
@@ -135,7 +141,7 @@ export class ReconciliationService {
       `Reconciliation failed after ${MAX_RETRIES} attempts: ${
         lastError instanceof Error ? lastError.message : String(lastError)
       }`,
-      lastError,
+      lastError
     );
   }
 

@@ -24,7 +24,7 @@ export class ReconcileOrchestrator {
   constructor(
     private readonly runsService: RunsService,
     private readonly runsEvents: RunsEventsService,
-    private readonly reconciliationService: ReconciliationService,
+    private readonly reconciliationService: ReconciliationService
   ) {}
 
   /**
@@ -54,10 +54,15 @@ export class ReconcileOrchestrator {
         throw new Error('No Gherkin document found on run — Phase 1 must complete first');
       }
 
-      this.emitEvent(runId, 'observation', `Reconciling ${gherkinDoc.features.length} feature(s) against ${rules.length} rule(s)`, {
-        featureCount: gherkinDoc.features.length,
-        ruleCount: rules.length,
-      });
+      this.emitEvent(
+        runId,
+        'observation',
+        `Reconciling ${gherkinDoc.features.length} feature(s) against ${rules.length} rule(s)`,
+        {
+          featureCount: gherkinDoc.features.length,
+          ruleCount: rules.length,
+        }
+      );
 
       const reconciledDoc = await this.reconciliationService.reconcile(gherkinDoc, rules);
       const unifiedDoc = UnifiedDocMapper.fromGherkinDoc(reconciledDoc);
@@ -66,11 +71,16 @@ export class ReconcileOrchestrator {
       this.runsService.storeUnifiedDoc(runId, unifiedDoc);
 
       const scenarioCount = unifiedDoc.features.reduce((n, f) => n + f.scenarios.length, 0);
-      this.emitEvent(runId, 'complete', 'Reconciliation complete — unified document ready for review', {
-        featureCount: unifiedDoc.features.length,
-        scenarioCount,
-        conflictCount: unifiedDoc.conflicts.length,
-      });
+      this.emitEvent(
+        runId,
+        'complete',
+        'Reconciliation complete — unified document ready for review',
+        {
+          featureCount: unifiedDoc.features.length,
+          scenarioCount,
+          conflictCount: unifiedDoc.conflicts.length,
+        }
+      );
 
       this.runsService.transitionRun(runId, RunStatus.Review);
       this.runsEvents.emit(runId, {
@@ -100,7 +110,7 @@ export class ReconcileOrchestrator {
     runId: string,
     type: ExploreEvent['type'],
     message: string,
-    details?: Record<string, unknown>,
+    details?: Record<string, unknown>
   ): void {
     const event: ExploreEvent = {
       timestamp: new Date(),

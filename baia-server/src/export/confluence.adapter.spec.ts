@@ -2,11 +2,7 @@ import { Logger } from '@nestjs/common';
 import { GherkinDoc } from '@baia/shared';
 
 import { CredentialStoreService } from '../security/credential-store.service';
-import {
-  ConfluenceAdapter,
-  ConfluenceAdapterError,
-  ConfluenceConfig,
-} from './confluence.adapter';
+import { ConfluenceAdapter, ConfluenceAdapterError, ConfluenceConfig } from './confluence.adapter';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -104,25 +100,25 @@ describe('ConfluenceAdapter', () => {
     it('throws INVALID_CONFIG when baseUrl is missing', async () => {
       const { adapter } = makeAdapter();
       await expect(
-        adapter.publishPage({ ...BASE_CONFIG, baseUrl: '' }, SAMPLE_DOC),
+        adapter.publishPage({ ...BASE_CONFIG, baseUrl: '' }, SAMPLE_DOC)
       ).rejects.toThrow(ConfluenceAdapterError);
 
       await expect(
-        adapter.publishPage({ ...BASE_CONFIG, baseUrl: '' }, SAMPLE_DOC),
+        adapter.publishPage({ ...BASE_CONFIG, baseUrl: '' }, SAMPLE_DOC)
       ).rejects.toMatchObject({ code: 'INVALID_CONFIG' });
     });
 
     it('throws INVALID_CONFIG when spaceKey is missing', async () => {
       const { adapter } = makeAdapter();
       await expect(
-        adapter.publishPage({ ...BASE_CONFIG, spaceKey: '' }, SAMPLE_DOC),
+        adapter.publishPage({ ...BASE_CONFIG, spaceKey: '' }, SAMPLE_DOC)
       ).rejects.toMatchObject({ code: 'INVALID_CONFIG' });
     });
 
     it('throws INVALID_CONFIG when credentialsRef is missing', async () => {
       const { adapter } = makeAdapter();
       await expect(
-        adapter.publishPage({ ...BASE_CONFIG, credentialsRef: '' }, SAMPLE_DOC),
+        adapter.publishPage({ ...BASE_CONFIG, credentialsRef: '' }, SAMPLE_DOC)
       ).rejects.toMatchObject({ code: 'INVALID_CONFIG' });
     });
   });
@@ -273,7 +269,7 @@ describe('ConfluenceAdapter', () => {
           code: 'AUTH_FAILED',
           statusCode: status,
         });
-      },
+      }
     );
   });
 
@@ -290,7 +286,7 @@ describe('ConfluenceAdapter', () => {
           code: 'AUTH_FAILED',
           statusCode: status,
         });
-      },
+      }
     );
   });
 
@@ -307,7 +303,7 @@ describe('ConfluenceAdapter', () => {
           code: 'AUTH_FAILED',
           statusCode: status,
         });
-      },
+      }
     );
   });
 

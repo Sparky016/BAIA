@@ -1,15 +1,7 @@
-import {
-  Body,
-  Controller,
-  HttpCode,
-  HttpStatus,
-  Logger,
-  Param,
-  Post,
-} from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Logger, Param, Post } from '@nestjs/common';
 
-import { CredentialStoreService } from '../security/credential-store.service';
 import { RunsService } from '../runs/runs.service';
+import { CredentialStoreService } from '../security/credential-store.service';
 
 import { E2ePipelineService } from './e2e-pipeline.service';
 
@@ -41,15 +33,12 @@ export class E2eStartController {
   constructor(
     private readonly runsService: RunsService,
     private readonly credentialStore: CredentialStoreService,
-    private readonly pipelineService: E2ePipelineService,
+    private readonly pipelineService: E2ePipelineService
   ) {}
 
   @Post(':id/start')
   @HttpCode(HttpStatus.ACCEPTED)
-  startPipeline(
-    @Param('id') id: string,
-    @Body() body: StartPipelineBody,
-  ): StartPipelineResult {
+  startPipeline(@Param('id') id: string, @Body() body: StartPipelineBody): StartPipelineResult {
     const run = this.runsService.getRun(id);
 
     this.credentialStore.store(body.credentialsRef, 'mock-access-token');
@@ -57,7 +46,7 @@ export class E2eStartController {
       // Confluence basic auth format: "email:apiToken"
       this.credentialStore.store(
         body.confluenceCredentialsRef,
-        'test@example.com:mock-confluence-token',
+        'test@example.com:mock-confluence-token'
       );
     }
 
@@ -71,7 +60,7 @@ export class E2eStartController {
         body.instructions,
         body.repoUrl,
         body.repoProvider,
-        body.credentialsRef,
+        body.credentialsRef
       )
       .catch((err: unknown) => {
         const msg = err instanceof Error ? err.message : String(err);

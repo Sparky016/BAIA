@@ -35,7 +35,11 @@ const DOC_WITH_CONFLICT: GherkinDoc = {
           name: 'Short password rejected',
           conflictNote: 'UI allows 6 chars but code enforces 8 chars minimum.',
           steps: [
-            { keyword: 'Given', text: 'the user provides a 6-character password', provenance: 'ui' },
+            {
+              keyword: 'Given',
+              text: 'the user provides a 6-character password',
+              provenance: 'ui',
+            },
             { keyword: 'Then', text: 'the system shows a validation error', provenance: 'code' },
           ],
         },
@@ -230,7 +234,7 @@ describe('gherkinDocToConfluenceStorage', () => {
           'Given the user is on the login page\n' +
           'When the user enters valid credentials\n' +
           'Then the user is redirected to the dashboard' +
-          ']]></ac:plain-text-body>',
+          ']]></ac:plain-text-body>'
       );
     });
   });

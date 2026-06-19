@@ -2,8 +2,8 @@ import { Module } from '@nestjs/common';
 import { chromium } from 'playwright';
 
 import { GherkinModule } from '../gherkin/gherkin.module';
-import { RunsEventsService } from '../runs/runs.events';
 import { RunStateMachine } from '../runs/run-state-machine';
+import { RunsEventsService } from '../runs/runs.events';
 import { RunsService } from '../runs/runs.service';
 
 import { ActionExecutorService } from './action-executor.service';

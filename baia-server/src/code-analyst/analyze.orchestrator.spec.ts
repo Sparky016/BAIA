@@ -208,7 +208,12 @@ describe('AnalyzeOrchestrator', () => {
       ingestionService.ingestWithConnector.mockResolvedValue(makeIngestedRepo());
       ruleExtractor.extractRules.mockResolvedValue([]);
 
-      await orchestrator.executePhase2(runId, 'https://dev.azure.com/org/proj/_git/repo', 'azure', 'creds-1');
+      await orchestrator.executePhase2(
+        runId,
+        'https://dev.azure.com/org/proj/_git/repo',
+        'azure',
+        'creds-1'
+      );
 
       expect(azureConnector.auth).toHaveBeenCalledWith({
         token: 'fake-token',
@@ -305,7 +310,12 @@ describe('AnalyzeOrchestrator', () => {
       runsEvents.stream(run.runId).subscribe((e) => collectedEvents.push(e));
 
       await expect(
-        orchestrator.executePhase2(run.runId, RUN_REQUEST.repoUrl, 'github', RUN_REQUEST.credentialsRef)
+        orchestrator.executePhase2(
+          run.runId,
+          RUN_REQUEST.repoUrl,
+          'github',
+          RUN_REQUEST.credentialsRef
+        )
       ).rejects.toThrow(IllegalRunTransitionError);
 
       expect(collectedEvents).toHaveLength(0);

@@ -1,6 +1,5 @@
-import { Inject, Injectable } from '@nestjs/common';
-
 import { BusinessRule } from '@baia/shared';
+import { Inject, Injectable } from '@nestjs/common';
 
 import { LLM_SERVICE } from '../llm/llm.constants';
 import { LlmError, LlmService } from '../llm/llm.service';
@@ -54,10 +53,7 @@ export class RuleExtractorService {
 
   // ── Private helpers ────────────────────────────────────────────────────────
 
-  private async processFile(
-    file: FileChunks,
-    rulesMap: Map<string, BusinessRule>
-  ): Promise<void> {
+  private async processFile(file: FileChunks, rulesMap: Map<string, BusinessRule>): Promise<void> {
     const language = detectLanguage(file.path);
 
     for (let chunkIndex = 0; chunkIndex < file.chunks.length; chunkIndex++) {

@@ -46,6 +46,7 @@ const baseRules = {
     },
   ],
   'prettier/prettier': 'error',
+  'no-undef': 'off',
 };
 
 module.exports = [

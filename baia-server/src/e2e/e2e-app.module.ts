@@ -7,8 +7,8 @@ import { IngestionService } from '../code-analyst/ingestion.service';
 import { REPO_CONNECTOR } from '../code-analyst/repo-connector';
 import { RuleExtractorService } from '../code-analyst/rule-extractor.service';
 import { ExploreOrchestrator } from '../explore/explore.orchestrator';
-import { ExportController } from '../export/export.controller';
 import { ConfluenceAdapter } from '../export/confluence.adapter';
+import { ExportController } from '../export/export.controller';
 import { GherkinGeneratorService } from '../gherkin/gherkin-generator.service';
 import { LLM_SERVICE } from '../llm/llm.constants';
 import { MockLlmService } from '../llm/mock-llm.service';
@@ -17,8 +17,8 @@ import { ReconciliationService } from '../reconcile/reconciliation.service';
 import { RunStateMachine } from '../runs/run-state-machine';
 import { RunsController } from '../runs/runs.controller';
 import { RunsEventsService } from '../runs/runs.events';
-import { RunsSseController } from '../runs/runs.sse.controller';
 import { RunsService } from '../runs/runs.service';
+import { RunsSseController } from '../runs/runs.sse.controller';
 import {
   CREDENTIAL_ENCRYPTION_KEY,
   CredentialStoreService,
@@ -43,12 +43,7 @@ import { MockRepoConnector } from './mock-repo-connector';
  * No production code imports this module.
  */
 @Module({
-  controllers: [
-    RunsController,
-    RunsSseController,
-    ExportController,
-    E2eStartController,
-  ],
+  controllers: [RunsController, RunsSseController, ExportController, E2eStartController],
   providers: [
     // ── Shared run state (single instances) ─────────────────────────────────
     // RunStateMachine takes an optional Clock function; bypass NestJS DI with
@@ -60,8 +55,7 @@ import { MockRepoConnector } from './mock-repo-connector';
     // ── Security ─────────────────────────────────────────────────────────────
     {
       provide: CREDENTIAL_ENCRYPTION_KEY,
-      useValue:
-        process.env['CREDENTIAL_ENCRYPTION_KEY'] ?? 'e2e-test-key-padding-32-chars-ok!',
+      useValue: process.env['CREDENTIAL_ENCRYPTION_KEY'] ?? 'e2e-test-key-padding-32-chars-ok!',
     },
     CredentialStoreService,
 

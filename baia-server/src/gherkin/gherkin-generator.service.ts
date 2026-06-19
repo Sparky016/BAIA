@@ -14,8 +14,8 @@
  * times before throwing a {@link GherkinGenerationError}.
  */
 
-import { Inject, Injectable } from '@nestjs/common';
 import { GherkinDoc, GherkinFeature, GherkinScenario, GherkinStep } from '@baia/shared';
+import { Inject, Injectable } from '@nestjs/common';
 
 import { CapturedStep, ExploreTrace } from '../explore/crawl-capture.service';
 import { LLM_SERVICE } from '../llm/llm.constants';
@@ -26,6 +26,7 @@ import {
   renderGherkinGenerationPrompt,
   UiObservation,
 } from '../llm/prompts/gherkin-generation.prompt';
+
 import { GherkinValidationError, validateGherkinDoc } from './gherkin-validator';
 
 // ─── Constants ────────────────────────────────────────────────────────────────

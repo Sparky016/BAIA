@@ -17,15 +17,27 @@ const BASE_DOC: GherkinDoc = {
           steps: [
             { keyword: 'Given', text: 'the user is on the login page', provenance: 'ui' },
             { keyword: 'When', text: 'the user enters valid credentials', provenance: 'merged' },
-            { keyword: 'Then', text: 'the user is redirected to the dashboard', provenance: 'merged' },
+            {
+              keyword: 'Then',
+              text: 'the user is redirected to the dashboard',
+              provenance: 'merged',
+            },
           ],
         },
         {
           name: 'Code Rule: auth::rule-1',
           steps: [
-            { keyword: 'Given', text: 'the system enforces: must authenticate', provenance: 'code' },
+            {
+              keyword: 'Given',
+              text: 'the system enforces: must authenticate',
+              provenance: 'code',
+            },
             { keyword: 'When', text: 'the user performs the related action', provenance: 'code' },
-            { keyword: 'Then', text: 'access is granted only with valid session', provenance: 'code' },
+            {
+              keyword: 'Then',
+              text: 'access is granted only with valid session',
+              provenance: 'code',
+            },
           ],
         },
       ],
@@ -189,8 +201,18 @@ describe('UnifiedDocMapper serialise / deserialise', () => {
               name: 'Login',
               steps: [
                 { keyword: 'Given', text: 'context', provenance: 'ui' },
-                { keyword: 'When', text: 'action', provenance: 'merged', ruleRefs: ['auth::rule-1', 'auth::rule-2'] },
-                { keyword: 'Then', text: 'outcome', provenance: 'merged', ruleRefs: ['auth::rule-1'] },
+                {
+                  keyword: 'When',
+                  text: 'action',
+                  provenance: 'merged',
+                  ruleRefs: ['auth::rule-1', 'auth::rule-2'],
+                },
+                {
+                  keyword: 'Then',
+                  text: 'outcome',
+                  provenance: 'merged',
+                  ruleRefs: ['auth::rule-1'],
+                },
               ],
             },
           ],
@@ -215,7 +237,7 @@ describe('UnifiedDocMapper serialise / deserialise', () => {
     expect(revived.conflicts).toHaveLength(1);
     expect(revived.conflicts[0].ruleRef).toBe('auth::rule-1');
     expect(revived.conflicts[0].description).toBe(
-      'UI scenario contradicts code rule requiring authentication',
+      'UI scenario contradicts code rule requiring authentication'
     );
   });
 
@@ -266,12 +288,16 @@ describe('UnifiedDocMapper serialise / deserialise', () => {
                 { keyword: 'When', text: 'act2', provenance: 'merged' },
                 { keyword: 'Then', text: 'out2', provenance: 'merged' },
               ],
-              conflicts: [{ scenarioName: 'Scenario B1', ruleRef: 'r2', description: 'conflict desc' }],
+              conflicts: [
+                { scenarioName: 'Scenario B1', ruleRef: 'r2', description: 'conflict desc' },
+              ],
             },
           ],
         },
       ],
-      conflicts: [{ scenarioName: 'Scenario B1', ruleRef: 'r2', description: 'top-level conflict' }],
+      conflicts: [
+        { scenarioName: 'Scenario B1', ruleRef: 'r2', description: 'top-level conflict' },
+      ],
       generatedAt: GENERATED_AT,
       sourceRunId: 'run-xyz',
     };

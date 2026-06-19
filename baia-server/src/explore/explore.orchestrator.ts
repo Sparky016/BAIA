@@ -45,7 +45,12 @@ export class ExploreOrchestrator {
     const fromStatus = run.status;
 
     this.runsService.transitionRun(runId, RunStatus.Exploring);
-    this.runsEvents.emit(runId, { runId, from: fromStatus, to: RunStatus.Exploring, at: Date.now() });
+    this.runsEvents.emit(runId, {
+      runId,
+      from: fromStatus,
+      to: RunStatus.Exploring,
+      at: Date.now(),
+    });
     this.logger.log(`Run ${runId}: queued → exploring`);
 
     try {
@@ -64,10 +69,15 @@ export class ExploreOrchestrator {
         domSnapshot: initialStep.domSnapshot,
       });
 
-      this.emitExploreEvent(runId, 'observation', `Planned ${planResult.actions.length} action(s): ${planResult.goalSummary}`, {
-        stopReason: planResult.stopReason,
-        stepsUsed: planResult.stepsUsed,
-      });
+      this.emitExploreEvent(
+        runId,
+        'observation',
+        `Planned ${planResult.actions.length} action(s): ${planResult.goalSummary}`,
+        {
+          stopReason: planResult.stopReason,
+          stepsUsed: planResult.stepsUsed,
+        }
+      );
 
       for (let i = 0; i < planResult.actions.length; i++) {
         const action = planResult.actions[i];
@@ -123,7 +133,12 @@ export class ExploreOrchestrator {
     message: string,
     details?: Record<string, unknown>
   ): void {
-    const event: ExploreEvent = { timestamp: new Date(), type, message, ...(details ? { details } : {}) };
+    const event: ExploreEvent = {
+      timestamp: new Date(),
+      type,
+      message,
+      ...(details ? { details } : {}),
+    };
     this.runsEvents.emit(runId, event);
   }
 }

@@ -34,10 +34,7 @@ type Phase = 'Given' | 'When' | 'Then';
  *
  * Returns `null` when the transition is invalid (e.g. Then followed by When).
  */
-function resolvePhase(
-  keyword: GherkinStep['keyword'],
-  currentPhase: Phase | null
-): Phase | null {
+function resolvePhase(keyword: GherkinStep['keyword'], currentPhase: Phase | null): Phase | null {
   switch (keyword) {
     case 'Given':
       // Given may only appear before any When has started.
@@ -109,19 +106,13 @@ export function validateGherkinDoc(doc: GherkinDoc): void {
       const hasThen = scenario.steps.some((s) => s.keyword === 'Then');
 
       if (!hasGiven) {
-        throw new GherkinValidationError(
-          `${scenarioLabel} must have at least one "Given" step`
-        );
+        throw new GherkinValidationError(`${scenarioLabel} must have at least one "Given" step`);
       }
       if (!hasWhen) {
-        throw new GherkinValidationError(
-          `${scenarioLabel} must have at least one "When" step`
-        );
+        throw new GherkinValidationError(`${scenarioLabel} must have at least one "When" step`);
       }
       if (!hasThen) {
-        throw new GherkinValidationError(
-          `${scenarioLabel} must have at least one "Then" step`
-        );
+        throw new GherkinValidationError(`${scenarioLabel} must have at least one "Then" step`);
       }
 
       // Validate ordering via phase-transition rules.

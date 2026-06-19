@@ -1,3 +1,4 @@
+import { GherkinDoc, RunStatus, UnifiedDoc } from '@baia/shared';
 import {
   BadRequestException,
   Body,
@@ -10,9 +11,9 @@ import {
   Post,
 } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { GherkinDoc, RunStatus, UnifiedDoc } from '@baia/shared';
 
 import { RunsService } from '../runs/runs.service';
+
 import { ConfluenceAdapter, ConfluenceConfig } from './confluence.adapter';
 
 export interface ExportRunBody {
@@ -60,7 +61,7 @@ export class ExportController {
 
   constructor(
     private readonly runsService: RunsService,
-    private readonly confluenceAdapter: ConfluenceAdapter,
+    private readonly confluenceAdapter: ConfluenceAdapter
   ) {}
 
   /**
@@ -93,16 +94,13 @@ export class ExportController {
   @ApiResponse({ status: 400, description: 'Run has no document to export.' })
   @ApiResponse({ status: 404, description: 'Run not found.' })
   @ApiResponse({ status: 409, description: 'Run is not in review state.' })
-  async exportRun(
-    @Param('id') id: string,
-    @Body() body: ExportRunBody,
-  ): Promise<ExportRunResult> {
+  async exportRun(@Param('id') id: string, @Body() body: ExportRunBody): Promise<ExportRunResult> {
     const run = this.runsService.getRun(id);
 
     if (run.status !== RunStatus.Review) {
       throw new ConflictException(
         `Export is only allowed when run is in '${RunStatus.Review}' state; ` +
-          `current state is '${run.status}'.`,
+          `current state is '${run.status}'.`
       );
     }
 

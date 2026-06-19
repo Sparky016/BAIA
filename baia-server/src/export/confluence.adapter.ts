@@ -1,7 +1,8 @@
-import { Injectable, Logger } from '@nestjs/common';
 import { GherkinDoc } from '@baia/shared';
+import { Injectable, Logger } from '@nestjs/common';
 
 import { CredentialStoreService } from '../security/credential-store.service';
+
 import { gherkinDocTitle, gherkinDocToConfluenceStorage } from './gherkin-to-confluence';
 
 export interface ConfluenceConfig {
@@ -40,7 +41,7 @@ export class ConfluenceAdapterError extends Error {
   constructor(
     message: string,
     readonly code: 'AUTH_FAILED' | 'NOT_FOUND' | 'API_ERROR' | 'INVALID_CONFIG',
-    readonly statusCode?: number,
+    readonly statusCode?: number
   ) {
     super(message);
     this.name = 'ConfluenceAdapterError';
@@ -56,8 +57,8 @@ export class ConfluenceAdapter {
    * Overridable in tests without requiring global fetch to be mocked.
    * Tests can cast to `any` and assign a jest.fn() before calling publishPage.
    */
-  protected fetch: (url: string, init?: RequestInit) => Promise<Response> =
-    (url, init) => globalThis.fetch(url, init);
+  protected fetch: (url: string, init?: RequestInit) => Promise<Response> = (url, init) =>
+    globalThis.fetch(url, init);
 
   constructor(private readonly credentialStore: CredentialStoreService) {}
 
@@ -75,7 +76,7 @@ export class ConfluenceAdapter {
     if (!baseUrl || !spaceKey || !credentialsRef) {
       throw new ConfluenceAdapterError(
         'baseUrl, spaceKey, and credentialsRef are all required.',
-        'INVALID_CONFIG',
+        'INVALID_CONFIG'
       );
     }
 
@@ -92,7 +93,7 @@ export class ConfluenceAdapter {
         existing.version,
         title,
         body,
-        authHeader,
+        authHeader
       );
       this.logger.log(`Updated Confluence page id=${updated.id} title="${title}"`);
       return {
@@ -123,7 +124,7 @@ export class ConfluenceAdapter {
     baseUrl: string,
     spaceKey: string,
     title: string,
-    authHeader: string,
+    authHeader: string
   ): Promise<{ id: string; version: number } | null> {
     const url =
       `${baseUrl}/wiki/rest/api/content` +
@@ -139,7 +140,7 @@ export class ConfluenceAdapter {
       throw new ConfluenceAdapterError(
         `Confluence authentication failed searching for page (HTTP ${res.status}).`,
         'AUTH_FAILED',
-        res.status,
+        res.status
       );
     }
 
@@ -147,7 +148,7 @@ export class ConfluenceAdapter {
       throw new ConfluenceAdapterError(
         `Confluence API error searching for page (HTTP ${res.status}).`,
         'API_ERROR',
-        res.status,
+        res.status
       );
     }
 
@@ -164,7 +165,7 @@ export class ConfluenceAdapter {
     title: string,
     body: string,
     authHeader: string,
-    parentPageId?: string,
+    parentPageId?: string
   ): Promise<ConfluenceContentResponse> {
     const payload: Record<string, unknown> = {
       type: 'page',
@@ -191,7 +192,7 @@ export class ConfluenceAdapter {
       throw new ConfluenceAdapterError(
         `Confluence authentication failed creating page (HTTP ${res.status}).`,
         'AUTH_FAILED',
-        res.status,
+        res.status
       );
     }
 
@@ -199,7 +200,7 @@ export class ConfluenceAdapter {
       throw new ConfluenceAdapterError(
         `Confluence API error creating page (HTTP ${res.status}).`,
         'API_ERROR',
-        res.status,
+        res.status
       );
     }
 
@@ -212,7 +213,7 @@ export class ConfluenceAdapter {
     currentVersion: number,
     title: string,
     body: string,
-    authHeader: string,
+    authHeader: string
   ): Promise<ConfluenceContentResponse> {
     const payload = {
       type: 'page',
@@ -235,7 +236,7 @@ export class ConfluenceAdapter {
       throw new ConfluenceAdapterError(
         `Confluence authentication failed updating page (HTTP ${res.status}).`,
         'AUTH_FAILED',
-        res.status,
+        res.status
       );
     }
 
@@ -243,7 +244,7 @@ export class ConfluenceAdapter {
       throw new ConfluenceAdapterError(
         `Confluence API error updating page (HTTP ${res.status}).`,
         'API_ERROR',
-        res.status,
+        res.status
       );
     }
 

@@ -68,7 +68,7 @@ describe('ReconcileOrchestrator', () => {
     orchestrator = new ReconcileOrchestrator(
       runsService,
       runsEvents,
-      reconciliationService as unknown as ReconciliationService,
+      reconciliationService as unknown as ReconciliationService
     );
   });
 
@@ -128,7 +128,7 @@ describe('ReconcileOrchestrator', () => {
 
     it('emits reconciling→review transition event', () => {
       const transition = collectedEvents.find(
-        (e) => 'to' in e && (e as { to: RunStatus }).to === RunStatus.Review,
+        (e) => 'to' in e && (e as { to: RunStatus }).to === RunStatus.Review
       );
       expect(transition).toBeDefined();
       expect((transition as { from: RunStatus }).from).toBe(RunStatus.Reconciling);
@@ -136,21 +136,21 @@ describe('ReconcileOrchestrator', () => {
 
     it('emits observation events during the phase', () => {
       const observations = collectedEvents.filter(
-        (e) => 'type' in e && (e as { type: string }).type === 'observation',
+        (e) => 'type' in e && (e as { type: string }).type === 'observation'
       );
       expect(observations.length).toBeGreaterThanOrEqual(2);
     });
 
     it('emits a complete event', () => {
       const complete = collectedEvents.find(
-        (e) => 'type' in e && (e as { type: string }).type === 'complete',
+        (e) => 'type' in e && (e as { type: string }).type === 'complete'
       );
       expect(complete).toBeDefined();
     });
 
     it('complete event includes featureCount and scenarioCount', () => {
       const complete = collectedEvents.find(
-        (e) => 'type' in e && (e as { type: string }).type === 'complete',
+        (e) => 'type' in e && (e as { type: string }).type === 'complete'
       ) as { details?: Record<string, unknown> } | undefined;
       expect(complete?.details?.['featureCount']).toBe(reconciledDoc.features.length);
       expect(typeof complete?.details?.['scenarioCount']).toBe('number');
@@ -199,10 +199,10 @@ describe('ReconcileOrchestrator', () => {
 
     it('emits error event before terminal transition', () => {
       const errorIdx = collectedEvents.findIndex(
-        (e) => 'type' in e && (e as { type: string }).type === 'error',
+        (e) => 'type' in e && (e as { type: string }).type === 'error'
       );
       const failedIdx = collectedEvents.findIndex(
-        (e) => 'to' in e && (e as { to: RunStatus }).to === RunStatus.Failed,
+        (e) => 'to' in e && (e as { to: RunStatus }).to === RunStatus.Failed
       );
       expect(errorIdx).toBeGreaterThanOrEqual(0);
       expect(failedIdx).toBeGreaterThan(errorIdx);
@@ -210,14 +210,14 @@ describe('ReconcileOrchestrator', () => {
 
     it('error event includes failure message', () => {
       const errorEvent = collectedEvents.find(
-        (e) => 'type' in e && (e as { type: string }).type === 'error',
+        (e) => 'type' in e && (e as { type: string }).type === 'error'
       ) as { message: string } | undefined;
       expect(errorEvent?.message).toContain('LLM quota exceeded');
     });
 
     it('emits reconciling→failed transition', () => {
       const transition = collectedEvents.find(
-        (e) => 'to' in e && (e as { to: RunStatus }).to === RunStatus.Failed,
+        (e) => 'to' in e && (e as { to: RunStatus }).to === RunStatus.Failed
       );
       expect((transition as { from: RunStatus } | undefined)?.from).toBe(RunStatus.Reconciling);
     });
@@ -236,7 +236,7 @@ describe('ReconcileOrchestrator', () => {
       expect(runsService.getRun(runId).status).toBe(RunStatus.Failed);
 
       const errorEvent = collectedEvents.find(
-        (e) => 'type' in e && (e as { type: string }).type === 'error',
+        (e) => 'type' in e && (e as { type: string }).type === 'error'
       ) as { message: string } | undefined;
       expect(errorEvent?.message).toContain('No Gherkin document');
       expect(reconciliationService.reconcile).not.toHaveBeenCalled();
@@ -252,7 +252,7 @@ describe('ReconcileOrchestrator', () => {
       runsEvents.stream(run.runId).subscribe((e) => collectedEvents.push(e));
 
       await expect(orchestrator.executeReconcile(run.runId)).rejects.toThrow(
-        IllegalRunTransitionError,
+        IllegalRunTransitionError
       );
 
       expect(collectedEvents).toHaveLength(0);

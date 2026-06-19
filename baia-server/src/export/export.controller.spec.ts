@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  ConflictException,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { RunStatus, RunSummary, GherkinDoc, UnifiedDoc } from '@baia/shared';
 
@@ -56,7 +52,9 @@ const MOCK_UNIFIED_DOC: UnifiedDoc = {
             { keyword: 'When', text: 'I enter valid credentials', provenance: 'merged' },
             { keyword: 'Then', text: 'the session token is set', provenance: 'code' },
           ],
-          conflicts: [{ scenarioName: 'Successful login with code rules', description: 'Token TTL mismatch' }],
+          conflicts: [
+            { scenarioName: 'Successful login with code rules', description: 'Token TTL mismatch' },
+          ],
         },
       ],
     },
@@ -214,20 +212,26 @@ describe('ExportController', () => {
         runsService.getRun.mockReturnValue(makeRun({ status, gherkinDoc: MOCK_GHERKIN_DOC }));
 
         await expect(controller.exportRun('run-0001', EXPORT_BODY)).rejects.toThrow(
-          ConflictException,
+          ConflictException
         );
-      },
+      }
     );
 
     it('does not call Confluence when guard rejects', async () => {
-      runsService.getRun.mockReturnValue(makeRun({ status: RunStatus.Queued, gherkinDoc: MOCK_GHERKIN_DOC }));
+      runsService.getRun.mockReturnValue(
+        makeRun({ status: RunStatus.Queued, gherkinDoc: MOCK_GHERKIN_DOC })
+      );
 
-      await expect(controller.exportRun('run-0001', EXPORT_BODY)).rejects.toThrow(ConflictException);
+      await expect(controller.exportRun('run-0001', EXPORT_BODY)).rejects.toThrow(
+        ConflictException
+      );
       expect(confluenceAdapter.publishPage).not.toHaveBeenCalled();
     });
 
     it('conflict message mentions current state', async () => {
-      runsService.getRun.mockReturnValue(makeRun({ status: RunStatus.Queued, gherkinDoc: MOCK_GHERKIN_DOC }));
+      runsService.getRun.mockReturnValue(
+        makeRun({ status: RunStatus.Queued, gherkinDoc: MOCK_GHERKIN_DOC })
+      );
 
       let caught: unknown;
       try {
@@ -248,14 +252,16 @@ describe('ExportController', () => {
       runsService.getRun.mockReturnValue(makeRun({ gherkinDoc: undefined, unifiedDoc: undefined }));
 
       await expect(controller.exportRun('run-0001', EXPORT_BODY)).rejects.toThrow(
-        BadRequestException,
+        BadRequestException
       );
     });
 
     it('does not call Confluence when no doc is available', async () => {
       runsService.getRun.mockReturnValue(makeRun());
 
-      await expect(controller.exportRun('run-0001', EXPORT_BODY)).rejects.toThrow(BadRequestException);
+      await expect(controller.exportRun('run-0001', EXPORT_BODY)).rejects.toThrow(
+        BadRequestException
+      );
       expect(confluenceAdapter.publishPage).not.toHaveBeenCalled();
     });
   });
@@ -269,7 +275,7 @@ describe('ExportController', () => {
       });
 
       await expect(controller.exportRun('run-9999', EXPORT_BODY)).rejects.toThrow(
-        NotFoundException,
+        NotFoundException
       );
     });
   });
@@ -286,7 +292,11 @@ describe('ExportController', () => {
 
       const doc = confluenceAdapter.publishPage.mock.calls[0][1];
       const step = doc.features[0].scenarios[0].steps[0];
-      expect(step).toMatchObject({ keyword: 'Given', text: 'I am on the login page', provenance: 'ui' });
+      expect(step).toMatchObject({
+        keyword: 'Given',
+        text: 'I am on the login page',
+        provenance: 'ui',
+      });
     });
 
     it('sets conflictNote to undefined when scenario has no conflicts', async () => {
@@ -344,13 +354,13 @@ describe('ExportController', () => {
 
       const doc = confluenceAdapter.publishPage.mock.calls[0][1];
       expect(doc.features[0].scenarios[0].conflictNote).toBe(
-        'Amount rounding differs; Currency code missing',
+        'Amount rounding differs; Currency code missing'
       );
     });
 
     it('prefers unifiedDoc over gherkinDoc when both are present', async () => {
       runsService.getRun.mockReturnValue(
-        makeRun({ unifiedDoc: MOCK_UNIFIED_DOC, gherkinDoc: MOCK_GHERKIN_DOC }),
+        makeRun({ unifiedDoc: MOCK_UNIFIED_DOC, gherkinDoc: MOCK_GHERKIN_DOC })
       );
       runsService.transitionRun.mockReturnValue(makeRun());
       confluenceAdapter.publishPage.mockResolvedValue(MOCK_PAGE_RESULT);

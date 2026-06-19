@@ -12,7 +12,9 @@ function makeChunk(text: string, index = 0) {
   return { index, text, tokenCount: text.length, sourceRange: { start: 0, end: text.length } };
 }
 
-function makeRepo(files: Array<{ path: string; chunks: ReturnType<typeof makeChunk>[] }>): IngestedRepo {
+function makeRepo(
+  files: Array<{ path: string; chunks: ReturnType<typeof makeChunk>[] }>
+): IngestedRepo {
   const totalChunks = files.reduce((acc, f) => acc + f.chunks.length, 0);
   return { files, totalChunks, skippedFiles: [] };
 }
@@ -145,19 +147,27 @@ describe('RuleExtractorService', () => {
     const chunk1 = makeChunk('// chunk 1 content', 1);
 
     const rules0 = makeOutput([
-      { ruleId: 'rule-from-chunk0', statement: 'Rule from chunk 0', severity: 'must', evidence: '// chunk 0', category: 'other' },
+      {
+        ruleId: 'rule-from-chunk0',
+        statement: 'Rule from chunk 0',
+        severity: 'must',
+        evidence: '// chunk 0',
+        category: 'other',
+      },
     ]);
     const rules1 = makeOutput([
-      { ruleId: 'rule-from-chunk1', statement: 'Rule from chunk 1', severity: 'must', evidence: '// chunk 1', category: 'other' },
+      {
+        ruleId: 'rule-from-chunk1',
+        statement: 'Rule from chunk 1',
+        severity: 'must',
+        evidence: '// chunk 1',
+        category: 'other',
+      },
     ]);
 
-    (mockLlm.completeJson as jest.Mock)
-      .mockResolvedValueOnce(rules0)
-      .mockResolvedValueOnce(rules1);
+    (mockLlm.completeJson as jest.Mock).mockResolvedValueOnce(rules0).mockResolvedValueOnce(rules1);
 
-    const repo = makeRepo([
-      { path: 'src/service.ts', chunks: [chunk0, chunk1] },
-    ]);
+    const repo = makeRepo([{ path: 'src/service.ts', chunks: [chunk0, chunk1] }]);
 
     const result = await service.extractRules(repo);
 
@@ -183,9 +193,7 @@ describe('RuleExtractorService', () => {
 
     (mockLlm.completeJson as jest.Mock).mockResolvedValueOnce(ruleWithoutCategory);
 
-    const repo = makeRepo([
-      { path: 'src/index.ts', chunks: [makeChunk('some code')] },
-    ]);
+    const repo = makeRepo([{ path: 'src/index.ts', chunks: [makeChunk('some code')] }]);
 
     const result = await service.extractRules(repo);
 
@@ -243,9 +251,7 @@ describe('RuleExtractorService', () => {
       .mockRejectedValueOnce(schemaError)
       .mockResolvedValueOnce(CONTENT_PAGE_RULES);
 
-    const repo = makeRepo([
-      { path: 'Models/ContentPage.cs', chunks: [CONTENT_PAGE_CHUNK] },
-    ]);
+    const repo = makeRepo([{ path: 'Models/ContentPage.cs', chunks: [CONTENT_PAGE_CHUNK] }]);
 
     const result = await service.extractRules(repo);
 
@@ -261,9 +267,7 @@ describe('RuleExtractorService', () => {
       .mockRejectedValueOnce(providerError)
       .mockResolvedValueOnce(CONTENT_PAGE_RULES);
 
-    const repo = makeRepo([
-      { path: 'Models/ContentPage.cs', chunks: [CONTENT_PAGE_CHUNK] },
-    ]);
+    const repo = makeRepo([{ path: 'Models/ContentPage.cs', chunks: [CONTENT_PAGE_CHUNK] }]);
 
     const result = await service.extractRules(repo);
 
@@ -297,12 +301,8 @@ describe('RuleExtractorService', () => {
     expect(result).toHaveLength(1);
     expect(result[0].id).toBe('Models/ContentPage.cs::content-title-required');
 
-    expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringContaining('Controllers/HomeController.cs')
-    );
-    expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringContaining('2 retries')
-    );
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('Controllers/HomeController.cs'));
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('2 retries'));
 
     warnSpy.mockRestore();
   });
@@ -312,9 +312,7 @@ describe('RuleExtractorService', () => {
 
     (mockLlm.completeJson as jest.Mock).mockRejectedValue(providerError);
 
-    const repo = makeRepo([
-      { path: 'src/index.ts', chunks: [makeChunk('// only chunk')] },
-    ]);
+    const repo = makeRepo([{ path: 'src/index.ts', chunks: [makeChunk('// only chunk')] }]);
 
     const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
 
@@ -330,9 +328,7 @@ describe('RuleExtractorService', () => {
 
     (mockLlm.completeJson as jest.Mock).mockRejectedValue(rateLimitError);
 
-    const repo = makeRepo([
-      { path: 'src/index.ts', chunks: [makeChunk('// code')] },
-    ]);
+    const repo = makeRepo([{ path: 'src/index.ts', chunks: [makeChunk('// code')] }]);
 
     await expect(service.extractRules(repo)).rejects.toThrow(LlmError);
     await expect(service.extractRules(repo)).rejects.toMatchObject({ code: 'RATE_LIMITED' });
@@ -402,9 +398,7 @@ describe('RuleExtractorService', () => {
       { ruleId: 'a-rule', statement: 'A rule', severity: 'must', evidence: 'a', category: 'other' },
     ]);
 
-    (mockLlm.completeJson as jest.Mock)
-      .mockResolvedValueOnce(rulesZ)
-      .mockResolvedValueOnce(rulesA);
+    (mockLlm.completeJson as jest.Mock).mockResolvedValueOnce(rulesZ).mockResolvedValueOnce(rulesA);
 
     const repo = makeRepo([
       { path: 'src/z.ts', chunks: [makeChunk('z')] },
@@ -434,9 +428,7 @@ describe('RuleExtractorService', () => {
   it('uses correct language for .ts files', async () => {
     (mockLlm.completeJson as jest.Mock).mockResolvedValueOnce(makeOutput([]));
 
-    await service.extractRules(
-      makeRepo([{ path: 'src/service.ts', chunks: [makeChunk('code')] }])
-    );
+    await service.extractRules(makeRepo([{ path: 'src/service.ts', chunks: [makeChunk('code')] }]));
 
     const promptArg = (mockLlm.completeJson as jest.Mock).mock.calls[0][0] as string;
     expect(promptArg).toContain('TypeScript');
@@ -445,9 +437,7 @@ describe('RuleExtractorService', () => {
   it('uses correct language for .js files', async () => {
     (mockLlm.completeJson as jest.Mock).mockResolvedValueOnce(makeOutput([]));
 
-    await service.extractRules(
-      makeRepo([{ path: 'src/util.js', chunks: [makeChunk('code')] }])
-    );
+    await service.extractRules(makeRepo([{ path: 'src/util.js', chunks: [makeChunk('code')] }]));
 
     const promptArg = (mockLlm.completeJson as jest.Mock).mock.calls[0][0] as string;
     expect(promptArg).toContain('JavaScript');
@@ -456,9 +446,7 @@ describe('RuleExtractorService', () => {
   it('falls back to "code" for unknown extensions', async () => {
     (mockLlm.completeJson as jest.Mock).mockResolvedValueOnce(makeOutput([]));
 
-    await service.extractRules(
-      makeRepo([{ path: 'src/module.py', chunks: [makeChunk('code')] }])
-    );
+    await service.extractRules(makeRepo([{ path: 'src/module.py', chunks: [makeChunk('code')] }]));
 
     const promptArg = (mockLlm.completeJson as jest.Mock).mock.calls[0][0] as string;
     expect(promptArg).toContain('code');
@@ -479,9 +467,7 @@ describe('RuleExtractorService', () => {
 
     (mockLlm.completeJson as jest.Mock).mockResolvedValueOnce(singleRule);
 
-    const repo = makeRepo([
-      { path: 'Services/AuthService.cs', chunks: [makeChunk('code')] },
-    ]);
+    const repo = makeRepo([{ path: 'Services/AuthService.cs', chunks: [makeChunk('code')] }]);
 
     const result = await service.extractRules(repo);
 

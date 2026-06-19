@@ -54,7 +54,11 @@ const MATCHED_OUTPUT: ReconciliationOutput = {
       steps: [
         { keyword: 'Given', text: 'the user is on the login page' },
         { keyword: 'When', text: 'the user enters valid credentials' },
-        { keyword: 'Then', text: 'the user is redirected to the dashboard', supportedBy: ['auth::rule-1'] },
+        {
+          keyword: 'Then',
+          text: 'the user is redirected to the dashboard',
+          supportedBy: ['auth::rule-1'],
+        },
       ],
     },
   ],
@@ -127,7 +131,7 @@ const NEW_OUTPUT: ReconciliationOutput = {
 // ─── Mock factory ─────────────────────────────────────────────────────────────
 
 function makeMockLlm(
-  responses: Array<ReconciliationOutput | LlmError | Error>,
+  responses: Array<ReconciliationOutput | LlmError | Error>
 ): jest.Mocked<Pick<LlmService, 'completeJson' | 'complete' | 'countTokens'>> {
   let callIndex = 0;
   const completeJson = jest.fn().mockImplementation(async () => {
@@ -144,7 +148,7 @@ function makeMockLlm(
 }
 
 function buildService(
-  llm: Pick<LlmService, 'completeJson' | 'complete' | 'countTokens'>,
+  llm: Pick<LlmService, 'completeJson' | 'complete' | 'countTokens'>
 ): ReconciliationService {
   return new ReconciliationService(llm as LlmService);
 }
@@ -212,7 +216,9 @@ describe('ReconciliationService', () => {
       const doc = await service.reconcile(SAMPLE_DOC, SAMPLE_RULES);
       const scenario = doc.features[0].scenarios[0];
 
-      expect(scenario.conflictNote).toBe('UI allows bypass but auth rule prohibits unauthenticated access');
+      expect(scenario.conflictNote).toBe(
+        'UI allows bypass but auth rule prohibits unauthenticated access'
+      );
     });
 
     it('conflict scenario steps without supportedBy have provenance "ui"', async () => {
@@ -525,10 +531,10 @@ describe('ReconciliationService', () => {
       const service = buildService(llm);
 
       await expect(service.reconcile(SAMPLE_DOC, SAMPLE_RULES)).rejects.toThrow(
-        ReconciliationError,
+        ReconciliationError
       );
       await expect(service.reconcile(SAMPLE_DOC, SAMPLE_RULES)).rejects.toThrow(
-        /Reconciliation failed after 3 attempts/,
+        /Reconciliation failed after 3 attempts/
       );
       // 3 + 3 attempts
       expect(llm.completeJson).toHaveBeenCalledTimes(6);
@@ -567,7 +573,9 @@ describe('ReconciliationService', () => {
       };
       const service = buildService(llm);
 
-      await expect(service.reconcile(SAMPLE_DOC, SAMPLE_RULES)).rejects.toThrow(ReconciliationError);
+      await expect(service.reconcile(SAMPLE_DOC, SAMPLE_RULES)).rejects.toThrow(
+        ReconciliationError
+      );
       expect(llm.completeJson).toHaveBeenCalledTimes(1);
     });
 
@@ -580,7 +588,9 @@ describe('ReconciliationService', () => {
       };
       const service = buildService(llm);
 
-      await expect(service.reconcile(SAMPLE_DOC, SAMPLE_RULES)).rejects.toThrow(ReconciliationError);
+      await expect(service.reconcile(SAMPLE_DOC, SAMPLE_RULES)).rejects.toThrow(
+        ReconciliationError
+      );
       expect(llm.completeJson).toHaveBeenCalledTimes(1);
     });
 
@@ -593,7 +603,9 @@ describe('ReconciliationService', () => {
       };
       const service = buildService(llm);
 
-      await expect(service.reconcile(SAMPLE_DOC, SAMPLE_RULES)).rejects.toThrow(ReconciliationError);
+      await expect(service.reconcile(SAMPLE_DOC, SAMPLE_RULES)).rejects.toThrow(
+        ReconciliationError
+      );
       expect(llm.completeJson).toHaveBeenCalledTimes(1);
     });
 
@@ -606,7 +618,9 @@ describe('ReconciliationService', () => {
       };
       const service = buildService(llm);
 
-      await expect(service.reconcile(SAMPLE_DOC, SAMPLE_RULES)).rejects.toThrow(ReconciliationError);
+      await expect(service.reconcile(SAMPLE_DOC, SAMPLE_RULES)).rejects.toThrow(
+        ReconciliationError
+      );
       expect(llm.completeJson).toHaveBeenCalledTimes(1);
     });
 
@@ -620,7 +634,7 @@ describe('ReconciliationService', () => {
       const service = buildService(llm);
 
       await expect(service.reconcile(SAMPLE_DOC, SAMPLE_RULES)).rejects.toThrow(
-        /specific failure reason/,
+        /specific failure reason/
       );
     });
   });

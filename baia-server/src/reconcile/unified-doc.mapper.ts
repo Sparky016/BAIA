@@ -1,4 +1,11 @@
-import { DocConflict, GherkinDoc, UnifiedDoc, UnifiedFeature, UnifiedScenario, UnifiedStep } from '@baia/shared';
+import {
+  DocConflict,
+  GherkinDoc,
+  UnifiedDoc,
+  UnifiedFeature,
+  UnifiedScenario,
+  UnifiedStep,
+} from '@baia/shared';
 
 export class UnifiedDocMapper {
   /**
@@ -9,27 +16,31 @@ export class UnifiedDocMapper {
    * can be passed in separately and are attached to the document root.
    */
   static fromGherkinDoc(doc: GherkinDoc, topLevelConflicts: DocConflict[] = []): UnifiedDoc {
-    const features: UnifiedFeature[] = doc.features.map((feature): UnifiedFeature => ({
-      name: feature.name,
-      description: feature.description,
-      scenarios: feature.scenarios.map((scenario): UnifiedScenario => {
-        const steps: UnifiedStep[] = scenario.steps.map((step): UnifiedStep => ({
-          keyword: step.keyword,
-          text: step.text,
-          provenance: step.provenance,
-        }));
+    const features: UnifiedFeature[] = doc.features.map(
+      (feature): UnifiedFeature => ({
+        name: feature.name,
+        description: feature.description,
+        scenarios: feature.scenarios.map((scenario): UnifiedScenario => {
+          const steps: UnifiedStep[] = scenario.steps.map(
+            (step): UnifiedStep => ({
+              keyword: step.keyword,
+              text: step.text,
+              provenance: step.provenance,
+            })
+          );
 
-        const unifiedScenario: UnifiedScenario = { name: scenario.name, steps };
+          const unifiedScenario: UnifiedScenario = { name: scenario.name, steps };
 
-        if (scenario.conflictNote) {
-          unifiedScenario.conflicts = [
-            { scenarioName: scenario.name, description: scenario.conflictNote },
-          ];
-        }
+          if (scenario.conflictNote) {
+            unifiedScenario.conflicts = [
+              { scenarioName: scenario.name, description: scenario.conflictNote },
+            ];
+          }
 
-        return unifiedScenario;
-      }),
-    }));
+          return unifiedScenario;
+        }),
+      })
+    );
 
     return {
       features,
