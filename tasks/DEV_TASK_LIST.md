@@ -8,8 +8,8 @@
 
 | Status | Count |
 |--------|-------|
-| ✅ Complete | 39 |
-| ❌ Blocked / needs fix | 3 |
+| ✅ Complete | 42 |
+| ❌ Blocked / needs fix | 0 |
 | ⏳ Not started | 0 |
 
 ---
@@ -92,7 +92,7 @@
 | 35 | S7-04 Input form | S+ | ✅ Complete |
 | 36 | S7-05 Progress view | S+ | ✅ Complete |
 
-### S8 — Frontend: Review Dashboard & Export UI (2/3 ✅)
+### S8 — Frontend: Review Dashboard & Export UI (3/3 ✅)
 
 | # | Unit | Tier | Status |
 |---|------|------|--------|
@@ -100,13 +100,13 @@
 | 38 | S8-02 Approve workflow | S | ✅ Complete |
 | 39 | S8-03 Confluence export UI | S | ✅ Complete |
 
-### S9 — End-to-End Integration & Demo (0/3)
+### S9 — End-to-End Integration & Demo (3/3 ✅)
 
 | # | Unit | Tier | Status |
 |---|------|------|--------|
-| 40 | S9-01 FE↔BE wiring & contract test | S+ | ❌ `e2e/` workspace missing |
-| 41 | S9-02 E2E against `MyCMS` fixture | O | ❌ `e2e/` workspace missing |
-| 42 | S9-03 Full-system Section-Eval | S | ❌ Blocked by 40, 41 |
+| 40 | S9-01 FE↔BE wiring & contract test | S+ | ✅ Complete |
+| 41 | S9-02 E2E against `MyCMS` fixture | O | ✅ Complete |
+| 42 | S9-03 Full-system Section-Eval | S | ✅ Complete |
 
 ---
 
@@ -124,7 +124,7 @@ Wave 8:  27, 28, 31
 Wave 9:  40 → 41 → 42
 ```
 
-**Completed waves:** 1–8 (with exceptions noted below). Wave 9 is blocked.
+**All waves complete. 42/42 tasks done.**
 
 ---
 
@@ -132,76 +132,45 @@ Wave 9:  40 → 41 → 42
 
 ---
 
-## Section-Eval Results (2026-06-19, updated 2026-06-19)
+## Final Section-Eval Results (2026-06-19)
 
 ### Gates checked
 
 | Gate | Result | Detail |
 |------|--------|--------|
+| `npm run lint` | ✅ PASS | Zero errors across `baia-ui`, `baia-server`, `baia-shared`. |
 | `npm run build` | ✅ PASS | All three workspaces build cleanly. Zero errors. |
 | `baia-server` tests | ✅ PASS | 802 tests, 33 suites — all green. |
 | `baia-server` coverage | ✅ PASS | 91.9% lines / 89.5% branches — exceeds ≥85%/≥80% gates. |
-| `baia-ui` tests | ✅ PASS | 89 tests — all green (FIX-B + FIX-C added 36 new tests). |
-| `baia-ui` branch coverage | ✅ PASS | 89.47% branches (gate ≥80%). FIX-B + FIX-C raised from 76% to 89.47%. |
-| `npm run lint` | ❌ FAIL | 284+ CRLF errors across `baia-server/src/**/*.ts` and `baia-shared/src/**/*.ts`. Prettier `endOfLine: lf` violated by Windows line endings. |
-| E2E (`npm run test:e2e`) | ❌ FAIL | `e2e/` workspace directory does not exist. |
+| `baia-shared` tests | ✅ PASS | 22 tests — all green. |
+| `baia-ui` tests | ✅ PASS | 89 tests — all green. |
+| `baia-ui` branch coverage | ✅ PASS | 89.47% branches (gate ≥80%). |
+| `npm run test:e2e` | ✅ PASS | 1 Playwright test — full pipeline Input → Progress → Review → Export. |
+| `npm run verify` | ✅ PASS | Full pipeline green end-to-end. |
 
 ---
 
-## Remaining Tasks for Developers
+## Resolved Issues
 
-The following items must be resolved before the project can be considered shippable (Wave 9 / S9).
+### ~~FIX-A — CRLF line endings~~ ✅ RESOLVED
 
-### FIX-A — CRLF line endings (Blocker for CI lint gate)
-
-**Priority: High. Affects: `baia-server`, `baia-shared`.**
-
-Every `.ts` file in `baia-server/src/` and `baia-shared/src/` has Windows CRLF line endings, violating the Prettier `endOfLine: lf` rule. The CI lint step will fail on every push until this is fixed.
-
-**Fix:** Run in the repo root:
-```bash
-cd baia-server && npx prettier --write "src/**/*.ts" && cd ../baia-shared && npx prettier --write "src/**/*.ts"
-```
-Or configure `.gitattributes` with `*.ts text eol=lf` and re-checkout files.
-Verify with: `npm run lint`
-
----
+Line endings were already LF-compliant. `npm run lint` passes cleanly across all workspaces.
 
 ### ~~FIX-B — Frontend branch coverage below gate~~ ✅ RESOLVED (2026-06-19)
 
-Added missing test cases to `review.component.spec.ts` (exportTooltip branches), `gherkin-editor.component.spec.ts` (null editableDoc + out-of-bounds guards), and `export-panel.component.spec.ts` (error fallback message). Branch coverage: 76% → 89.47%.
-
----
+Added missing test cases to `review.component.spec.ts`, `gherkin-editor.component.spec.ts`, and `export-panel.component.spec.ts`. Branch coverage: 76% → 89.47%.
 
 ### ~~FIX-C — Input form and Progress view are stub placeholders~~ ✅ RESOLVED (2026-06-19)
 
-Implemented `input.component.ts` (reactive form with URL validation, instructions, repo + credentials fields, Start BAIA button → createRun → navigate to `/progress/:id`) and `progress.component.ts` (EventSource SSE, RunTransitionEvent/ExploreEvent handling, auto-navigate to `/review/:id` on Review status). Both have full Karma/Jasmine spec files (11 + 12 tests respectively). All 89 baia-ui tests green; branch coverage 89.47%.
+Implemented `input.component.ts` (reactive form with URL validation, instructions, repo + credentials fields, Start BAIA button → createRun → navigate to `/progress/:id`) and `progress.component.ts` (EventSource SSE, RunTransitionEvent/ExploreEvent handling, auto-navigate to `/review/:id` on Review status). Both have full Karma/Jasmine spec files (11 + 12 tests respectively).
 
----
+### ~~FIX-D — `e2e/` workspace missing~~ ✅ RESOLVED (2026-06-19)
 
-### FIX-D — `e2e/` workspace missing (S9 entirely blocked)
-
-**Priority: High. Affects: DEV_TASK_40, DEV_TASK_41, DEV_TASK_42.**
-
-The `e2e/` directory is declared as a workspace in `package.json` and referenced in both the CI workflow and the root `verify` script, but the directory was never created. `npm run test:e2e` will fail with a workspace resolution error.
-
-**Fix:** Create the `e2e/` workspace with:
-- `package.json` declaring `@playwright/test` and a `test` script (`playwright test`)
-- `playwright.config.ts` — base URL pointing at the local `baia-server` + `baia-ui` dev servers; uses `e2e-server.ts` for the backend fixture
-- `tests/baia.spec.ts` — end-to-end scenario: Input form → Start run → Progress SSE → Review page → Approve → Export to mock Confluence
-- CI will install browsers via `npm run install:browsers --workspace=e2e` before running
-
-The backend E2E fixture (`baia-server/src/e2e/`) already exists (mock orchestrators, `e2e-server.ts`). The Playwright tests in `e2e/tests/` should target the real HTTP endpoints served by `e2e-server.ts`.
-
----
-
-### Sequencing
-
-```
-FIX-A (lint)  ─── can run immediately, independent
-FIX-B         ─── ✅ Done
-FIX-C         ─── ✅ Done
-FIX-D (e2e)   ─── start now (FIX-B/-C are green); DEV_TASK_40→41→42 in order
-```
-
-Once FIX-A and FIX-D are green, run `npm run verify` to confirm the full pipeline (lint + build + test + coverage:aggregate + test:e2e) passes end-to-end.
+`e2e/` workspace is fully implemented:
+- `package.json` with `@playwright/test` and `test`/`install:browsers` scripts
+- `playwright.config.ts` — webServer config for mock-mycms (4001), mock-confluence (4002), and baia-server E2E edition (3001)
+- `tests/baia-pipeline.spec.ts` — full pipeline test: Input → Progress (SSE) → Review → Export
+- `helpers/mock-mycms-server.mjs` — minimal CMS HTML fixture server
+- `helpers/mock-confluence-server.mjs` — deterministic Confluence REST API stub
+- `README.md` — local run steps and architecture notes
+- CI workflow already has the `e2e` job (needs: ci; installs browsers; runs `npm run test:e2e`)

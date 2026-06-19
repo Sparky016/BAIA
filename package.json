@@ -4,9 +4,9 @@
   "description": "Business Analyst AI - autonomous agent for UI behaviour capture and business rule extraction",
   "private": true,
   "workspaces": [
+    "baia-shared",
     "baia-ui",
     "baia-server",
-    "baia-shared",
     "e2e"
   ],
   "scripts": {
