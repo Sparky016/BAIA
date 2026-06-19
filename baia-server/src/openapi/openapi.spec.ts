@@ -10,7 +10,7 @@ import { RunsEventsService } from '../runs/runs.events';
 function buildDocument(app: INestApplication): OpenAPIObject {
   const config = new DocumentBuilder()
     .setTitle('BAIA API')
-    .setDescription('Business Analyst AI API')
+    .setDescription('Business AI Analyst API')
     .setVersion('1.0')
     .build();
   return SwaggerModule.createDocument(app, config);

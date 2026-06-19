@@ -1,7 +1,7 @@
 {
   "name": "baia",
   "version": "0.0.0",
-  "description": "Business Analyst AI - autonomous agent for UI behaviour capture and business rule extraction",
+  "description": "Business AI Analyst - autonomous agent for UI behaviour capture and business rule extraction",
   "private": true,
   "workspaces": [
     "baia-shared",

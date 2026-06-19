@@ -1,6 +1,6 @@
-# BAIA — Business Analyst AI
+# BAIA — Business AI Analyst
 
-[![Build & Test](https://github.com/anthropics/BAIA/actions/workflows/ci.yml/badge.svg)](https://github.com/anthropics/BAIA/actions)
+[![Build & Test](https://github.com/Sparky016/BAIA/actions/workflows/ci.yml/badge.svg)](https://github.com/anthropics/BAIA/actions)
 [![Coverage](https://img.shields.io/badge/coverage-91.9%25%20%2F%2089.5%25-brightgreen)](#coverage-gates)
 [![License](https://img.shields.io/badge/license-MIT-blue)](#license)
 

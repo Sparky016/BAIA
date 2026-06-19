@@ -16,7 +16,7 @@ async function bootstrap(): Promise<void> {
 
   const config = new DocumentBuilder()
     .setTitle('BAIA API')
-    .setDescription('Business Analyst AI API')
+    .setDescription('Business AI Analyst API')
     .setVersion('1.0')
     .build();
 
