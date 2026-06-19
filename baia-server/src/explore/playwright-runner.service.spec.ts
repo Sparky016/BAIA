@@ -1,3 +1,4 @@
+import { Logger } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 
 import {
@@ -95,6 +96,10 @@ async function buildTestBed(config?: Partial<PlaywrightRunnerConfig>): Promise<T
 // ── Tests ─────────────────────────────────────────────────────────────────
 
 describe('PlaywrightRunnerService', () => {
+  beforeEach(() => {
+    jest.spyOn(Logger.prototype, 'error').mockImplementation(() => {});
+  });
+
   describe('DEFAULT_PLAYWRIGHT_CONFIG', () => {
     it('should default to headless=true and 30 000 ms navigation timeout', () => {
       expect(DEFAULT_PLAYWRIGHT_CONFIG.headless).toBe(true);
