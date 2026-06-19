@@ -80,4 +80,35 @@ describe('OpenAPI contract', () => {
     const idParam = eventsEndpoint.parameters?.find((p) => p.name === 'id' && p.in === 'path');
     expect(idParam).toBeDefined();
   });
+
+  it('POST /runs request body schema includes required RunRequest fields', () => {
+    const postRuns = document.paths['/runs']['post'] as {
+      requestBody: { content: { 'application/json': { schema: { required: string[]; properties: Record<string, unknown> } } } };
+    };
+    const schema = postRuns.requestBody?.content?.['application/json']?.schema;
+    expect(schema).toBeDefined();
+    expect(schema.required).toEqual(
+      expect.arrayContaining(['targetUrl', 'instructions', 'repoUrl', 'repoProvider', 'credentialsRef']),
+    );
+    expect(schema.properties['targetUrl']).toBeDefined();
+    expect(schema.properties['repoProvider']).toBeDefined();
+  });
+
+  it('POST /runs 201 response schema includes RunSummary fields', () => {
+    const postRuns = document.paths['/runs']['post'] as {
+      responses: Record<string, { content?: { 'application/json': { schema: { properties: Record<string, unknown> } } } }>;
+    };
+    const schema = postRuns.responses['201']?.content?.['application/json']?.schema;
+    expect(schema).toBeDefined();
+    expect(schema.properties['runId']).toBeDefined();
+    expect(schema.properties['status']).toBeDefined();
+    expect(schema.properties['targetUrl']).toBeDefined();
+  });
+
+  it('GET /runs/{id}/events has a 200 response defined', () => {
+    const eventsEndpoint = document.paths['/runs/{id}/events']['get'] as {
+      responses: Record<string, unknown>;
+    };
+    expect(eventsEndpoint.responses['200']).toBeDefined();
+  });
 });

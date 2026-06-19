@@ -1,5 +1,5 @@
 import { Controller, MessageEvent, Param, Sse } from '@nestjs/common';
-import { ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
@@ -37,6 +37,15 @@ export class RunsSseController {
   @Sse(':id/events')
   @ApiOperation({ summary: 'Stream Server-Sent Events for a run' })
   @ApiParam({ name: 'id', description: 'The run identifier', example: 'run-0001' })
+  @ApiResponse({
+    status: 200,
+    description: 'SSE stream of run progress events (text/event-stream).',
+    schema: {
+      type: 'string',
+      description: 'Newline-delimited SSE frames containing JSON-encoded RunStreamEvent payloads.',
+    },
+  })
+  @ApiResponse({ status: 404, description: 'Run not found.' })
   streamEvents(@Param('id') id: string): Observable<MessageEvent> {
     return this.eventsService.stream(id).pipe(
       map(

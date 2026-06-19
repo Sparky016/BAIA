@@ -8,8 +8,8 @@
 
 | Status | Count |
 |--------|-------|
-| ✅ Complete | 31 |
-| ⏳ Not started | 11 |
+| ✅ Complete | 34 |
+| ⏳ Not started | 8 |
 
 ---
 
@@ -25,7 +25,7 @@
 | 4 | S0-04 Coverage configuration | S | ✅ Complete |
 | 5 | S0-05 CI workflow | S | ✅ Complete |
 
-### S1 — Backend Core & API Contract (4/5 ✅)
+### S1 — Backend Core & API Contract (5/5 ✅)
 
 | # | Unit | Tier | Status |
 |---|------|------|--------|
@@ -33,7 +33,7 @@
 | 7 | S1-02 Run state machine | O | ✅ Complete |
 | 8 | S1-03 Runs module (REST) | S+ | ✅ Complete |
 | 9 | S1-04 SSE progress stream | S+ | ✅ Complete |
-| 10 | S1-05 OpenAPI contract | S | ⏳ Not started |
+| 10 | S1-05 OpenAPI contract | S | ✅ Complete |
 
 ### S2 — LLM Integration Layer (4/4 ✅)
 
@@ -73,13 +73,13 @@
 | 27 | S5-02 Unified document model | S | ✅ Complete |
 | 28 | S5-03 Wire reconcile into runs | S | ✅ Complete |
 
-### S6 — Integrations & Export (2/3 ✅)
+### S6 — Integrations & Export (3/3 ✅)
 
 | # | Unit | Tier | Status |
 |---|------|------|--------|
 | 29 | S6-01 Credential/secret handling | O | ✅ Complete |
 | 30 | S6-02 Confluence REST adapter | S+ | ✅ Complete |
-| 31 | S6-03 Export endpoint + wiring | S | ⏳ Not started |
+| 31 | S6-03 Export endpoint + wiring | S | ✅ Complete |
 
 ### S7 — Frontend: Shell/Input/Progress (5/5 ✅)
 
@@ -123,8 +123,49 @@ Wave 8:  27, 28, 31
 Wave 9:  40 → 41 → 42
 ```
 
-**Completed waves:** 1, 2, 3, 4 — wave 6 (tasks 19, 24, 39) complete — wave 7 in progress (tasks 25, 26, 27, 28 done).
+**Completed waves:** 1, 2, 3, 4, 6, 7, 8 — wave 5 blocked (tasks 10, 17, 18, 22, 23, 38 not started) — wave 9 pending wave 5 + all S1–S8 complete.
 
 ---
 
 *See `PLAN.md` for full orchestration method and `tasks/DEV_TASK_{N}.md` for individual briefs.*
+
+---
+
+## Next Phase
+
+### Current state
+
+Waves 1–4, 6, 7, 8 are fully complete. **Wave 5** (6 tasks) was skipped while later waves landed out of order — it is now the only blocker before Wave 9 can start. Wave 9 is the final integration and demo gate.
+
+### Wave 5 — Finish the gaps (parallel, all unblocked)
+
+| Task | Unit | Tier | Effort | Key deliverable |
+|------|------|------|--------|-----------------|
+| 10 | S1-05 OpenAPI contract | S | M | `GET /api-docs` + decorated DTOs; enables FE contract test |
+| 17 | S3-03 NL→action planner | O | L | `ActionPlannerService` — LLM loop with bounded steps/stop conditions |
+| 18 | S3-04 Crawl & capture | S+ | M | Playwright crawl driver; appends screenshots + DOM snapshots to trace |
+| 22 | S4-02 Azure Repos connector | S | S | `RepoConnector` impl for Azure DevOps; parity tests with GitHub connector |
+| 23 | S4-03 Ingestion & chunking | S+ | M | `IngestionService` — walk tree, filter, chunk via token utilities |
+| 38 | S8-02 Approve workflow | S | S | Gate export behind explicit approve; re-gate on post-approval edit |
+
+All six can run in parallel. Start with **17** (Opus, longest) and **10** (enables contract test) to front-load the critical path.
+
+### Wave 9 — End-to-End Integration & Demo (sequential)
+
+Begins only after every S1–S8 task is ✅.
+
+```
+40 (FE↔BE wiring) → 41 (E2E MyCMS) → 42 (Full-system eval)
+```
+
+| Task | Unit | Tier | Effort | Key deliverable |
+|------|------|------|--------|-----------------|
+| 40 | S9-01 FE↔BE wiring & contract test | S+ | M | Proxy config + contract test validating client shapes against OpenAPI spec |
+| 41 | S9-02 E2E against `MyCMS` fixture | O | L | Playwright E2E: Input → Progress → Review → Export to mock Confluence |
+| 42 | S9-03 Full-system Section-Eval | S | M | Root `verify` script; aggregate ≥85 % coverage; E2E added to CI |
+
+### Suggested execution order
+
+1. **Parallelise Wave 5** — assign tasks 10, 17, 18, 22, 23, 38 concurrently (tasks 17 and 23 are largest; start them first).
+2. **Once all Wave 5 tasks are green**, open Wave 9: run task 40, then 41, then 42 strictly in order.
+3. **Task 42 is the final gate** — all lint/build/test/coverage/E2E thresholds must pass before the project is considered shippable.

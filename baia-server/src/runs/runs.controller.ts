@@ -1,61 +1,68 @@
 import { RunSummary } from '@baia/shared';
 import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post } from '@nestjs/common';
-import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { RunsService } from './runs.service';
 
-/**
- * REST surface for the runs domain.
- *
- *   POST /runs          — create a new run (body: RunRequest)
- *   GET  /runs          — list all runs
- *   GET  /runs/:id      — get a single run by id
- *
- * Validation and 404 errors are thrown by `RunsService`; NestJS exception
- * filters translate them to the appropriate HTTP responses automatically.
- */
+const RUN_REQUEST_SCHEMA = {
+  type: 'object',
+  required: ['targetUrl', 'instructions', 'repoUrl', 'repoProvider', 'credentialsRef'],
+  properties: {
+    targetUrl: { type: 'string', example: 'https://example.com' },
+    instructions: { type: 'string', example: 'Click "Login", enter credentials, navigate to dashboard.' },
+    repoUrl: { type: 'string', example: 'https://github.com/org/repo' },
+    repoProvider: { type: 'string', enum: ['github', 'azure'], example: 'github' },
+    credentialsRef: { type: 'string', example: 'my-creds' },
+  },
+} as const;
+
+const RUN_SUMMARY_SCHEMA = {
+  type: 'object',
+  required: ['runId', 'status', 'targetUrl', 'createdAt', 'updatedAt'],
+  properties: {
+    runId: { type: 'string', example: 'run-0001' },
+    status: {
+      type: 'string',
+      enum: ['queued', 'exploring', 'analyzing', 'reconciling', 'review', 'exporting', 'done', 'failed'],
+      example: 'queued',
+    },
+    targetUrl: { type: 'string', example: 'https://example.com' },
+    createdAt: { type: 'string', format: 'date-time' },
+    updatedAt: { type: 'string', format: 'date-time' },
+    completedAt: { type: 'string', format: 'date-time' },
+  },
+} as const;
+
 @ApiTags('runs')
 @Controller('runs')
 export class RunsController {
   constructor(private readonly runsService: RunsService) {}
 
-  /**
-   * Create a new run.
-   *
-   * Returns 201 Created with the `RunSummary` on success.
-   * Returns 400 Bad Request with field errors when the body fails validation.
-   */
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Create a new run' })
-  @ApiResponse({ status: 201, description: 'Run created successfully.' })
+  @ApiBody({ schema: RUN_REQUEST_SCHEMA })
+  @ApiResponse({ status: 201, description: 'Run created successfully.', schema: RUN_SUMMARY_SCHEMA })
   @ApiResponse({ status: 400, description: 'Validation failed.' })
   createRun(@Body() body: unknown): RunSummary {
     return this.runsService.createRun(body);
   }
 
-  /**
-   * Retrieve all runs.
-   *
-   * Returns 200 OK with an array of `RunSummary`.
-   */
   @Get()
   @ApiOperation({ summary: 'List all runs' })
-  @ApiResponse({ status: 200, description: 'Array of run summaries.' })
+  @ApiResponse({
+    status: 200,
+    description: 'Array of run summaries.',
+    schema: { type: 'array', items: RUN_SUMMARY_SCHEMA },
+  })
   getAllRuns(): RunSummary[] {
     return this.runsService.getAllRuns();
   }
 
-  /**
-   * Retrieve a single run by id.
-   *
-   * Returns 200 OK with the `RunSummary` when found.
-   * Returns 404 Not Found when the id is unknown.
-   */
   @Get(':id')
   @ApiOperation({ summary: 'Get a single run by id' })
   @ApiParam({ name: 'id', description: 'The run identifier', example: 'run-0001' })
-  @ApiResponse({ status: 200, description: 'Run summary for the requested id.' })
+  @ApiResponse({ status: 200, description: 'Run summary for the requested id.', schema: RUN_SUMMARY_SCHEMA })
   @ApiResponse({ status: 404, description: 'Run not found.' })
   getRun(@Param('id') id: string): RunSummary {
     return this.runsService.getRun(id);
