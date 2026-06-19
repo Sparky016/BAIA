@@ -1,4 +1,5 @@
 import { BusinessRule, GherkinDoc, RunStatus } from '@baia/shared';
+import { Logger } from '@nestjs/common';
 
 import { IllegalRunTransitionError } from '../runs/run-state-machine';
 import { RunStateMachine } from '../runs/run-state-machine';
@@ -57,6 +58,8 @@ describe('ReconcileOrchestrator', () => {
   let reconciliationService: jest.Mocked<Pick<ReconciliationService, 'reconcile'>>;
 
   beforeEach(() => {
+    jest.spyOn(Logger.prototype, 'error').mockImplementation(() => {});
+
     const stateMachine = new RunStateMachine();
     runsService = new RunsService(stateMachine);
     runsEvents = new RunsEventsService();
