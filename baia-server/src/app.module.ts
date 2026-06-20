@@ -3,6 +3,8 @@ import { ConfigModule } from '@nestjs/config';
 
 import { ConfigService } from './config/config.service';
 import { HealthController } from './health/health.controller';
+import { PipelineModule } from './pipeline/pipeline.module';
+import { RunsModule } from './runs/runs.module';
 
 @Module({
   imports: [
@@ -10,6 +12,8 @@ import { HealthController } from './health/health.controller';
       isGlobal: true,
       envFilePath: '.env',
     }),
+    RunsModule,
+    PipelineModule,
   ],
   controllers: [HealthController],
   providers: [ConfigService],

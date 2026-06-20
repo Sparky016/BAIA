@@ -92,13 +92,19 @@ describe('RunsService', () => {
       expect(() => service.createRun(body)).toThrow(BadRequestException);
     });
 
-    it('throws BadRequestException when repoUrl is empty', () => {
+    it('creates a run when only targetUrl and instructions are provided', () => {
+      const body = { targetUrl: 'https://example.com', instructions: 'Explore the homepage' };
+      const summary = service.createRun(body);
+      expect(summary.status).toBe(RunStatus.Queued);
+    });
+
+    it('throws BadRequestException when repoUrl is provided but empty', () => {
       const body = { ...VALID_BODY, repoUrl: '' };
       const err = catchBadRequest(() => service.createRun(body));
       expectFieldError(err, 'repoUrl');
     });
 
-    it('throws BadRequestException when repoProvider is an invalid value', () => {
+    it('throws BadRequestException when repoProvider is provided but invalid', () => {
       const body = { ...VALID_BODY, repoProvider: 'gitlab' };
       const err = catchBadRequest(() => service.createRun(body));
       expectFieldError(err, 'repoProvider');
@@ -110,7 +116,7 @@ describe('RunsService', () => {
       expect(summary.status).toBe(RunStatus.Queued);
     });
 
-    it('throws BadRequestException when credentialsRef is blank', () => {
+    it('throws BadRequestException when credentialsRef is provided but blank', () => {
       const body = { ...VALID_BODY, credentialsRef: '   ' };
       const err = catchBadRequest(() => service.createRun(body));
       expectFieldError(err, 'credentialsRef');
@@ -205,15 +211,15 @@ describe('RunsService', () => {
       expect(RunsService.validateRunRequest(VALID_BODY)).toHaveLength(0);
     });
 
-    it('returns an error for each missing required field', () => {
+    it('returns errors only for the required fields when body is empty', () => {
       const empty = {};
       const errors = RunsService.validateRunRequest(empty);
       const fields = errors.map((e: FieldError) => e.field);
       expect(fields).toContain('targetUrl');
       expect(fields).toContain('instructions');
-      expect(fields).toContain('repoUrl');
-      expect(fields).toContain('repoProvider');
-      expect(fields).toContain('credentialsRef');
+      expect(fields).not.toContain('repoUrl');
+      expect(fields).not.toContain('repoProvider');
+      expect(fields).not.toContain('credentialsRef');
     });
 
     it('returns no errors when stateMachine is injected', () => {

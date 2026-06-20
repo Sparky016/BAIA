@@ -412,7 +412,7 @@ describe('ReconciliationService', () => {
       const llm = makeMockLlm([emptyOutput]);
       const service = buildService(llm);
 
-      const doc = await service.reconcile(emptyDoc, []);
+      const doc = await service.reconcile(emptyDoc, SAMPLE_RULES);
       expect(doc.features[0].name).toBe('Feature');
     });
 
@@ -489,7 +489,7 @@ describe('ReconciliationService', () => {
       const service = buildService(llm);
 
       const [prompt] = await (async () => {
-        await service.reconcile(multiFeatureDoc, []);
+        await service.reconcile(multiFeatureDoc, SAMPLE_RULES);
         return (llm.completeJson as jest.Mock).mock.calls[0];
       })();
 

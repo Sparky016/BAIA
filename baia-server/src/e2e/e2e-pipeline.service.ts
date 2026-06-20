@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 
 import { AnalyzeOrchestrator } from '../code-analyst/analyze.orchestrator';
 import { ExploreOrchestrator } from '../explore/explore.orchestrator';
@@ -11,6 +11,8 @@ import { ReconcileOrchestrator } from '../reconcile/reconcile.orchestrator';
  */
 @Injectable()
 export class E2ePipelineService {
+  private readonly logger = new Logger(E2ePipelineService.name);
+
   constructor(
     private readonly exploreOrchestrator: ExploreOrchestrator,
     private readonly analyzeOrchestrator: AnalyzeOrchestrator,
@@ -21,12 +23,24 @@ export class E2ePipelineService {
     runId: string,
     targetUrl: string,
     instructions: string,
-    repoUrl: string,
-    repoProvider: 'github' | 'azure',
-    credentialsRef: string
+    repoUrl?: string,
+    repoProvider?: 'github' | 'azure',
+    credentialsRef?: string
   ): Promise<void> {
+    this.logger.log(
+      `Pipeline starting for run ${runId} | targetUrl=${targetUrl} | repo=${repoProvider ?? 'none'}`
+    );
+    const startTime = Date.now();
+
     await this.exploreOrchestrator.executePhase1(runId, targetUrl, instructions);
+    this.logger.log(`Run ${runId}: Phase 1 complete (${Date.now() - startTime}ms elapsed)`);
+
     await this.analyzeOrchestrator.executePhase2(runId, repoUrl, repoProvider, credentialsRef);
+    this.logger.log(`Run ${runId}: Phase 2 complete (${Date.now() - startTime}ms elapsed)`);
+
     await this.reconcileOrchestrator.executeReconcile(runId);
+    this.logger.log(
+      `Run ${runId}: pipeline complete — total time ${Date.now() - startTime}ms`
+    );
   }
 }

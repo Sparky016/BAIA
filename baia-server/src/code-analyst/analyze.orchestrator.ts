@@ -38,17 +38,18 @@ export class AnalyzeOrchestrator {
   /**
    * Execute Phase 2 for the given run.
    *
-   * Expects `runId` to be in `analyzing` state. Transitions to `reconciling`
-   * on success or `failed` on any error.
+   * Expects `runId` to be in `analyzing` state. When repo params are omitted
+   * the code-analysis step is skipped and the run advances directly to
+   * `reconciling` with no business rules.  Transitions to `failed` on error.
    *
    * @throws {IllegalRunTransitionError} if the run is not in `analyzing` state.
    * @throws {NotFoundException} if `runId` is unknown.
    */
   async executePhase2(
     runId: string,
-    repoUrl: string,
-    repoProvider: 'github' | 'azure',
-    credentialsRef: string
+    repoUrl?: string,
+    repoProvider?: 'github' | 'azure',
+    credentialsRef?: string
   ): Promise<void> {
     const run = this.runsService.getRun(runId);
 
@@ -56,6 +57,23 @@ export class AnalyzeOrchestrator {
     // any side-effects if the run is in an unexpected state.
     if (run.status !== RunStatus.Analyzing) {
       throw new IllegalRunTransitionError(run.status, RunStatus.Reconciling);
+    }
+
+    if (!repoUrl || !repoProvider || !credentialsRef) {
+      this.emitAnalyzeEvent(
+        runId,
+        'observation',
+        'Skipping code analysis — no repository provided'
+      );
+      this.logger.log(`Run ${runId}: Phase 2 skipped (no repo params)`);
+      this.runsService.transitionRun(runId, RunStatus.Reconciling);
+      this.runsEvents.emit(runId, {
+        runId,
+        from: RunStatus.Analyzing,
+        to: RunStatus.Reconciling,
+        at: Date.now(),
+      });
+      return;
     }
 
     this.emitAnalyzeEvent(runId, 'observation', 'Starting Phase 2 code analysis');

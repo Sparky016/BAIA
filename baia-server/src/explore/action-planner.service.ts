@@ -1,5 +1,5 @@
 import { Action, ClickAction, FillAction, NavigateAction, SelectAction } from '@baia/shared';
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 
 import { LLM_SERVICE } from '../llm/llm.constants';
 import { LlmError, LlmService } from '../llm/llm.service';
@@ -29,6 +29,8 @@ const DEFAULT_MAX_STEPS = 10;
 
 @Injectable()
 export class ActionPlannerService {
+  private readonly logger = new Logger(ActionPlannerService.name);
+
   constructor(@Inject(LLM_SERVICE) private readonly llmService: LlmService) {}
 
   async planActions(input: ActionPlannerInput): Promise<ActionPlannerResult> {
@@ -36,7 +38,11 @@ export class ActionPlannerService {
     const allActions: Action[] = [];
     let goalSummary = '';
 
+    this.logger.log(`Action planning started — url=${input.currentUrl}, maxSteps=${maxSteps}`);
+
     for (let step = 0; step < maxSteps; step++) {
+      this.logger.debug(`Planning step ${step + 1}/${maxSteps} (${allActions.length} action(s) accumulated so far)`);
+
       const priorDescriptions: string[] = [
         ...(input.previousActions ?? []),
         ...allActions.map((a) => describeAction(a)),
@@ -57,12 +63,16 @@ export class ActionPlannerService {
         );
       } catch (err) {
         if (err instanceof LlmError && err.code === 'SCHEMA_VALIDATION') {
+          this.logger.warn(`Action planning schema validation failed at step ${step + 1} — retrying once`);
           try {
             output = await this.llmService.completeJson<ActionPlanningOutput>(
               prompt,
               ACTION_PLANNING_OUTPUT_SCHEMA
             );
-          } catch {
+          } catch (retryErr) {
+            this.logger.error(
+              `Action planning retry failed at step ${step + 1}: ${retryErr instanceof Error ? retryErr.message : String(retryErr)}`
+            );
             return {
               actions: allActions,
               goalSummary,
@@ -71,6 +81,9 @@ export class ActionPlannerService {
             };
           }
         } else {
+          this.logger.error(
+            `Action planning LLM error at step ${step + 1}: ${err instanceof Error ? err.message : String(err)}`
+          );
           return {
             actions: allActions,
             goalSummary,
@@ -82,21 +95,30 @@ export class ActionPlannerService {
 
       if (goalSummary === '') {
         goalSummary = output.goalSummary;
+        this.logger.log(`Goal summary: ${goalSummary}`);
       }
 
       if (output.actions.length === 0) {
+        const stopReason = allActions.length === 0 ? 'no-progress' : 'goal-reached';
+        this.logger.log(
+          `Action planning stopped at step ${step + 1}: stopReason=${stopReason}, totalActions=${allActions.length}`
+        );
         return {
           actions: allActions,
           goalSummary,
           stepsUsed: step,
-          stopReason: allActions.length === 0 ? 'no-progress' : 'goal-reached',
+          stopReason,
         };
       }
 
       const mapped = output.actions.map((planned) => mapPlannedAction(planned));
       allActions.push(...mapped);
+      this.logger.debug(`Step ${step + 1}: added ${mapped.length} action(s) — types=[${mapped.map((a) => a.type).join(', ')}]`);
     }
 
+    this.logger.log(
+      `Action planning hit maxSteps=${maxSteps}: totalActions=${allActions.length}, stopReason=max-steps`
+    );
     return {
       actions: allActions,
       goalSummary,

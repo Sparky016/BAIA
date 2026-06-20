@@ -45,7 +45,7 @@ export class InputComponent {
 
     this.runsApi.createRun(request).subscribe({
       next: (run) => {
-        this.store.setRun(run.runId, run.status ?? RunStatus.Queued);
+        this.store.setRunWithRequest(run.runId, run.status ?? RunStatus.Queued, request);
         void this.router.navigate(['/progress', run.runId]);
       },
       error: (err: Error) => {

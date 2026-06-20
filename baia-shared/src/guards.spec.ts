@@ -64,26 +64,26 @@ describe('Type Guards', () => {
       expect(isRunRequest(invalidRequest)).toBe(false);
     });
 
-    it('should return false for missing repoUrl', () => {
-      const invalidRequest = {
+    it('should return true when repoUrl is absent', () => {
+      const request = {
         targetUrl: 'https://example.com',
         instructions: 'Test the login flow',
         repoProvider: 'github',
         credentialsRef: 'github-token-v1',
       };
 
-      expect(isRunRequest(invalidRequest)).toBe(false);
+      expect(isRunRequest(request)).toBe(true);
     });
 
-    it('should return false for missing repoProvider', () => {
-      const invalidRequest = {
+    it('should return true when repoProvider is absent', () => {
+      const request = {
         targetUrl: 'https://example.com',
         instructions: 'Test the login flow',
         repoUrl: 'https://github.com/test/repo',
         credentialsRef: 'github-token-v1',
       };
 
-      expect(isRunRequest(invalidRequest)).toBe(false);
+      expect(isRunRequest(request)).toBe(true);
     });
 
     it('should return false for invalid repoProvider', () => {
@@ -98,15 +98,21 @@ describe('Type Guards', () => {
       expect(isRunRequest(invalidRequest)).toBe(false);
     });
 
-    it('should return false for missing credentialsRef', () => {
-      const invalidRequest = {
+    it('should return true when credentialsRef is absent', () => {
+      const request = {
         targetUrl: 'https://example.com',
         instructions: 'Test the login flow',
         repoUrl: 'https://github.com/test/repo',
         repoProvider: 'github',
       };
 
-      expect(isRunRequest(invalidRequest)).toBe(false);
+      expect(isRunRequest(request)).toBe(true);
+    });
+
+    it('should return true when only targetUrl and instructions are provided', () => {
+      expect(
+        isRunRequest({ targetUrl: 'https://example.com', instructions: 'Explore the homepage' })
+      ).toBe(true);
     });
 
     it('should return false for non-string targetUrl', () => {

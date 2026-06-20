@@ -1,12 +1,12 @@
 import { RunSummary } from '@baia/shared';
-import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Logger, Param, Post } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { RunsService } from './runs.service';
 
 const RUN_REQUEST_SCHEMA = {
   type: 'object',
-  required: ['targetUrl', 'instructions', 'repoUrl', 'repoProvider', 'credentialsRef'],
+  required: ['targetUrl', 'instructions'],
   properties: {
     targetUrl: { type: 'string', example: 'https://example.com' },
     instructions: {
@@ -48,6 +48,8 @@ const RUN_SUMMARY_SCHEMA = {
 @ApiTags('runs')
 @Controller('runs')
 export class RunsController {
+  private readonly logger = new Logger(RunsController.name);
+
   constructor(private readonly runsService: RunsService) {}
 
   @Post()
@@ -61,7 +63,11 @@ export class RunsController {
   })
   @ApiResponse({ status: 400, description: 'Validation failed.' })
   createRun(@Body() body: unknown): RunSummary {
-    return this.runsService.createRun(body);
+    const targetUrl = (body as Record<string, unknown>)?.['targetUrl'];
+    this.logger.log(`POST /runs — targetUrl=${targetUrl ?? '(missing)'}`);
+    const result = this.runsService.createRun(body);
+    this.logger.log(`Run accepted: ${result.runId}`);
+    return result;
   }
 
   @Get()
@@ -72,7 +78,9 @@ export class RunsController {
     schema: { type: 'array', items: RUN_SUMMARY_SCHEMA },
   })
   getAllRuns(): RunSummary[] {
-    return this.runsService.getAllRuns();
+    const runs = this.runsService.getAllRuns();
+    this.logger.debug(`GET /runs — returning ${runs.length} run(s)`);
+    return runs;
   }
 
   @Get(':id')
@@ -85,6 +93,7 @@ export class RunsController {
   })
   @ApiResponse({ status: 404, description: 'Run not found.' })
   getRun(@Param('id') id: string): RunSummary {
+    this.logger.debug(`GET /runs/${id}`);
     return this.runsService.getRun(id);
   }
 }

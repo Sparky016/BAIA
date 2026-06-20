@@ -7,10 +7,10 @@ import { E2ePipelineService } from './e2e-pipeline.service';
 
 export interface StartPipelineBody {
   instructions: string;
-  repoUrl: string;
-  repoProvider: 'github' | 'azure';
+  repoUrl?: string;
+  repoProvider?: 'github' | 'azure';
   /** Ref under which the repo access token will be stored. */
-  credentialsRef: string;
+  credentialsRef?: string;
   /** Ref under which the Confluence credentials will be stored. */
   confluenceCredentialsRef?: string;
 }
@@ -41,7 +41,9 @@ export class E2eStartController {
   startPipeline(@Param('id') id: string, @Body() body: StartPipelineBody): StartPipelineResult {
     const run = this.runsService.getRun(id);
 
-    this.credentialStore.store(body.credentialsRef, 'mock-access-token');
+    if (body.credentialsRef) {
+      this.credentialStore.store(body.credentialsRef, 'mock-access-token');
+    }
     if (body.confluenceCredentialsRef) {
       // Confluence basic auth format: "email:apiToken"
       this.credentialStore.store(

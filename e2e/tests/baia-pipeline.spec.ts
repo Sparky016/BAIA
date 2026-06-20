@@ -106,7 +106,64 @@ async function collectSseStatuses(
   return statuses;
 }
 
-// ── Test ─────────────────────────────────────────────────────────────────────
+// ── SSE helpers (extended) ────────────────────────────────────────────────────
+
+interface SseCollectionResult {
+  statuses: string[];
+  observationMessages: string[];
+}
+
+/**
+ * Like collectSseStatuses but also captures ExploreEvent observation messages.
+ * Stops on the first STOP_STATUSES transition, same as the simpler helper.
+ */
+async function collectSseEvents(
+  reader: ReadableStreamDefaultReader<Uint8Array>,
+  controller: AbortController,
+): Promise<SseCollectionResult> {
+  const statuses: string[] = [];
+  const observationMessages: string[] = [];
+  const decoder = new TextDecoder();
+  let buffer = '';
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() ?? '';
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed.startsWith('data:')) continue;
+        const json = trimmed.slice('data:'.length).trim();
+        if (!json) continue;
+
+        try {
+          const event = JSON.parse(json) as Record<string, unknown>;
+          if (typeof event['to'] === 'string') {
+            const status = event['to'] as string;
+            statuses.push(status);
+            if (STOP_STATUSES.has(status)) return { statuses, observationMessages };
+          } else if (event['type'] === 'observation' && typeof event['message'] === 'string') {
+            observationMessages.push(event['message'] as string);
+          }
+        } catch {
+          // Ignore non-JSON SSE frames (heartbeats, comments, etc.)
+        }
+      }
+    }
+  } finally {
+    controller.abort();
+    reader.cancel().catch(() => {});
+  }
+
+  return { statuses, observationMessages };
+}
+
+// ── Tests ─────────────────────────────────────────────────────────────────────
 
 test('full BAIA pipeline: Input → Progress → Review → Export', async ({ request }) => {
   // ── Stage 1: Input ───────────────────────────────────────────────────────
@@ -175,6 +232,102 @@ test('full BAIA pipeline: Input → Progress → Review → Export', async ({ re
   // The run must carry generated documentation (unifiedDoc preferred, gherkinDoc as fallback).
   const hasDoc = reviewRun.unifiedDoc !== undefined || reviewRun.gherkinDoc !== undefined;
   expect(hasDoc).toBe(true);
+
+  // ── Stage 4: Export ──────────────────────────────────────────────────────
+
+  const exportRes = await request.post(`${API}/runs/${runId}/export`, {
+    data: {
+      baseUrl: CONFLUENCE_BASE,
+      spaceKey: CONFLUENCE_SPACE,
+      credentialsRef: CONFLUENCE_CREDS_REF,
+    },
+  });
+
+  expect(exportRes.status()).toBe(200);
+  const exportBody = (await exportRes.json()) as { url: string };
+  expect(exportBody.url).toMatch(/^http:\/\/localhost:4002\/wiki\//);
+
+  // ── Final state ──────────────────────────────────────────────────────────
+
+  const finalRes = await request.get(`${API}/runs/${runId}`);
+  expect(finalRes.status()).toBe(200);
+  const finalRun = (await finalRes.json()) as RunSummary;
+  expect(finalRun.status).toBe('done');
+});
+
+test('no-repo pipeline: Phase 2 skipped — still reaches review with empty conflicts', async ({ request }) => {
+  // ── Stage 1: Input (no repo fields) ─────────────────────────────────────
+
+  const createRes = await request.post(`${API}/runs`, {
+    data: {
+      targetUrl: MYCMS_URL,
+      instructions:
+        'Navigate the MyCMS home page, explore the navigation links, and document the visible content.',
+    },
+  });
+
+  expect(createRes.status()).toBe(201);
+  const run = (await createRes.json()) as RunSummary;
+  expect(run.runId).toMatch(/^run-\d{4}$/);
+  expect(run.status).toBe('queued');
+  expect(run.targetUrl).toBe(MYCMS_URL);
+
+  const { runId } = run;
+
+  // ── Stage 2: Progress (SSE) ──────────────────────────────────────────────
+
+  const { reader, controller } = await openSseStream(runId);
+
+  // Start pipeline with no repo fields — Phase 2 will be skipped.
+  const startRes = await request.post(`${API}/runs/${runId}/start`, {
+    data: {
+      instructions:
+        'Navigate the MyCMS home page, explore the navigation links, and document the visible content.',
+      confluenceCredentialsRef: CONFLUENCE_CREDS_REF,
+    },
+  });
+
+  expect(startRes.status()).toBe(202);
+  const startBody = (await startRes.json()) as { accepted: boolean; runId: string };
+  expect(startBody.accepted).toBe(true);
+  expect(startBody.runId).toBe(runId);
+
+  // Collect SSE events including observation messages.
+  const { statuses, observationMessages } = await collectSseEvents(reader, controller);
+
+  // Run still passes through all status transitions despite Phase 2 being skipped.
+  expect(statuses).toContain('exploring');
+  expect(statuses).toContain('analyzing');
+  expect(statuses).toContain('reconciling');
+  expect(statuses).toContain('review');
+  expect(statuses).not.toContain('failed');
+
+  // The skip must be observable via the SSE observation event emitted by Phase 2.
+  expect(observationMessages.some(m => m.includes('Skipping code analysis'))).toBe(true);
+
+  // ── Stage 3: Review — doc shape ──────────────────────────────────────────
+
+  const reviewRes = await request.get(`${API}/runs/${runId}`);
+  expect(reviewRes.status()).toBe(200);
+
+  const reviewRun = (await reviewRes.json()) as RunSummary & {
+    unifiedDoc?: { features: Array<{ scenarios: Array<{ name: string }> }>; conflicts: unknown[] };
+    gherkinDoc?: unknown;
+  };
+  expect(reviewRun.status).toBe('review');
+
+  // A gherkin doc must exist (Phase 1 produced it) even without code analysis.
+  expect(reviewRun.gherkinDoc).toBeDefined();
+
+  // The unified doc must exist and have no conflicts (no code rules to conflict with).
+  expect(reviewRun.unifiedDoc).toBeDefined();
+  expect(reviewRun.unifiedDoc!.conflicts).toHaveLength(0);
+
+  // No scenarios should be named "Code Rule: …" since Phase 2 produced no rules.
+  const allScenarioNames = reviewRun.unifiedDoc!.features.flatMap(f =>
+    f.scenarios.map(s => s.name),
+  );
+  expect(allScenarioNames.every(name => !name.startsWith('Code Rule:'))).toBe(true);
 
   // ── Stage 4: Export ──────────────────────────────────────────────────────
 

@@ -6,7 +6,7 @@ import {
   RunSummary,
   UnifiedDoc,
 } from '@baia/shared';
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 
 import { RunStateMachine } from './run-state-machine';
 
@@ -51,23 +51,31 @@ function validateRunRequest(body: unknown): FieldError[] {
     errors.push({ field: 'instructions', message: 'instructions must be a non-empty string.' });
   }
 
-  // repoUrl — required non-empty string
-  if (typeof candidate['repoUrl'] !== 'string' || candidate['repoUrl'].trim() === '') {
+  // repoUrl — optional; if provided, must be a non-empty string
+  if (
+    candidate['repoUrl'] !== undefined &&
+    (typeof candidate['repoUrl'] !== 'string' || candidate['repoUrl'].trim() === '')
+  ) {
     errors.push({ field: 'repoUrl', message: 'repoUrl must be a non-empty string.' });
   }
 
-  // repoProvider — must be 'github' | 'azure'
-  if (candidate['repoProvider'] !== 'github' && candidate['repoProvider'] !== 'azure') {
+  // repoProvider — optional; if provided, must be 'github' | 'azure'
+  if (
+    candidate['repoProvider'] !== undefined &&
+    candidate['repoProvider'] !== 'github' &&
+    candidate['repoProvider'] !== 'azure'
+  ) {
     errors.push({
       field: 'repoProvider',
       message: "repoProvider must be either 'github' or 'azure'.",
     });
   }
 
-  // credentialsRef — required non-empty string
+  // credentialsRef — optional; if provided, must be a non-empty string
   if (
-    typeof candidate['credentialsRef'] !== 'string' ||
-    candidate['credentialsRef'].trim() === ''
+    candidate['credentialsRef'] !== undefined &&
+    (typeof candidate['credentialsRef'] !== 'string' ||
+      candidate['credentialsRef'].trim() === '')
   ) {
     errors.push({
       field: 'credentialsRef',
@@ -84,6 +92,7 @@ function validateRunRequest(body: unknown): FieldError[] {
  */
 @Injectable()
 export class RunsService {
+  private readonly logger = new Logger(RunsService.name);
   private readonly runs = new Map<string, RunSummary>();
   private nextId = 1;
 
@@ -113,6 +122,7 @@ export class RunsService {
     };
 
     this.runs.set(runId, summary);
+    this.logger.log(`Run created: ${runId} | targetUrl=${request.targetUrl}`);
     return summary;
   }
 
@@ -147,6 +157,7 @@ export class RunsService {
     this.stateMachine.transition(runId, run.status, to);
     const updated: RunSummary = { ...run, status: to, updatedAt: new Date() };
     this.runs.set(runId, updated);
+    this.logger.log(`Run ${runId}: ${run.status} → ${to}`);
     return updated;
   }
 
@@ -158,6 +169,7 @@ export class RunsService {
     const run = this.getRun(runId);
     const updated: RunSummary = { ...run, gherkinDoc: doc, updatedAt: new Date() };
     this.runs.set(runId, updated);
+    this.logger.log(`Run ${runId}: GherkinDoc stored (${doc.features.length} feature(s))`);
     return updated;
   }
 
@@ -169,6 +181,7 @@ export class RunsService {
     const run = this.getRun(runId);
     const updated: RunSummary = { ...run, businessRules: rules, updatedAt: new Date() };
     this.runs.set(runId, updated);
+    this.logger.log(`Run ${runId}: ${rules.length} business rule(s) stored`);
     return updated;
   }
 
@@ -180,6 +193,10 @@ export class RunsService {
     const run = this.getRun(runId);
     const updated: RunSummary = { ...run, unifiedDoc: doc, updatedAt: new Date() };
     this.runs.set(runId, updated);
+    const scenarioCount = doc.features.reduce((n, f) => n + f.scenarios.length, 0);
+    this.logger.log(
+      `Run ${runId}: UnifiedDoc stored (${doc.features.length} feature(s), ${scenarioCount} scenario(s), ${doc.conflicts.length} conflict(s))`
+    );
     return updated;
   }
 

@@ -1,10 +1,11 @@
 import { computed } from '@angular/core';
 import { signalStore, withState, withComputed, withMethods, patchState } from '@ngrx/signals';
-import { GherkinDoc, RunStatus, ExploreEvent } from '@baia/shared';
+import { GherkinDoc, RunRequest, RunStatus, ExploreEvent } from '@baia/shared';
 
 export interface RunState {
   runId: string | null;
   status: RunStatus | null;
+  request: RunRequest | null;
   events: ExploreEvent[];
   gherkinDoc: GherkinDoc | null;
   gherkinDocEdited: GherkinDoc | null;
@@ -15,6 +16,7 @@ export interface RunState {
 const initialState: RunState = {
   runId: null,
   status: null,
+  request: null,
   events: [],
   gherkinDoc: null,
   gherkinDocEdited: null,
@@ -35,7 +37,10 @@ export const RunStore = signalStore(
   })),
   withMethods((store) => ({
     setRun(runId: string, status: RunStatus): void {
-      patchState(store, { runId, status, events: [], gherkinDoc: null, gherkinDocEdited: null, approved: false, error: null });
+      patchState(store, { runId, status, request: null, events: [], gherkinDoc: null, gherkinDocEdited: null, approved: false, error: null });
+    },
+    setRunWithRequest(runId: string, status: RunStatus, request: RunRequest): void {
+      patchState(store, { runId, status, request, events: [], gherkinDoc: null, gherkinDocEdited: null, approved: false, error: null });
     },
     setStatus(status: RunStatus): void {
       patchState(store, { status });

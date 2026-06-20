@@ -304,6 +304,44 @@ describe('AnalyzeOrchestrator', () => {
     });
   });
 
+  // ── URL-only (no repo) ─────────────────────────────────────────────────────
+
+  describe('when no repository params are provided', () => {
+    it('transitions to reconciling without calling any connector', async () => {
+      const runId = createAnalyzingRun();
+      await orchestrator.executePhase2(runId);
+      expect(runsService.getRun(runId).status).toBe(RunStatus.Reconciling);
+      expect(githubConnector.auth).not.toHaveBeenCalled();
+      expect(azureConnector.auth).not.toHaveBeenCalled();
+      expect(ingestionService.ingestWithConnector).not.toHaveBeenCalled();
+      expect(ruleExtractor.extractRules).not.toHaveBeenCalled();
+    });
+
+    it('does not store business rules when skipping analysis', async () => {
+      const runId = createAnalyzingRun();
+      await orchestrator.executePhase2(runId);
+      expect(runsService.getRun(runId).businessRules).toBeUndefined();
+    });
+
+    it('emits a skip observation and analyzing→reconciling transition', async () => {
+      const runId = createAnalyzingRun();
+      const collectedEvents: RunStreamEvent[] = [];
+      runsEvents.stream(runId).subscribe((e) => collectedEvents.push(e));
+
+      await orchestrator.executePhase2(runId);
+
+      const observation = collectedEvents.find(
+        (e) => 'type' in e && (e as { type: string }).type === 'observation'
+      ) as { message: string } | undefined;
+      expect(observation?.message).toContain('Skipping');
+
+      const transition = collectedEvents.find(
+        (e) => 'to' in e && (e as { to: RunStatus }).to === RunStatus.Reconciling
+      );
+      expect(transition).toBeDefined();
+    });
+  });
+
   // ── Guard: wrong starting state ────────────────────────────────────────────
 
   describe('when run is not in analyzing state', () => {

@@ -2,6 +2,7 @@ import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ExploreEvent, RunStatus } from '@baia/shared';
+import { RunsApiService } from '../core/api/runs-api.service';
 import { RunStore } from '../core/state/run.store';
 
 interface RunTransitionEvent {
@@ -23,12 +24,24 @@ export class ProgressComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   protected readonly store = inject(RunStore);
+  private readonly runsApi = inject(RunsApiService);
 
   readonly runId: string = this.route.snapshot.params['id'] ?? '';
   private eventSource: EventSource | null = null;
 
   ngOnInit(): void {
     if (!this.runId) return;
+
+    if (this.store.status() === RunStatus.Queued) {
+      const request = this.store.request();
+      if (request) {
+        this.runsApi.startRun(this.runId, request).subscribe({
+          error: (err: Error) =>
+            this.store.setError(err.message ?? 'Failed to start pipeline'),
+        });
+      }
+    }
+
     this.connect();
   }
 

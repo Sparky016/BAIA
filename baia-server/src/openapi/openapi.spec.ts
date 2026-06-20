@@ -93,15 +93,7 @@ describe('OpenAPI contract', () => {
     };
     const schema = postRuns.requestBody?.content?.['application/json']?.schema;
     expect(schema).toBeDefined();
-    expect(schema.required).toEqual(
-      expect.arrayContaining([
-        'targetUrl',
-        'instructions',
-        'repoUrl',
-        'repoProvider',
-        'credentialsRef',
-      ])
-    );
+    expect(schema.required).toEqual(expect.arrayContaining(['targetUrl', 'instructions']));
     expect(schema.properties['targetUrl']).toBeDefined();
     expect(schema.properties['repoProvider']).toBeDefined();
   });

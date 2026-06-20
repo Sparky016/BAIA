@@ -27,6 +27,13 @@ export class RunsApiService {
     return this.http.get<RunSummary>(`${this.baseUrl}/runs/${runId}`);
   }
 
+  startRun(runId: string, request: RunRequest): Observable<{ accepted: boolean; runId: string }> {
+    return this.http.post<{ accepted: boolean; runId: string }>(
+      `${this.baseUrl}/runs/${runId}/start`,
+      request
+    );
+  }
+
   export(runId: string, request: ExportRequest): Observable<ExportResult> {
     return this.http.post<ExportResult>(`${this.baseUrl}/runs/${runId}/export`, request);
   }

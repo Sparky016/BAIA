@@ -5,7 +5,7 @@ import {
   GherkinScenario,
   GherkinStep,
 } from '@baia/shared';
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 
 import { LLM_SERVICE } from '../llm/llm.constants';
 import { LlmError, LlmService } from '../llm/llm.service';
@@ -81,6 +81,8 @@ function mapGapToScenario(gap: RuleGap): GherkinScenario {
 
 @Injectable()
 export class ReconciliationService {
+  private readonly logger = new Logger(ReconciliationService.name);
+
   constructor(@Inject(LLM_SERVICE) private readonly llm: LlmService) {}
 
   /**
@@ -94,6 +96,11 @@ export class ReconciliationService {
    * throws {@link ReconciliationError} on non-retryable errors or exhaustion.
    */
   async reconcile(gherkinDoc: GherkinDoc, rules: BusinessRule[]): Promise<GherkinDoc> {
+    if (rules.length === 0) {
+      this.logger.log('Reconciliation skipped — no business rules; returning original GherkinDoc');
+      return { ...gherkinDoc, generatedAt: new Date() };
+    }
+
     const featureName = gherkinDoc.features[0]?.name ?? 'Feature';
 
     const observedScenarios: ObservedScenario[] = gherkinDoc.features.flatMap((feature) =>
@@ -118,25 +125,43 @@ export class ReconciliationService {
     const prompt = renderReconciliationPrompt(input);
     let lastError: unknown;
 
+    this.logger.log(
+      `Reconciliation LLM call: ${observedScenarios.length} scenario(s) × ${codeRules.length} rule(s)`
+    );
+
     for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
       try {
+        if (attempt > 0) {
+          this.logger.warn(`Reconciliation retry attempt ${attempt + 1}/${MAX_RETRIES}`);
+        }
         const output = await this.llm.completeJson<ReconciliationOutput>(
           prompt,
           RECONCILIATION_OUTPUT_SCHEMA
         );
-        return this.buildDoc(output, featureName);
+        const doc = this.buildDoc(output, featureName);
+        this.logger.log(
+          `Reconciliation succeeded on attempt ${attempt + 1}: ${output.scenarios.length} enriched scenario(s), ${output.gaps.length} gap(s)`
+        );
+        return doc;
       } catch (err) {
         lastError = err;
         const isRetryable = err instanceof LlmError && err.code === 'SCHEMA_VALIDATION';
         if (!isRetryable) {
+          this.logger.error(
+            `Reconciliation non-retryable error: ${err instanceof Error ? err.message : String(err)}`
+          );
           throw new ReconciliationError(
             `Reconciliation failed: ${err instanceof Error ? err.message : String(err)}`,
             err
           );
         }
+        this.logger.warn(
+          `Reconciliation schema validation failed (attempt ${attempt + 1}): ${err instanceof Error ? err.message : String(err)}`
+        );
       }
     }
 
+    this.logger.error(`Reconciliation exhausted ${MAX_RETRIES} retries`);
     throw new ReconciliationError(
       `Reconciliation failed after ${MAX_RETRIES} attempts: ${
         lastError instanceof Error ? lastError.message : String(lastError)
