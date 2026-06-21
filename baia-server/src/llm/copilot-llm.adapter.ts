@@ -240,9 +240,14 @@ export class CopilotLlmAdapter implements LlmService {
     const jsonPrompt = `${prompt}\n\nRespond with valid JSON only — no markdown, no prose, no code fences.`;
     const raw = await this.complete(jsonPrompt, opts);
 
+    const cleaned = raw
+      .replace(/^```(?:json)?\s*/i, '')
+      .replace(/\s*```\s*$/, '')
+      .trim();
+
     let parsed: unknown;
     try {
-      parsed = JSON.parse(raw);
+      parsed = JSON.parse(cleaned);
     } catch (e) {
       throw new LlmError(
         'SCHEMA_VALIDATION',
