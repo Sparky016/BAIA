@@ -51,6 +51,39 @@ function validateRunRequest(body: unknown): FieldError[] {
     errors.push({ field: 'instructions', message: 'instructions must be a non-empty string.' });
   }
 
+  // repoUrl — optional, but if present must be a non-empty string
+  if (candidate['repoUrl'] !== undefined) {
+    if (typeof candidate['repoUrl'] !== 'string' || candidate['repoUrl'].trim() === '') {
+      errors.push({
+        field: 'repoUrl',
+        message: 'repoUrl must be a non-empty string when provided.',
+      });
+    }
+  }
+
+  // repoProvider — optional, but if present must be 'github' or 'azure'
+  if (candidate['repoProvider'] !== undefined) {
+    if (candidate['repoProvider'] !== 'github' && candidate['repoProvider'] !== 'azure') {
+      errors.push({
+        field: 'repoProvider',
+        message: "repoProvider must be 'github' or 'azure' when provided.",
+      });
+    }
+  }
+
+  // credentialsRef — optional, but if present must be a non-blank string
+  if (candidate['credentialsRef'] !== undefined) {
+    if (
+      typeof candidate['credentialsRef'] !== 'string' ||
+      candidate['credentialsRef'].trim() === ''
+    ) {
+      errors.push({
+        field: 'credentialsRef',
+        message: 'credentialsRef must be a non-blank string when provided.',
+      });
+    }
+  }
+
   return errors;
 }
 
