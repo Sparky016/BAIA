@@ -1,0 +1,81 @@
+{
+  "guides": [
+    {
+      "name": "scale-inspiration",
+      "tokens": {
+        "colors": {
+          "primary": "#050505",
+          "on-primary": "#ffffff",
+          "green": "#72ce7b",
+          "forest": "#1f3d2e",
+          "beige": "#b3a18d",
+          "surface": "#ffffff",
+          "surface-secondary": "#ebebeb",
+          "surface-card": "#f3f4f6",
+          "on-surface": "#000000",
+          "on-surface-secondary": "#6b7280",
+          "hairline": "#e5e7eb",
+          "blue": "#2563eb",
+          "blue-soft": "#dbeafe",
+          "red": "#dc2626"
+        },
+        "typography": {
+          "display": {
+            "family": "aeonik, \"aeonik Fallback\", -apple-system, Arial, sans-serif",
+            "size": "116px",
+            "url": ""
+          },
+          "headline-lg": {
+            "family": "aeonik, \"aeonik Fallback\", -apple-system, Arial, sans-serif",
+            "size": "64px",
+            "url": ""
+          },
+          "headline-md": {
+            "family": "aeonik, \"aeonik Fallback\", -apple-system, Arial, sans-serif",
+            "size": "32px",
+            "url": ""
+          },
+          "title": {
+            "family": "aeonik, \"aeonik Fallback\", -apple-system, Arial, sans-serif",
+            "size": "24px",
+            "url": ""
+          },
+          "body-lg": {
+            "family": "aeonik, \"aeonik Fallback\", -apple-system, Arial, sans-serif",
+            "size": "18px",
+            "url": ""
+          },
+          "body-md": {
+            "family": "aeonik, \"aeonik Fallback\", -apple-system, Arial, sans-serif",
+            "size": "16px",
+            "url": ""
+          },
+          "label": {
+            "family": "aeonik, \"aeonik Fallback\", -apple-system, Arial, sans-serif",
+            "size": "14px",
+            "url": ""
+          }
+        },
+        "spacing": {
+          "xs": "4px",
+          "sm": "8px",
+          "md": "16px",
+          "lg": "24px",
+          "xl": "48px",
+          "2xl": "96px",
+          "3xl": "128px"
+        },
+        "radius": {
+          "sm": "8px",
+          "md": "16px",
+          "lg": "24px",
+          "full": "9999px"
+        }
+      },
+      "designInstructions": "## Token Instructions\n\n- `primary` (#050505) -> near-black; both the ink and the fill of the big rounded hero blocks (white text on them)\n- `green` (#72ce7b) -> reserved leaf-green accent for emphasis words and \"Get Started\" contexts\n- `forest` / `beige` -> editorial pair; beige is the warm second clause of two-tone headlines, forest for dark panels\n- `surface-secondary` (#ebebeb) -> light grey eyebrow blocks; `surface-card` (#f3f4f6) -> cards\n- `blue` / `blue-soft` / `red` -> data/semantic use only, never page colors\n- `display` (116px) / `headline-lg` (64px) -> Aeonik at regular (400) weight with tight tracking; scale, not weight, makes impact\n- `radius.sm` (8px) -> buttons/chips; `radius.md` (16px) -> cards; `radius.lg` (~24px) -> the big black hero slabs\n- spacing -> base 8px with large section steps up to 128px\n\n\n# Scale\n\n`scale-design · alpha`\n\n## Overview\n\nScale's design is **high-contrast Swiss modernism**. The page is white, punctuated by\n**huge black rounded \"hero blocks\"** that hold monumental white type (\"The world's most\nimportant decisions need reliable AI systems.\"). The type is **Aeonik**, a clean neutral\ngrotesque, set **enormous (116px) at regular (400) weight** with tight negative tracking —\nthe scale of the type does the work, not its weight. Color is largely **monochrome\nblack/white**, with two reserved accents: a **fresh leaf green** (`#72ce7b`) used for\nemphasis words and supporting statements, and a **forest-green + warm-beige** pairing for\neditorial panels (e.g. the two-tone \"Artificial Intelligence / Real *Research*\" headline,\nwhere the second clause is beige). Shapes are large rounded rectangles (16–24px) and pills.\nThe imagery leans into AI/brain scans with small bracket \"annotation\" markers — a nod to\ndata labeling. The overall tone is calm, technical, and enterprise-credible.\n\n## Colors\n\n**Brand** — `primary #050505` (near-black) is both the ink and the fill of the big hero\nblocks; text on them is white. The reserved accents are `green #72ce7b` (emphasis words,\n\"Get Started\" contexts, highlight statements) and the editorial pair `forest #1f3d2e` /\n`beige #b3a18d` (the warm second clause of two-tone headlines and dark panels).\n\n**Surface** — white canvas; `surface-secondary #ebebeb` for light grey eyebrow blocks;\n`surface-card #f3f4f6` for cards.\n\n**Text** — `on-surface #000000` primary; `on-surface-secondary #6b7280` for muted copy.\n\n**Utility** — token blue `#2563eb` / soft `#dbeafe` and red `#dc2626` exist for data/semantic\nuse, not as page colors.\n\n## Typography\n\nFamily: **Aeonik** (`aeonik`, fallback Arial/system grotesque). Closest open-source\nsubstitutes: **Inter**, **Neue Montreal**-like grotesques, or **Hanken Grotesk**. The\nstrategy is *monumental regular weight* — 116px and 64px headlines at weight 400 with tight\ntracking; only small UI titles bump to 500.\n\n| Token | Size | Weight | Line-height | Tracking | Usage |\n|---|---|---|---|---|---|\n| display | 116px | 400 | 116px | −1.16px | Hero block headline |\n| headline-lg | 64px | 400 | 67.2px | −0.64px | Section heads (\"Systems that never spoke\") |\n| headline-md | 32px | 400 | 38px | −0.32px | Supporting statement (often green) |\n| title | 24px | 500 | 36px | −0.24px | Card / sub titles |\n| body-lg | 18px | 400 | 28px | 0 | Lead copy |\n| body-md | 16px | 400 | 24px | 0 | Body |\n| label | 14px | 400 | 1.0 | +0.14px | Buttons, small UI |\n\n## Layout\n\nBase unit **8px** with large rem section steps (rem tokens up to 24rem). The page is a\n**stack of full-width white sections, each anchored by a black rounded hero block** that\nbleeds wide. A \"Proven across every industry\" carousel uses bordered square chevron\ncontrols; logo/industry cards sit on light grey. Whitespace is generous; headlines are\nleft-aligned and oversized.\n\n## Elevation & Depth\n\nLargely **flat**. Depth is communicated by the contrast of black rounded slabs against\nwhite, not by shadows. Cards use soft grey fills and large radii rather than elevation.\nNo glows or heavy shadows.\n\n## Shapes\n\nRounded vocabulary: **8px** (buttons, small chips), **16px** (cards), and **~24px** (the\nbig hero blocks), plus **full pills** for some controls. The large radii on the black slabs\nare the signature shape gesture — soft but monumental.\n\n## Components\n\n- **button-primary** — near-black \"Book Demo\" button, ~8px radius.\n- **button-outline** — \"Log In\" with a 1px hairline outline.\n- **button-light** — white \"Get Started\" on a grey/black panel.\n- **hero-block** — the oversized black rounded slab holding white display type.\n- **card** — grey-fill 16px-radius card (industry/logo tiles).\n- **carousel control** — bordered square button with a chevron.\n\n## Motion\n\nStandard ~**300ms** ease. Carousels slide; brain/scan imagery may animate subtly with\nbracket markers. Motion is restrained and serious — no bounce or playful flourish; the\ngravity comes from the type and contrast.\n\n## Iconography\n\nMinimal outline icons at 16/20/24px in `on-surface`. The Scale wordmark + arrow is the\nbrand mark. Decorative imagery uses AI/medical scan visuals with small square \"annotation\"\nbrackets referencing data labeling.\n\n## Do's and Don'ts\n\n- **Do** anchor sections with big black rounded hero blocks holding white display type.\n- **Do** set headlines huge in Aeonik at regular (400) weight with tight tracking — never bold.\n- **Do** use the two-tone headline pattern (black clause + green/beige second clause).\n- **Do** reserve green `#72ce7b` and the forest/beige pair for emphasis and editorial panels only.\n- **Don't** bold the big type or add shadows — keep it flat and contrast-driven.\n- **Don't** introduce extra saturated UI colors; stay monochrome with the reserved accents.\n- **Don't** crowd the hero blocks — they need generous internal padding and whitespace.\n\n## Known Gaps\n\n- Scale's tokens are emitted with opaque hashed names (captured/mapped above). Accent hexes\n  (green `#72ce7b`, beige `#b3a18d`, forest `#1f3d2e`) are from computed element styles. Hero\n  block radius is inferred (~24px). \"Aeonik\" is licensed — substitute a neutral grotesque.\n",
+      "id": "style_fa7e5528e528",
+      "created": "2026-06-21T10:19:18.530Z",
+      "modified": "2026-06-21T10:19:18.530Z"
+    }
+  ]
+}
