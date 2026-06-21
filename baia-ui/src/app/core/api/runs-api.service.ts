@@ -37,4 +37,12 @@ export class RunsApiService {
   export(runId: string, request: ExportRequest): Observable<ExportResult> {
     return this.http.post<ExportResult>(`${this.baseUrl}/runs/${runId}/export`, request);
   }
+
+  downloadGherkin(runId: string): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/runs/${runId}/export/gherkin`, { responseType: 'blob' });
+  }
+
+  downloadOkf(runId: string): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/runs/${runId}/export/okf`, { responseType: 'blob' });
+  }
 }

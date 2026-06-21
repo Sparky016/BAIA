@@ -74,8 +74,7 @@ function validateRunRequest(body: unknown): FieldError[] {
   // credentialsRef — optional; if provided, must be a non-empty string
   if (
     candidate['credentialsRef'] !== undefined &&
-    (typeof candidate['credentialsRef'] !== 'string' ||
-      candidate['credentialsRef'].trim() === '')
+    (typeof candidate['credentialsRef'] !== 'string' || candidate['credentialsRef'].trim() === '')
   ) {
     errors.push({
       field: 'credentialsRef',

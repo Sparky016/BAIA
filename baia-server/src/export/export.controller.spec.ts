@@ -372,4 +372,62 @@ describe('ExportController', () => {
       expect(doc.features[0].scenarios[0].name).toBe('Successful login with code rules');
     });
   });
+
+  describe('downloadGherkin()', () => {
+    let mockResponse: any;
+
+    beforeEach(() => {
+      mockResponse = {
+        setHeader: jest.fn(),
+        send: jest.fn(),
+      };
+    });
+
+    it('downloads raw Gherkin text and sets correct headers', async () => {
+      runsService.getRun.mockReturnValue(makeRun({ gherkinDoc: MOCK_GHERKIN_DOC }));
+
+      await controller.downloadGherkin('run-0001', mockResponse);
+
+      expect(mockResponse.setHeader).toHaveBeenCalledWith('Content-Type', 'text/plain; charset=utf-8');
+      expect(mockResponse.setHeader).toHaveBeenCalledWith('Content-Disposition', 'attachment; filename="login.feature"');
+      expect(mockResponse.send).toHaveBeenCalledWith(expect.stringContaining('Feature: Login'));
+    });
+
+    it('throws BadRequestException if no document is available', async () => {
+      runsService.getRun.mockReturnValue(makeRun());
+
+      await expect(controller.downloadGherkin('run-0001', mockResponse)).rejects.toThrow(
+        BadRequestException
+      );
+    });
+  });
+
+  describe('downloadOkf()', () => {
+    let mockResponse: any;
+
+    beforeEach(() => {
+      mockResponse = {
+        setHeader: jest.fn(),
+        send: jest.fn(),
+      };
+    });
+
+    it('downloads OKF ZIP bundle and sets correct headers', async () => {
+      runsService.getRun.mockReturnValue(makeRun({ gherkinDoc: MOCK_GHERKIN_DOC }));
+
+      await controller.downloadOkf('run-0001', mockResponse);
+
+      expect(mockResponse.setHeader).toHaveBeenCalledWith('Content-Type', 'application/zip');
+      expect(mockResponse.setHeader).toHaveBeenCalledWith('Content-Disposition', 'attachment; filename="login-okf.zip"');
+      expect(mockResponse.send).toHaveBeenCalledWith(expect.any(Buffer));
+    });
+
+    it('throws BadRequestException if no document is available', async () => {
+      runsService.getRun.mockReturnValue(makeRun());
+
+      await expect(controller.downloadOkf('run-0001', mockResponse)).rejects.toThrow(
+        BadRequestException
+      );
+    });
+  });
 });

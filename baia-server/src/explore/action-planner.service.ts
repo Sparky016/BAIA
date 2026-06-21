@@ -41,7 +41,9 @@ export class ActionPlannerService {
     this.logger.log(`Action planning started — url=${input.currentUrl}, maxSteps=${maxSteps}`);
 
     for (let step = 0; step < maxSteps; step++) {
-      this.logger.debug(`Planning step ${step + 1}/${maxSteps} (${allActions.length} action(s) accumulated so far)`);
+      this.logger.debug(
+        `Planning step ${step + 1}/${maxSteps} (${allActions.length} action(s) accumulated so far)`
+      );
 
       const priorDescriptions: string[] = [
         ...(input.previousActions ?? []),
@@ -63,7 +65,9 @@ export class ActionPlannerService {
         );
       } catch (err) {
         if (err instanceof LlmError && err.code === 'SCHEMA_VALIDATION') {
-          this.logger.warn(`Action planning schema validation failed at step ${step + 1} — retrying once`);
+          this.logger.warn(
+            `Action planning schema validation failed at step ${step + 1} — retrying once`
+          );
           try {
             output = await this.llmService.completeJson<ActionPlanningOutput>(
               prompt,
@@ -113,7 +117,9 @@ export class ActionPlannerService {
 
       const mapped = output.actions.map((planned) => mapPlannedAction(planned));
       allActions.push(...mapped);
-      this.logger.debug(`Step ${step + 1}: added ${mapped.length} action(s) — types=[${mapped.map((a) => a.type).join(', ')}]`);
+      this.logger.debug(
+        `Step ${step + 1}: added ${mapped.length} action(s) — types=[${mapped.map((a) => a.type).join(', ')}]`
+      );
     }
 
     this.logger.log(

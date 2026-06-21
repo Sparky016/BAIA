@@ -24,7 +24,11 @@ describe('InputComponent', () => {
   let store: InstanceType<typeof RunStore>;
 
   beforeEach(async () => {
-    runsApiSpy = jasmine.createSpyObj<RunsApiService>('RunsApiService', ['createRun', 'getRun', 'export']);
+    runsApiSpy = jasmine.createSpyObj('RunsApiService', [
+      'createRun',
+      'getRun',
+      'export',
+    ]) as jasmine.SpyObj<RunsApiService>;
 
     await TestBed.configureTestingModule({
       imports: [InputComponent],

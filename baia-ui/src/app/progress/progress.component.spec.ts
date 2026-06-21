@@ -1,6 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { ActivatedRoute } from '@angular/router';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ProgressComponent } from './progress.component';
 import { RunStore } from '../core/state/run.store';
 import { RunStatus } from '@baia/shared';
@@ -27,6 +29,8 @@ describe('ProgressComponent', () => {
       imports: [ProgressComponent],
       providers: [
         provideRouter([]),
+        provideHttpClient(),
+        provideHttpClientTesting(),
         {
           provide: ActivatedRoute,
           useValue: { snapshot: { params: { id: 'test-run-id' } } },

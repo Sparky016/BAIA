@@ -14,7 +14,14 @@ describe('ExportPanelComponent', () => {
   let runsApiSpy: jasmine.SpyObj<RunsApiService>;
 
   beforeEach(async () => {
-    runsApiSpy = jasmine.createSpyObj<RunsApiService>('RunsApiService', ['createRun', 'getRun', 'export']);
+    runsApiSpy = jasmine.createSpyObj('RunsApiService', [
+      'createRun',
+      'getRun',
+      'startRun',
+      'export',
+      'downloadGherkin',
+      'downloadOkf',
+    ]) as jasmine.SpyObj<RunsApiService>;
 
     await TestBed.configureTestingModule({
       imports: [ExportPanelComponent],
@@ -162,5 +169,49 @@ describe('ExportPanelComponent', () => {
     expect(component.exportError).toBe('Export failed');
     expect(component.exportUrl).toBeNull();
     expect(component.isExporting).toBeFalse();
+  });
+
+  it('downloadGherkin success triggers browser download', () => {
+    store.setStatus(RunStatus.Review);
+    store.approve();
+    createComponent();
+
+    const mockBlob = new Blob(['Gherkin doc'], { type: 'text/plain' });
+    runsApiSpy.downloadGherkin.and.returnValue(of(mockBlob));
+
+    spyOn(window.URL, 'createObjectURL').and.returnValue('blob-url');
+    spyOn(window.URL, 'revokeObjectURL');
+    const mockAnchor = document.createElement('a');
+    spyOn(document, 'createElement').and.callThrough().and.returnValue(mockAnchor);
+    spyOn(mockAnchor, 'click');
+
+    component.downloadGherkin();
+
+    expect(runsApiSpy.downloadGherkin).toHaveBeenCalledWith('test-run-id');
+    expect(mockAnchor.download).toBe('test-run-id.feature');
+    expect(mockAnchor.href).toContain('blob-url');
+    expect(mockAnchor.click).toHaveBeenCalled();
+  });
+
+  it('downloadOkf success triggers browser download', () => {
+    store.setStatus(RunStatus.Review);
+    store.approve();
+    createComponent();
+
+    const mockBlob = new Blob(['zip content'], { type: 'application/zip' });
+    runsApiSpy.downloadOkf.and.returnValue(of(mockBlob));
+
+    spyOn(window.URL, 'createObjectURL').and.returnValue('zip-url');
+    spyOn(window.URL, 'revokeObjectURL');
+    const mockAnchor = document.createElement('a');
+    spyOn(document, 'createElement').and.callThrough().and.returnValue(mockAnchor);
+    spyOn(mockAnchor, 'click');
+
+    component.downloadOkf();
+
+    expect(runsApiSpy.downloadOkf).toHaveBeenCalledWith('test-run-id');
+    expect(mockAnchor.download).toBe('test-run-id-okf.zip');
+    expect(mockAnchor.href).toContain('zip-url');
+    expect(mockAnchor.click).toHaveBeenCalled();
   });
 });

@@ -20,6 +20,7 @@
     "@nestjs/platform-express": "^10.3.0",
     "@nestjs/swagger": "^7.4.2",
     "@octokit/rest": "^22.0.1",
+    "adm-zip": "^0.5.17",
     "class-validator": "^0.14.0",
     "dotenv": "^16.3.1",
     "playwright": "^1.61.0",
@@ -29,6 +30,7 @@
   "devDependencies": {
     "@nestjs/cli": "^10.3.0",
     "@nestjs/testing": "^10.3.0",
+    "@types/adm-zip": "^0.5.8",
     "@types/jest": "^29.5.8",
     "@types/node": "^20.10.0",
     "@typescript-eslint/eslint-plugin": "^6.13.1",

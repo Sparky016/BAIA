@@ -1,31 +1,58 @@
-<div class="export-panel">
-  <h2>Export to Confluence</h2>
-  <div class="form-group">
-    <label for="baseUrl">Confluence Base URL</label>
-    <input id="baseUrl" [(ngModel)]="baseUrl" placeholder="e.g. https://mycompany.atlassian.net" [disabled]="!store.approved()" />
-  </div>
-  <div class="form-group">
-    <label for="spaceKey">Space Key</label>
-    <input id="spaceKey" [(ngModel)]="spaceKey" placeholder="e.g. ENG" [disabled]="!store.approved()" />
-  </div>
-  <div class="form-group">
-    <label for="credentialsRef">Credentials Reference</label>
-    <input id="credentialsRef" [(ngModel)]="credentialsRef" placeholder="e.g. confluence-creds" [disabled]="!store.approved()" />
-  </div>
-  <button
-    class="btn-export-confluence"
-    (click)="export()"
-    [disabled]="!canExport || isExporting"
-    data-testid="confluence-export-btn">
-    {{ isExporting ? 'Exporting...' : 'Export to Confluence' }}
-  </button>
-  @if (exportUrl) {
-    <div class="export-success" data-testid="export-success">
-      <p>Exported successfully!</p>
-      <a [href]="exportUrl" target="_blank" data-testid="confluence-link">{{ exportUrl }}</a>
+<div class="export-container">
+  <!-- Confluence sync section -->
+  <div class="export-section confluence-section">
+    <h2>Sync to Confluence</h2>
+    <div class="form-group">
+      <label for="baseUrl">Confluence Base URL</label>
+      <input id="baseUrl" [(ngModel)]="baseUrl" placeholder="e.g. https://mycompany.atlassian.net" [disabled]="!store.approved()" />
     </div>
-  }
-  @if (exportError) {
-    <div class="export-error" data-testid="export-error">{{ exportError }}</div>
-  }
+    <div class="form-group">
+      <label for="spaceKey">Space Key</label>
+      <input id="spaceKey" [(ngModel)]="spaceKey" placeholder="e.g. ENG" [disabled]="!store.approved()" />
+    </div>
+    <div class="form-group">
+      <label for="credentialsRef">Credentials Reference</label>
+      <input id="credentialsRef" [(ngModel)]="credentialsRef" placeholder="e.g. confluence-creds" [disabled]="!store.approved()" />
+    </div>
+    <button
+      class="btn-action btn-gold"
+      (click)="export()"
+      [disabled]="!canExport || isExporting"
+      data-testid="confluence-export-btn">
+      {{ isExporting ? 'Syncing...' : 'Export to Confluence' }}
+    </button>
+    @if (exportUrl) {
+      <div class="export-success" data-testid="export-success">
+        <p>Exported successfully!</p>
+        <a [href]="exportUrl" target="_blank" data-testid="confluence-link">{{ exportUrl }}</a>
+      </div>
+    }
+    @if (exportError) {
+      <div class="export-error" data-testid="export-error">{{ exportError }}</div>
+    }
+  </div>
+
+  <!-- Local downloads section -->
+  <div class="export-section download-section">
+    <h2>Download Assets</h2>
+    <p class="section-desc">Download the generated features in Gherkin syntax or the Open Knowledge Format (OKF) bundle.</p>
+    
+    <div class="download-actions">
+      <button
+        class="btn-action btn-outline"
+        (click)="downloadGherkin()"
+        [disabled]="!store.approved()"
+        data-testid="download-gherkin-btn">
+        <span class="icon">📄</span> Download Gherkin (.feature)
+      </button>
+
+      <button
+        class="btn-action btn-outline"
+        (click)="downloadOkf()"
+        [disabled]="!store.approved()"
+        data-testid="download-okf-btn">
+        <span class="icon">📦</span> Download OKF Bundle (.zip)
+      </button>
+    </div>
+  </div>
 </div>

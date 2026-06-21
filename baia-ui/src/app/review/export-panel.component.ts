@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 import { Component, Input, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -52,5 +53,40 @@ export class ExportPanelComponent {
           this.isExporting = false;
         },
       });
+  }
+
+  downloadGherkin(): void {
+    this.runsApi.downloadGherkin(this.runId).subscribe({
+      next: (blob) => {
+        const filename = `${this.runId || 'gherkin'}.feature`;
+        this.triggerDownload(blob, filename);
+      },
+      error: (error: Error) => {
+        this.exportError = error.message ?? 'Gherkin download failed';
+      },
+    });
+  }
+
+  downloadOkf(): void {
+    this.runsApi.downloadOkf(this.runId).subscribe({
+      next: (blob) => {
+        const filename = `${this.runId || 'okf'}-okf.zip`;
+        this.triggerDownload(blob, filename);
+      },
+      error: (error: Error) => {
+        this.exportError = error.message ?? 'OKF download failed';
+      },
+    });
+  }
+
+  private triggerDownload(blob: Blob, defaultFilename: string): void {
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = defaultFilename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
   }
 }

@@ -8,18 +8,12 @@ export function isRunRequest(obj: unknown): obj is RunRequest {
 
   const candidate = obj as Record<string, unknown>;
 
-  if (
-    typeof candidate['targetUrl'] !== 'string' ||
-    typeof candidate['instructions'] !== 'string'
-  ) {
+  if (typeof candidate['targetUrl'] !== 'string' || typeof candidate['instructions'] !== 'string') {
     return false;
   }
 
   // Optional fields: valid if absent (undefined), invalid if present with wrong type/value.
-  if (
-    candidate['repoUrl'] !== undefined &&
-    typeof candidate['repoUrl'] !== 'string'
-  ) {
+  if (candidate['repoUrl'] !== undefined && typeof candidate['repoUrl'] !== 'string') {
     return false;
   }
 

@@ -22,6 +22,7 @@ module.exports = {
     '!**/dto/**',
   ],
   coverageDirectory: '../coverage',
+  coverageReporters: ['json', 'lcov', 'text', 'clover', 'json-summary'],
   /**
    * Use V8 native coverage provider instead of Babel/Istanbul instrumentation.
    * V8 avoids false branch penalties from TypeScript-emitted DI constructor

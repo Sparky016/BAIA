@@ -39,8 +39,6 @@ export class E2ePipelineService {
     this.logger.log(`Run ${runId}: Phase 2 complete (${Date.now() - startTime}ms elapsed)`);
 
     await this.reconcileOrchestrator.executeReconcile(runId);
-    this.logger.log(
-      `Run ${runId}: pipeline complete — total time ${Date.now() - startTime}ms`
-    );
+    this.logger.log(`Run ${runId}: pipeline complete — total time ${Date.now() - startTime}ms`);
   }
 }

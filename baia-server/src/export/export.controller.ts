@@ -4,17 +4,21 @@ import {
   Body,
   ConflictException,
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
   Logger,
   Param,
   Post,
+  Res,
 } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Response } from 'express';
 
 import { RunsService } from '../runs/runs.service';
 
 import { ConfluenceAdapter, ConfluenceConfig } from './confluence.adapter';
+import { gherkinDocToText, gherkinDocToOkfZip, toSafeFilename } from './okf-generator';
 
 export interface ExportRunBody {
   baseUrl: string;
@@ -127,5 +131,55 @@ export class ExportController {
     this.runsService.transitionRun(id, RunStatus.Done);
 
     return { url: result.pageUrl };
+  }
+
+  /**
+   * Download run documentation as a raw Gherkin .feature file.
+   */
+  @Get(':id/export/gherkin')
+  @ApiOperation({ summary: 'Download run documentation as a raw Gherkin .feature file' })
+  @ApiParam({ name: 'id', description: 'The run identifier', example: 'run-0001' })
+  async downloadGherkin(@Param('id') id: string, @Res() res: Response): Promise<void> {
+    const run = this.runsService.getRun(id);
+
+    const gherkinDoc = run.unifiedDoc
+      ? unifiedDocToGherkinDoc(run.unifiedDoc)
+      : (run.gherkinDoc ?? null);
+
+    if (!gherkinDoc) {
+      throw new BadRequestException('Run has no document to export.');
+    }
+
+    const text = gherkinDocToText(gherkinDoc);
+    const filename = `${toSafeFilename(gherkinDoc.features[0]?.name || 'run')}.feature`;
+
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.send(text);
+  }
+
+  /**
+   * Download run documentation as an OKF .zip bundle.
+   */
+  @Get(':id/export/okf')
+  @ApiOperation({ summary: 'Download run documentation as an OKF .zip bundle' })
+  @ApiParam({ name: 'id', description: 'The run identifier', example: 'run-0001' })
+  async downloadOkf(@Param('id') id: string, @Res() res: Response): Promise<void> {
+    const run = this.runsService.getRun(id);
+
+    const gherkinDoc = run.unifiedDoc
+      ? unifiedDocToGherkinDoc(run.unifiedDoc)
+      : (run.gherkinDoc ?? null);
+
+    if (!gherkinDoc) {
+      throw new BadRequestException('Run has no document to export.');
+    }
+
+    const zipBuffer = gherkinDocToOkfZip(gherkinDoc, run.targetUrl);
+    const filename = `${toSafeFilename(gherkinDoc.features[0]?.name || 'run')}-okf.zip`;
+
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.send(zipBuffer);
   }
 }
