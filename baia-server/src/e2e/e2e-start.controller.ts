@@ -7,6 +7,10 @@ import { E2ePipelineService } from './e2e-pipeline.service';
 
 export interface StartPipelineBody {
   instructions: string;
+  repoUrl?: string;
+  repoProvider?: 'github' | 'azure';
+  credentialsRef?: string;
+  confluenceCredentialsRef?: string;
 }
 
 export interface StartPipelineResult {
@@ -35,14 +39,26 @@ export class E2eStartController {
   startPipeline(@Param('id') id: string, @Body() body: StartPipelineBody): StartPipelineResult {
     const run = this.runsService.getRun(id);
 
-    // Seed mock credentials under a fixed internal ref for the E2E pipeline.
-    this.credentialStore.store('env-repo', 'mock-access-token');
+    // Seed mock credentials for any refs the test supplies.
+    if (body.credentialsRef) {
+      this.credentialStore.store(body.credentialsRef, 'mock-access-token');
+    }
+    if (body.confluenceCredentialsRef) {
+      this.credentialStore.store(body.confluenceCredentialsRef, 'mock-confluence-token');
+    }
 
     this.logger.log(`E2E: starting full pipeline for run ${id}`);
 
     // Fire-and-forget; pipeline transitions are tracked via SSE.
     this.pipelineService
-      .runFullPipeline(id, run.targetUrl, body.instructions, undefined, undefined, undefined)
+      .runFullPipeline(
+        id,
+        run.targetUrl,
+        body.instructions,
+        body.repoUrl,
+        body.repoProvider,
+        body.credentialsRef
+      )
       .catch((err: unknown) => {
         const msg = err instanceof Error ? err.message : String(err);
         this.logger.error(`E2E pipeline error for run ${id}: ${msg}`);
