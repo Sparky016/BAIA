@@ -21,9 +21,9 @@ export class InputComponent {
   readonly form = this.fb.nonNullable.group({
     targetUrl: ['', [Validators.required, Validators.pattern(/^https?:\/\/.+/)]],
     instructions: ['', Validators.required],
-    repoUrl: ['', Validators.required],
+    repoUrl: [''],
     repoProvider: ['github' as 'github' | 'azure'],
-    credentialsRef: ['', Validators.required],
+    credentialsRef: [''],
   });
 
   isSubmitting = false;
@@ -38,10 +38,16 @@ export class InputComponent {
     const request: RunRequest = {
       targetUrl: value.targetUrl,
       instructions: value.instructions,
-      repoUrl: value.repoUrl,
-      repoProvider: value.repoProvider,
-      credentialsRef: value.credentialsRef,
     };
+
+    if (value.repoUrl.trim()) {
+      request.repoUrl = value.repoUrl.trim();
+      request.repoProvider = value.repoProvider;
+    }
+
+    if (value.credentialsRef.trim()) {
+      request.credentialsRef = value.credentialsRef.trim();
+    }
 
     this.runsApi.createRun(request).subscribe({
       next: (run) => {

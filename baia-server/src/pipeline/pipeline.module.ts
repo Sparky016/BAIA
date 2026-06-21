@@ -53,7 +53,13 @@ import { StartController } from './start.controller';
     // ── Security ─────────────────────────────────────────────────────────────
     {
       provide: CREDENTIAL_ENCRYPTION_KEY,
-      useValue: process.env['CREDENTIAL_ENCRYPTION_KEY'] ?? 'dev-key-change-in-production!!',
+      useFactory: () => {
+        const key = process.env['CREDENTIAL_ENCRYPTION_KEY'];
+        if (!key || key.trim().length === 0) {
+          throw new Error('Missing required environment variable: CREDENTIAL_ENCRYPTION_KEY');
+        }
+        return key;
+      },
     },
     CredentialStoreService,
 
