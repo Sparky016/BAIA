@@ -73,7 +73,9 @@ export class CopilotSdkClient implements CopilotClient {
 
     const session = await this.nativeClient.createSession({
       model: this.config.model,
-      ...(systemMessage && { systemMessage: { mode: 'replace', content: systemMessage } as SystemMessageConfig }),
+      ...(systemMessage && {
+        systemMessage: { mode: 'replace', content: systemMessage } as SystemMessageConfig,
+      }),
       ...(this.config.provider && { provider: this.config.provider }),
     });
 
@@ -91,7 +93,9 @@ export class CopilotSdkClient implements CopilotClient {
     const session = await this.nativeClient.createSession({
       model: this.config.model,
       streaming: true,
-      ...(systemMessage && { systemMessage: { mode: 'replace', content: systemMessage } as SystemMessageConfig }),
+      ...(systemMessage && {
+        systemMessage: { mode: 'replace', content: systemMessage } as SystemMessageConfig,
+      }),
       ...(this.config.provider && { provider: this.config.provider }),
     });
 

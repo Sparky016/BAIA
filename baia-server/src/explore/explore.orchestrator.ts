@@ -64,7 +64,13 @@ export class ExploreOrchestrator {
       trace.steps.push(initialStep);
 
       const initialShot = await this.runner.captureScreenshot();
-      this.emitExploreEvent(runId, 'screenshot', initialShot.url, {}, initialShot.data.toString('base64'));
+      this.emitExploreEvent(
+        runId,
+        'screenshot',
+        initialShot.url,
+        {},
+        initialShot.data.toString('base64')
+      );
 
       const planResult = await this.planner.planActions({
         instruction: instructions,
@@ -116,7 +122,10 @@ export class ExploreOrchestrator {
       this.logger.log(`Run ${runId}: exploring → analyzing`);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      this.logger.error(`Run ${runId}: Phase 1 failed — ${message}`, err instanceof Error ? err.stack : err);
+      this.logger.error(
+        `Run ${runId}: Phase 1 failed — ${message}`,
+        err instanceof Error ? err.stack : err
+      );
 
       this.emitExploreEvent(runId, 'error', `Phase 1 failed: ${message}`, { error: message });
 

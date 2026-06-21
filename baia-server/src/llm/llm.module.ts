@@ -16,7 +16,12 @@ function buildLlmService(): LlmService {
     const retryDelayMs = Number(process.env['COPILOT_RETRY_DELAY_MS'] ?? 500);
 
     const sdkClient = new CopilotSdkClient({ gitHubToken: copilotToken, model });
-    return new CopilotLlmAdapter(sdkClient, { token: copilotToken, model, maxRetries, retryDelayMs });
+    return new CopilotLlmAdapter(sdkClient, {
+      token: copilotToken,
+      model,
+      maxRetries,
+      retryDelayMs,
+    });
   }
 
   // BYOK mode — provider config present.
@@ -26,7 +31,8 @@ function buildLlmService(): LlmService {
 
   if (byokType && byokBase && byokModel) {
     const apiKey = process.env['BYOK_API_KEY']?.trim() || undefined;
-    const wireApi = (process.env['BYOK_WIRE_API']?.trim() as ByokProviderConfig['wireApi']) || undefined;
+    const wireApi =
+      (process.env['BYOK_WIRE_API']?.trim() as ByokProviderConfig['wireApi']) || undefined;
     const azureVersion = process.env['BYOK_AZURE_API_VERSION']?.trim() || undefined;
     const maxRetries = Number(process.env['COPILOT_MAX_RETRIES'] ?? 3);
     const retryDelayMs = Number(process.env['COPILOT_RETRY_DELAY_MS'] ?? 500);
