@@ -1,24 +1,66 @@
 import { Module } from '@nestjs/common';
 
+import { CopilotLlmAdapter } from './copilot-llm.adapter';
+import { ByokProviderConfig, CopilotSdkClient } from './copilot-sdk-client';
 import { LLM_SERVICE } from './llm.constants';
+import { LlmService } from './llm.service';
 import { MockLlmService } from './mock-llm.service';
+
+function buildLlmService(): LlmService {
+  const copilotToken = process.env['COPILOT_TOKEN']?.trim();
+
+  // Standard Copilot mode — GitHub token present.
+  if (copilotToken) {
+    const model = process.env['COPILOT_MODEL']?.trim() ?? 'gpt-4o';
+    const maxRetries = Number(process.env['COPILOT_MAX_RETRIES'] ?? 3);
+    const retryDelayMs = Number(process.env['COPILOT_RETRY_DELAY_MS'] ?? 500);
+
+    const sdkClient = new CopilotSdkClient({ gitHubToken: copilotToken, model });
+    return new CopilotLlmAdapter(sdkClient, { token: copilotToken, model, maxRetries, retryDelayMs });
+  }
+
+  // BYOK mode — provider config present.
+  const byokType = process.env['BYOK_PROVIDER_TYPE']?.trim();
+  const byokBase = process.env['BYOK_BASE_URL']?.trim();
+  const byokModel = process.env['BYOK_MODEL']?.trim();
+
+  if (byokType && byokBase && byokModel) {
+    const apiKey = process.env['BYOK_API_KEY']?.trim() || undefined;
+    const wireApi = (process.env['BYOK_WIRE_API']?.trim() as ByokProviderConfig['wireApi']) || undefined;
+    const azureVersion = process.env['BYOK_AZURE_API_VERSION']?.trim() || undefined;
+    const maxRetries = Number(process.env['COPILOT_MAX_RETRIES'] ?? 3);
+    const retryDelayMs = Number(process.env['COPILOT_RETRY_DELAY_MS'] ?? 500);
+
+    const provider: ByokProviderConfig = {
+      type: byokType as ByokProviderConfig['type'],
+      baseUrl: byokBase,
+      ...(apiKey && { apiKey }),
+      ...(wireApi && { wireApi }),
+      ...(azureVersion && { azure: { apiVersion: azureVersion } }),
+    };
+
+    const sdkClient = new CopilotSdkClient({ model: byokModel, provider });
+    return new CopilotLlmAdapter(sdkClient, { model: byokModel, maxRetries, retryDelayMs });
+  }
+
+  // Development / test fallback — no credentials configured.
+  return new MockLlmService();
+}
 
 /**
  * LLM integration module.
  *
- * Binds the {@link LLM_SERVICE} token to a concrete {@link LlmService}
- * implementation and re-exports the token so other feature modules can inject
- * the contract without importing any provider.
+ * Provider selection is determined at startup from environment variables:
  *
- * For now the binding is the deterministic {@link MockLlmService}. DEV_TASK_12
- * swaps this for `CopilotLlmAdapter` (the sole place the Copilot SDK is
- * imported); consumers depending on the token are unaffected by that swap.
+ * - `COPILOT_TOKEN` present → GitHub Copilot SDK (standard mode)
+ * - `BYOK_PROVIDER_TYPE` + `BYOK_BASE_URL` + `BYOK_MODEL` present → BYOK mode
+ * - Neither → MockLlmService (development / test fallback)
  */
 @Module({
   providers: [
     {
       provide: LLM_SERVICE,
-      useClass: MockLlmService,
+      useFactory: buildLlmService,
     },
   ],
   exports: [LLM_SERVICE],

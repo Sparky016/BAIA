@@ -39,9 +39,6 @@ async function main() {
   await page.fill('[data-testid="target-url"]', MYCMS_URL);
   await page.fill('[data-testid="instructions"]',
     'Navigate the MyCMS home page, explore all navigation links, click on articles and pages, and document the visible content and user interactions.');
-  await page.fill('[data-testid="repo-url"]', 'https://github.com/Sparky016/BAIA');
-  // repoProvider stays "github"
-  await page.fill('[data-testid="credentials-ref"]', 'my-pat-secret');
 
   await page.screenshot({ path: 'screenshot-02-form-filled.png' });
   console.log('Form filled. Submit button disabled?', await page.locator('[data-testid="start-btn"]').isDisabled());
@@ -64,10 +61,6 @@ async function main() {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       instructions: 'Navigate the MyCMS home page, explore all navigation links, and document the visible content.',
-      repoUrl: 'https://github.com/Sparky016/BAIA',
-      repoProvider: 'github',
-      credentialsRef: 'my-pat-secret',
-      confluenceCredentialsRef: 'e2e-confluence-creds',
     }),
   });
   const startBody = await startResponse.json();

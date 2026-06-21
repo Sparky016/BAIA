@@ -7,6 +7,7 @@ End-to-end manual test instructions for the Business AI Analyst (BAIA) applicati
 ## Table of Contents
 
 - [Prerequisites](#prerequisites)
+- [Environment Variables & Keys](#environment-variables--keys)
 - [Setup & Running the App](#setup--running-the-app)
 - [Test Data: MyCMS Sample App](#test-data-mycms-sample-app)
 - [Test 1: Health Check (API)](#test-1-health-check-api)
@@ -36,6 +37,56 @@ End-to-end manual test instructions for the Business AI Analyst (BAIA) applicati
 - **Git**
 - A terminal (PowerShell, bash, etc.)
 - **curl** or similar HTTP client (for API-only tests)
+
+---
+
+## Environment Variables & Keys
+
+The server requires certain environment variables to be set before it will start. Create a `.env` file in `baia-server/` (it is gitignored) or export these variables in your shell.
+
+### Required
+
+| Variable | Description |
+|---|---|
+| `CREDENTIAL_ENCRYPTION_KEY` | AES encryption key used to store connector credentials (GitHub tokens, Confluence API keys, etc.). Must be a strong random string — the server will refuse to start without it. |
+| `COPILOT_TOKEN` | GitHub Copilot or Azure OpenAI bearer token used by the LLM adapter. The server will refuse to start without it. |
+
+Generate a suitable encryption key:
+
+```bash
+# Node.js
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+
+# PowerShell
+[System.Convert]::ToBase64String((1..32 | ForEach-Object { Get-Random -Maximum 256 }))
+```
+
+### Optional
+
+| Variable | Default | Description |
+|---|---|---|
+| `COPILOT_MODEL` | `gpt-4o` | LLM model name passed to the Copilot endpoint. |
+| `COPILOT_MAX_RETRIES` | `3` | Number of retry attempts on transient LLM errors. Must be a positive integer. |
+| `COPILOT_RETRY_DELAY_MS` | `500` | Delay in milliseconds between LLM retries. Must be a non-negative integer. |
+| `PORT` | `3000` | Port the backend server listens on. |
+| `CORS_ORIGIN` | `http://localhost:4200` | Allowed CORS origin. Set this to the frontend URL in production. |
+
+### Example `.env` file
+
+```dotenv
+# baia-server/.env
+
+# Required
+CREDENTIAL_ENCRYPTION_KEY=your-32-byte-hex-key-here
+COPILOT_TOKEN=your-github-copilot-or-azure-openai-token
+
+# Optional overrides
+COPILOT_MODEL=gpt-4o
+PORT=3000
+CORS_ORIGIN=http://localhost:4200
+```
+
+> **Note:** If either required variable is missing or empty, the server will fail at startup with a clear error message rather than silently using insecure defaults.
 
 ---
 

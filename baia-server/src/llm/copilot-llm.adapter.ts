@@ -27,8 +27,8 @@ import {
  * an `LlmError` with code `INVALID_INPUT` at startup.
  */
 export interface CopilotAdapterConfig {
-  /** GitHub token with Copilot access (`COPILOT_TOKEN`). */
-  readonly token: string;
+  /** GitHub token with Copilot access (`COPILOT_TOKEN`). Absent in BYOK mode. */
+  readonly token?: string;
   /** Model identifier to request (`COPILOT_MODEL`, default `gpt-4o`). */
   readonly model: string;
   /** Maximum retries for retriable errors (`COPILOT_MAX_RETRIES`, default 3). */

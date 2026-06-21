@@ -9,12 +9,18 @@ describe('LlmModule', () => {
   let moduleRef: TestingModule;
 
   beforeEach(async () => {
+    // No LLM credentials in env → falls back to MockLlmService.
+    delete process.env['COPILOT_TOKEN'];
+    delete process.env['BYOK_PROVIDER_TYPE'];
+    delete process.env['BYOK_BASE_URL'];
+    delete process.env['BYOK_MODEL'];
+
     moduleRef = await Test.createTestingModule({
       imports: [LlmModule],
     }).compile();
   });
 
-  it('binds LLM_SERVICE to the mock implementation', () => {
+  it('falls back to MockLlmService when no LLM credentials are configured', () => {
     const service = moduleRef.get<LlmService>(LLM_SERVICE);
     expect(service).toBeInstanceOf(MockLlmService);
   });

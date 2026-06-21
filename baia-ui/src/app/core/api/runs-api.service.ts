@@ -30,7 +30,7 @@ export class RunsApiService {
   startRun(runId: string, request: RunRequest): Observable<{ accepted: boolean; runId: string }> {
     return this.http.post<{ accepted: boolean; runId: string }>(
       `${this.baseUrl}/runs/${runId}/start`,
-      request
+      { instructions: request.instructions }
     );
   }
 
