@@ -1,3 +1,5 @@
+import { randomBytes } from 'node:crypto';
+
 import { Module } from '@nestjs/common';
 import { chromium } from 'playwright';
 
@@ -54,9 +56,9 @@ import { StartController } from './start.controller';
     {
       provide: CREDENTIAL_ENCRYPTION_KEY,
       useFactory: () => {
-        const key = process.env['CREDENTIAL_ENCRYPTION_KEY'];
+        let key = process.env['CREDENTIAL_ENCRYPTION_KEY'];
         if (!key || key.trim().length === 0) {
-          throw new Error('Missing required environment variable: CREDENTIAL_ENCRYPTION_KEY');
+          key = randomBytes(32).toString('hex');
         }
         return key;
       },
