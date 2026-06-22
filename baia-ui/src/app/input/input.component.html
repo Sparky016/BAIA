@@ -38,6 +38,41 @@
       </span>
     </div>
 
+    <details class="repo-section">
+      <summary>Repository (optional)</summary>
+
+      <div class="form-group">
+        <label for="repoUrl">Repository URL</label>
+        <input
+          id="repoUrl"
+          type="url"
+          formControlName="repoUrl"
+          placeholder="https://github.com/org/repo"
+          data-testid="repo-url"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="repoProvider">Provider</label>
+        <select id="repoProvider" formControlName="repoProvider" data-testid="repo-provider">
+          <option value="">— select —</option>
+          <option value="github">GitHub</option>
+          <option value="azure">Azure Repos</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="credentialsRef">Credentials reference</label>
+        <input
+          id="credentialsRef"
+          type="text"
+          formControlName="credentialsRef"
+          placeholder="e.g. repo:my-org/my-repo"
+          data-testid="credentials-ref"
+        />
+      </div>
+    </details>
+
     <p class="submit-error" *ngIf="submitError" data-testid="submit-error">{{ submitError }}</p>
 
     <button

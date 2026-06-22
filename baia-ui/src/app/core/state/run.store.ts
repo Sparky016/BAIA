@@ -11,6 +11,7 @@ export interface RunState {
   gherkinDocEdited: GherkinDoc | null;
   approved: boolean;
   error: string | null;
+  latestScreenshot: string | null;
 }
 
 const initialState: RunState = {
@@ -22,6 +23,7 @@ const initialState: RunState = {
   gherkinDocEdited: null,
   approved: false,
   error: null,
+  latestScreenshot: null,
 };
 
 export const RunStore = signalStore(
@@ -37,10 +39,10 @@ export const RunStore = signalStore(
   })),
   withMethods((store) => ({
     setRun(runId: string, status: RunStatus): void {
-      patchState(store, { runId, status, request: null, events: [], gherkinDoc: null, gherkinDocEdited: null, approved: false, error: null });
+      patchState(store, { runId, status, request: null, events: [], gherkinDoc: null, gherkinDocEdited: null, approved: false, error: null, latestScreenshot: null });
     },
     setRunWithRequest(runId: string, status: RunStatus, request: RunRequest): void {
-      patchState(store, { runId, status, request, events: [], gherkinDoc: null, gherkinDocEdited: null, approved: false, error: null });
+      patchState(store, { runId, status, request, events: [], gherkinDoc: null, gherkinDocEdited: null, approved: false, error: null, latestScreenshot: null });
     },
     setStatus(status: RunStatus): void {
       patchState(store, { status });
@@ -56,6 +58,9 @@ export const RunStore = signalStore(
     },
     approve(): void {
       patchState(store, { approved: true });
+    },
+    setLatestScreenshot(base64: string): void {
+      patchState(store, { latestScreenshot: base64 });
     },
     setError(error: string): void {
       patchState(store, { error });

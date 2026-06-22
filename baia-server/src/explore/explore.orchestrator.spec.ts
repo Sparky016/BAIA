@@ -157,6 +157,11 @@ describe('ExploreOrchestrator', () => {
         return { ok: true, observation: `executed ${action.type}` };
       });
 
+      runner.captureScreenshot.mockResolvedValue({
+        url: 'https://example.com',
+        data: Buffer.from('fake-png'),
+      });
+
       planner.planActions.mockResolvedValue(makePlanResult(2));
       gherkinGen.generateGherkin.mockResolvedValue(gherkinDoc);
 
@@ -242,11 +247,16 @@ describe('ExploreOrchestrator', () => {
       // Navigation succeeds but planner throws
       executor.execute.mockResolvedValue(makeNavResult());
       crawler.captureStep.mockResolvedValue(makeStep(0));
+      runner.captureScreenshot.mockResolvedValue({
+        url: 'https://example.com',
+        data: Buffer.from('fake-png'),
+      });
       planner.planActions.mockRejectedValue(new Error('LLM unavailable'));
 
       runsEvents.stream(runId).subscribe((e) => collectedEvents.push(e));
 
-      await orchestrator.executePhase1(runId, RUN_REQUEST.targetUrl, RUN_REQUEST.instructions);
+      // executePhase1 now rethrows after handling the failure — absorb it here.
+      await orchestrator.executePhase1(runId, RUN_REQUEST.targetUrl, RUN_REQUEST.instructions).catch(() => {});
     });
 
     it('transitions run to failed', () => {

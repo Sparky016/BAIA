@@ -1,4 +1,4 @@
-import { Component, inject, OnDestroy, OnInit } from '@angular/core';
+import { Component, computed, inject, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ExploreEvent, RunStatus } from '@baia/shared';
@@ -28,6 +28,31 @@ export class ProgressComponent implements OnInit, OnDestroy {
 
   readonly runId: string = this.route.snapshot.params['id'] ?? '';
   private eventSource: EventSource | null = null;
+
+  readonly phases = ['exploring', 'analyzing', 'reconciling', 'review', 'done'] as const;
+
+  protected readonly currentOperation = computed(() => {
+    const events = this.store.events();
+    const last = [...events].reverse().find(e => e.type !== 'screenshot');
+    return last ? last.message : 'Waiting for pipeline to start…';
+  });
+
+  protected readonly stepCount = computed(() =>
+    this.store.events().filter(e => e.type === 'action').length
+  );
+
+  protected readonly hasError = computed(() =>
+    this.store.status() === RunStatus.Failed ||
+    this.store.events().some(e => e.type === 'error')
+  );
+
+  protected readonly phaseIndex = computed(() =>
+    this.phases.indexOf(this.store.status() as typeof this.phases[number])
+  );
+
+  protected readonly visibleEvents = computed(() =>
+    this.store.events().filter(e => e.type !== 'screenshot')
+  );
 
   ngOnInit(): void {
     if (!this.runId) return;
@@ -76,7 +101,23 @@ export class ProgressComponent implements OnInit, OnDestroy {
         void this.router.navigate(['/review', this.runId]);
       }
     } else {
-      this.store.appendEvent(event as ExploreEvent);
+      const exploreEvent = event as ExploreEvent;
+      if (exploreEvent.type === 'screenshot') {
+        if (exploreEvent.screenshotBase64) {
+          this.store.setLatestScreenshot(exploreEvent.screenshotBase64);
+        }
+      } else {
+        this.store.appendEvent(exploreEvent);
+      }
     }
+  }
+
+  protected phaseClass(phase: string, index: number): Record<string, boolean> {
+    const status = this.store.status();
+    const pIdx = this.phaseIndex();
+    return {
+      active: phase === status,
+      done: pIdx > 0 && index < pIdx,
+    };
   }
 }

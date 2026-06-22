@@ -328,3 +328,183 @@ nav a.router-link-active {
   margin-bottom: var(--spacing-sm);
   color: var(--on-surface);
 }
+
+/* Progress Page */
+.progress-page { max-width: 1400px; margin: 0 auto; padding: var(--spacing-xl) var(--spacing-md); }
+
+.progress-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-lg);
+}
+
+.run-id-chip {
+  font-size: var(--label-size);
+  color: var(--on-surface-muted);
+  background: var(--surface-secondary);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-full);
+  padding: var(--spacing-xs) var(--spacing-md);
+}
+
+.phase-stepper {
+  display: flex;
+  align-items: center;
+  margin-bottom: var(--spacing-lg);
+  flex-wrap: wrap;
+  gap: 0;
+}
+
+.phase-connector {
+  width: 32px;
+  height: 1px;
+  background: var(--hairline);
+  flex-shrink: 0;
+}
+
+.phase-chip {
+  padding: var(--spacing-xs) var(--spacing-md);
+  border-radius: var(--radius-full);
+  font-size: var(--label-size);
+  font-weight: 500;
+  background: var(--surface-secondary);
+  color: var(--on-surface-muted);
+  border: 1px solid var(--hairline);
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.phase-chip.active {
+  background: var(--forest);
+  color: var(--green);
+  border-color: var(--green);
+  animation: pulse-chip 1.6s ease-in-out infinite;
+}
+
+.phase-chip.done {
+  color: var(--on-surface);
+  border-color: var(--on-surface-muted);
+  background: var(--surface-card);
+}
+
+.phase-chip.failed {
+  background: #450a0a;
+  color: #fca5a5;
+  border-color: var(--red);
+}
+
+@keyframes pulse-chip {
+  0%, 100% { box-shadow: 0 0 0 0 transparent; }
+  50% { box-shadow: 0 0 0 4px rgba(114, 206, 123, 0.3); }
+}
+
+.op-strip {
+  background: var(--surface-secondary);
+  border-left: 4px solid var(--green);
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  margin-bottom: var(--spacing-lg);
+}
+
+.op-strip.error {
+  border-left-color: var(--red);
+}
+
+.op-strip .op-label {
+  font-size: var(--label-size);
+  color: var(--on-surface-muted);
+  margin-bottom: 4px;
+  display: flex;
+  gap: var(--spacing-md);
+}
+
+.op-strip .op-message {
+  font-size: var(--body-md-size);
+  color: var(--on-surface);
+  font-weight: 500;
+}
+
+.progress-layout {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: var(--spacing-lg);
+  align-items: start;
+}
+
+.events-log {
+  background: var(--surface-card);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  max-height: 55vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.event {
+  display: flex;
+  gap: var(--spacing-sm);
+  align-items: baseline;
+  font-size: 13px;
+  padding: 3px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.event-time {
+  font-family: var(--font-mono);
+  color: var(--on-surface-muted);
+  flex-shrink: 0;
+  font-size: 11px;
+}
+
+.badge {
+  padding: 2px 7px;
+  border-radius: var(--radius-full);
+  font-size: 10px;
+  font-weight: 700;
+  flex-shrink: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.badge-action { background: #1e3a5f; color: #93c5fd; }
+.badge-observation { background: var(--forest); color: var(--green); }
+.badge-error { background: #450a0a; color: #fca5a5; }
+.badge-complete { background: var(--surface-secondary); color: var(--on-surface); }
+
+.event-message {
+  color: var(--on-surface);
+  word-break: break-word;
+  line-height: 1.4;
+}
+
+.screenshot-panel {
+  background: var(--surface-card);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  position: sticky;
+  top: var(--spacing-md);
+}
+
+.screenshot-panel .panel-label {
+  font-size: var(--label-size);
+  color: var(--on-surface-muted);
+  margin-bottom: var(--spacing-sm);
+  display: flex;
+  justify-content: space-between;
+}
+
+.screenshot-panel img {
+  width: 100%;
+  border-radius: var(--radius-sm);
+  display: block;
+  border: 1px solid var(--hairline);
+}
+
+.no-events {
+  color: var(--on-surface-muted);
+  font-size: var(--label-size);
+  padding: var(--spacing-md);
+}

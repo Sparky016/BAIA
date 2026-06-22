@@ -63,6 +63,15 @@ export class ExploreOrchestrator {
       const initialStep = await this.crawler.captureStep(runId, page, 0, navResult.observation);
       trace.steps.push(initialStep);
 
+      const initialShot = await this.runner.captureScreenshot();
+      this.emitExploreEvent(
+        runId,
+        'screenshot',
+        initialShot.url,
+        {},
+        initialShot.data.toString('base64')
+      );
+
       const planResult = await this.planner.planActions({
         instruction: instructions,
         currentUrl: page.url(),
@@ -89,6 +98,9 @@ export class ExploreOrchestrator {
         });
         const step = await this.crawler.captureStep(runId, page, i + 1, result.observation);
         trace.steps.push(step);
+
+        const shot = await this.runner.captureScreenshot();
+        this.emitExploreEvent(runId, 'screenshot', shot.url, {}, shot.data.toString('base64'));
       }
 
       trace.completedAt = new Date();
@@ -110,7 +122,10 @@ export class ExploreOrchestrator {
       this.logger.log(`Run ${runId}: exploring → analyzing`);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      this.logger.error(`Run ${runId}: Phase 1 failed — ${message}`);
+      this.logger.error(
+        `Run ${runId}: Phase 1 failed — ${message}`,
+        err instanceof Error ? err.stack : err
+      );
 
       this.emitExploreEvent(runId, 'error', `Phase 1 failed: ${message}`, { error: message });
 
@@ -122,6 +137,7 @@ export class ExploreOrchestrator {
         to: RunStatus.Failed,
         at: Date.now(),
       });
+      throw err;
     } finally {
       await this.runner.teardown();
     }
@@ -131,13 +147,15 @@ export class ExploreOrchestrator {
     runId: string,
     type: ExploreEvent['type'],
     message: string,
-    details?: Record<string, unknown>
+    details?: Record<string, unknown>,
+    screenshotBase64?: string
   ): void {
     const event: ExploreEvent = {
       timestamp: new Date(),
       type,
       message,
-      ...(details ? { details } : {}),
+      ...(details && Object.keys(details).length > 0 ? { details } : {}),
+      ...(screenshotBase64 ? { screenshotBase64 } : {}),
     };
     this.runsEvents.emit(runId, event);
   }

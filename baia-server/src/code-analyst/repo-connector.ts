@@ -27,8 +27,6 @@
  * Tokens and secrets MUST NOT appear in error messages or log output.
  */
 
-import { RunRequest } from '@baia/shared';
-
 // ── Error types ───────────────────────────────────────────────────────────────
 
 /** Stable, provider-agnostic error codes for repo operations. */
@@ -188,8 +186,10 @@ export const REPO_CONNECTOR = Symbol('REPO_CONNECTOR');
 // ── Factory helper type ───────────────────────────────────────────────────────
 
 /**
- * Convenience alias for the subset of {@link RunRequest} fields that a
- * {@link RepoConnector} factory needs to select the right implementation and
- * configure the repo URL.
+ * Configuration fields a {@link RepoConnector} factory needs to select the
+ * right implementation and configure the repo URL.
  */
-export type RepoConnectorConfig = Pick<RunRequest, 'repoUrl' | 'repoProvider'>;
+export type RepoConnectorConfig = {
+  repoUrl?: string;
+  repoProvider?: 'github' | 'azure';
+};
