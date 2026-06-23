@@ -130,73 +130,66 @@ working copy but the problem returns on the next Windows checkout without
 
 ## 3. Medium Findings
 
-### 3.1 🟠 Production code depends on the `e2e/` layer
+### 3.1 ✅ RESOLVED — Production code depends on the `e2e/` layer
 
-The production `StartController` and `PipelineModule` import from `src/e2e/`:
+> **Resolved 2026-06-23.** Created `pipeline/pipeline.service.ts` (renamed from
+> `E2ePipelineService`) and `pipeline/pipeline.types.ts` (extracted
+> `StartPipelineBody`/`StartPipelineResult`). Updated `start.controller.ts` and
+> `pipeline.module.ts` to import from their own module. Updated
+> `e2e/e2e-start.controller.ts` and `e2e/e2e-app.module.ts` to import from
+> `../pipeline/`. Deleted `e2e/e2e-pipeline.service.ts`. Dependency direction is
+> now correct: e2e imports from pipeline, not vice versa.
+
+The production `StartController` and `PipelineModule` were importing from `src/e2e/`:
 
 ```ts
-// pipeline/start.controller.ts
+// pipeline/start.controller.ts  (before fix)
 import { E2ePipelineService } from '../e2e/e2e-pipeline.service';
 import { StartPipelineBody, StartPipelineResult } from '../e2e/e2e-start.controller';
 ```
 
-`E2ePipelineService` is, despite its name, the **real** Phase 1→2→reconcile
-pipeline the production server runs. Naming production behavior "E2e" and
-sourcing production DTOs from an `e2e/` folder is a layering/naming violation
-that will mislead maintainers and invites accidental breakage (e.g. someone
-"cleaning up e2e code" removes a production dependency).
+`E2ePipelineService` was, despite its name, the **real** Phase 1→2→reconcile
+pipeline the production server runs. This layering violation could cause a
+maintainer "cleaning up e2e code" to accidentally break production.
 
-**Fix:** promote `E2ePipelineService` → `pipeline/pipeline.service.ts` and the
-`StartPipeline*` interfaces into `pipeline/` (or `baia-shared`). Let the e2e
-controller import from production, not the reverse.
+### 3.2 ✅ RESOLVED — State-machine event seam is dead code; transition events are hand-duplicated
 
-### 3.2 🟠 State-machine event seam is dead code; transition events are hand-duplicated
+> **Resolved 2026-06-23.** Wired the seam in `RunsModule` using NestJS `useFactory`
+> with `inject: [RunsEventsService]`:
+> `machine.onTransition(e => runsEvents.emit(e.runId, e))`.
+> Removed all 8 manual `runsEvents.emit({runId, from, to, at})` blocks from
+> `explore.orchestrator.ts` (3), `analyze.orchestrator.ts` (3), and
+> `reconcile.orchestrator.ts` (2). Orchestrator specs updated to wire the listener
+> in `beforeEach` so they continue to collect transition events via the stream.
+> Server suite: **827 passed / 827** (all green, net −41 lines of duplication).
 
 `RunStateMachine` exposes a clean `onTransition(listener)` pub/sub seam
-(`run-state-machine.ts:95`) that emits a fully-formed `RunTransitionEvent`
-(`{ runId, from, to, at }`) on every guarded transition. **Nothing ever
-registers a listener** — verified: the only occurrence of `onTransition` in
-non-test code is its own definition.
+(`run-state-machine.ts:95`). Each orchestrator was manually emitting the
+transition event after every `transitionRun` call, duplicating the event shape 8
+times and hardcoding `from` values — a DRY violation and latent correctness risk.
 
-Instead, each orchestrator does the work twice and by hand:
+### 3.3 ✅ RESOLVED — The production pipeline entrypoint has 0% test coverage
 
-```ts
-// explore.orchestrator.ts (pattern repeated in reconcile + analyze)
-this.runsService.transitionRun(runId, RunStatus.Analyzing);
-this.runsEvents.emit(runId, { runId, from: RunStatus.Exploring,
-                              to: RunStatus.Analyzing, at: Date.now() });
-```
+> **Resolved 2026-06-23** (alongside §3.1). Created
+> `pipeline/start.controller.spec.ts` with 5 tests covering: return shape,
+> `runFullPipeline` argument correctness, env-var credential seeding path,
+> no-credential path, and pipeline error suppression. Server suite now **827
+> passed / 827**.
 
-This duplicates the event shape across ~6 call sites and **hardcodes `from`**
-(e.g. the explore failure path emits `from: RunStatus.Exploring` literally). If
-a transition's true `from` ever differs, the SSE stream silently lies. It is
-also a DRY violation: the machine already computed the authoritative event.
+`src/pipeline/start.controller.ts` had 0% test coverage; its e2e twin was the
+only tested variant and had already drifted (seeding `confluenceCredentialsRef`
+that production doesn't support).
 
-**Fix:** wire the seam once in `RunsModule`:
-`stateMachine.onTransition(e => runsEvents.emit(e.runId, e))`, have
-`RunsService.transitionRun` go through the machine (it already does), and delete
-the manual `runsEvents.emit({from,to,at})` calls from the orchestrators.
+### 3.4 ✅ RESOLVED — UI branch coverage (69.2%) is below the documented 80% gate
 
-### 3.3 🟠 The production pipeline entrypoint has 0% test coverage
-
-`src/pipeline/start.controller.ts` reports **0% / lines 1-51 uncovered**. The
-only tested variant is its e2e twin (`E2eStartController`). Given §2.1 and §3.1,
-the *production* wiring is exactly the part that is untested. The two
-controllers have already drifted: `E2eStartController` seeds
-`confluenceCredentialsRef`; `StartController` does not.
-
-**Fix:** consolidate to one controller (§3.1) and add a controller spec.
-
-### 3.4 🟠 UI branch coverage (69.2%) is below the documented 80% gate
-
-`baia-ui` reports **69.23% branch** coverage — under the README's stated
-"≥ 80% branch" gate. Either `coverage:aggregate` is not actually enforcing the
-UI branch threshold, or the gate is advisory. Untested branches concentrate in
-`review`/`gherkin-editor`/`export-panel` error paths.
-
-**Fix:** add tests for the uncovered error/guard branches, and make
-`coverage:aggregate` fail the build when the UI branch gate is missed (so the
-gate is real, not documentation).
+> **Resolved 2026-06-23.** Added `check: { global: { branches: 80, … } }` to
+> `baia-ui/karma.conf.js` so `ng test` exits non-zero if the gate is missed.
+> Added 20 new tests across `export-panel.component.spec.ts` (8 tests — error
+> fallback branches, `canExport` whitespace guards, filename fallbacks),
+> `input.component.spec.ts` (1 test — optional-field false branches),
+> `progress.component.spec.ts` (11 tests — screenshot, phaseClass, startRun
+> paths). Branch coverage raised from **69.2% → 92.3%** (60/65 branches). All
+> 108 UI tests pass.
 
 ---
 
@@ -257,7 +250,7 @@ hand-maintained module.
 - **Repo connectors**: token never stored on the instance or surfaced in
   errors; narrow hand-rolled API interface keeps ESM-only Octokit out of the
   test process.
-- **Test discipline**: 908 unit tests total, all green; deterministic mocks for
+- **Test discipline**: 935 unit tests total (827 server + 108 UI), all green; deterministic mocks for
   Playwright/LLM/repo so CI needs no external credentials.
 
 ---
@@ -268,10 +261,10 @@ hand-maintained module.
 |---|-----|--------|--------|
 | 1 | ✅ | ~~Register `ExportModule` in `AppModule`; add an `AppModule`-boot integration test for `/runs/:id/export` (§2.1)~~ **Done 2026-06-23** | S |
 | 2 | ✅ | ~~Add `.gitattributes` (`* text=auto eol=lf`), renormalize, get lint green (§2.2)~~ **Done 2026-06-23** | S |
-| 3 | 🟠 | Move `E2ePipelineService` + `StartPipeline*` DTOs out of `e2e/` into `pipeline/`; reverse the e2e→prod dependency (§3.1) | M |
-| 4 | 🟠 | Wire `RunStateMachine.onTransition` → `RunsEventsService`; delete duplicated manual emits (§3.2) | M |
-| 5 | 🟠 | Add `StartController` spec; consolidate prod/e2e start controllers (§3.3) | M |
-| 6 | 🟠 | Make UI branch-coverage gate enforced and raise coverage to 80% (§3.4) | M |
+| 3 | ✅ | ~~Move `E2ePipelineService` + `StartPipeline*` DTOs out of `e2e/` into `pipeline/`; reverse the e2e→prod dependency (§3.1)~~ **Done 2026-06-23** | M |
+| 4 | ✅ | ~~Wire `RunStateMachine.onTransition` → `RunsEventsService`; delete duplicated manual emits (§3.2)~~ **Done 2026-06-23** | M |
+| 5 | ✅ | ~~Add `StartController` spec; consolidate prod/e2e start controllers (§3.3)~~ **Done 2026-06-23** | M |
+| 6 | ✅ | ~~Make UI branch-coverage gate enforced and raise coverage to 80% (§3.4)~~ **Done 2026-06-23** (92.3%) | M |
 | 7 | 🟡 | Parallelize/batch `GitHubConnector.clone()`; fix doc mismatches; harden `emit` post-terminal (§4) | S–M |
 
 ---
