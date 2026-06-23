@@ -165,6 +165,32 @@ describe('InputComponent', () => {
     expect(errorEl.textContent?.trim()).toBe('Network failure');
   });
 
+  it('submit() excludes optional fields when they are empty', () => {
+    runsApiSpy.createRun.and.returnValue(of({
+      runId: 'run-002',
+      status: RunStatus.Queued,
+      targetUrl: 'https://example.com',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }));
+    spyOn(router, 'navigate').and.returnValue(Promise.resolve(true));
+
+    component.form.setValue({
+      targetUrl: 'https://example.com',
+      instructions: 'Do something',
+      repoUrl: '',
+      repoProvider: '',
+      credentialsRef: '',
+    });
+    component.submit();
+
+    const callArg = runsApiSpy.createRun.calls.mostRecent().args[0];
+    expect(callArg.repoUrl).toBeUndefined();
+    expect(callArg.repoProvider).toBeUndefined();
+    expect(callArg.credentialsRef).toBeUndefined();
+    expect(callArg.targetUrl).toBe('https://example.com');
+  });
+
   it('submit() does not call createRun a second time while isSubmitting is true', () => {
     runsApiSpy.createRun.and.returnValue(of({
       runId: 'run-001',

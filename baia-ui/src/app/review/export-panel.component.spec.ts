@@ -214,4 +214,107 @@ describe('ExportPanelComponent', () => {
     expect(mockAnchor.href).toContain('zip-url');
     expect(mockAnchor.click).toHaveBeenCalled();
   });
+
+  it('downloadGherkin error: non-Error thrown falls back to "Gherkin download failed"', () => {
+    store.setStatus(RunStatus.Review);
+    store.approve();
+    createComponent();
+
+    runsApiSpy.downloadGherkin.and.returnValue(throwError(() => ({ noMessageField: true })));
+
+    component.downloadGherkin();
+
+    expect(component.exportError).toBe('Gherkin download failed');
+  });
+
+  it('downloadOkf error: non-Error thrown falls back to "OKF download failed"', () => {
+    store.setStatus(RunStatus.Review);
+    store.approve();
+    createComponent();
+
+    runsApiSpy.downloadOkf.and.returnValue(throwError(() => ({ noMessageField: true })));
+
+    component.downloadOkf();
+
+    expect(component.exportError).toBe('OKF download failed');
+  });
+
+  it('canExport false when baseUrl is whitespace-only', () => {
+    store.setStatus(RunStatus.Review);
+    store.approve();
+    createComponent();
+
+    component.baseUrl = '   ';
+    component.spaceKey = 'ENG';
+    component.credentialsRef = 'cred-ref';
+    fixture.detectChanges();
+
+    expect(component.canExport).toBeFalse();
+  });
+
+  it('canExport false when spaceKey is whitespace-only', () => {
+    store.setStatus(RunStatus.Review);
+    store.approve();
+    createComponent();
+
+    component.baseUrl = 'https://mycompany.atlassian.net';
+    component.spaceKey = '   ';
+    component.credentialsRef = 'cred-ref';
+    fixture.detectChanges();
+
+    expect(component.canExport).toBeFalse();
+  });
+
+  it('canExport false when credentialsRef is whitespace-only', () => {
+    store.setStatus(RunStatus.Review);
+    store.approve();
+    createComponent();
+
+    component.baseUrl = 'https://mycompany.atlassian.net';
+    component.spaceKey = 'ENG';
+    component.credentialsRef = '   ';
+    fixture.detectChanges();
+
+    expect(component.canExport).toBeFalse();
+  });
+
+  it('downloadGherkin uses "gherkin" fallback filename when runId is empty', () => {
+    store.setStatus(RunStatus.Review);
+    store.approve();
+    createComponent();
+    component.runId = '';
+
+    const mockBlob = new Blob(['Gherkin doc'], { type: 'text/plain' });
+    runsApiSpy.downloadGherkin.and.returnValue(of(mockBlob));
+
+    spyOn(window.URL, 'createObjectURL').and.returnValue('blob-url');
+    spyOn(window.URL, 'revokeObjectURL');
+    const mockAnchor = document.createElement('a');
+    spyOn(document, 'createElement').and.callThrough().and.returnValue(mockAnchor);
+    spyOn(mockAnchor, 'click');
+
+    component.downloadGherkin();
+
+    expect(mockAnchor.download).toBe('gherkin.feature');
+  });
+
+  it('downloadOkf uses "okf" fallback filename when runId is empty', () => {
+    store.setStatus(RunStatus.Review);
+    store.approve();
+    createComponent();
+    component.runId = '';
+
+    const mockBlob = new Blob(['zip content'], { type: 'application/zip' });
+    runsApiSpy.downloadOkf.and.returnValue(of(mockBlob));
+
+    spyOn(window.URL, 'createObjectURL').and.returnValue('zip-url');
+    spyOn(window.URL, 'revokeObjectURL');
+    const mockAnchor = document.createElement('a');
+    spyOn(document, 'createElement').and.callThrough().and.returnValue(mockAnchor);
+    spyOn(mockAnchor, 'click');
+
+    component.downloadOkf();
+
+    expect(mockAnchor.download).toBe('okf-okf.zip');
+  });
 });
