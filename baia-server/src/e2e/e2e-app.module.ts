@@ -24,7 +24,8 @@ import {
   CredentialStoreService,
 } from '../security/credential-store.service';
 
-import { E2ePipelineService } from './e2e-pipeline.service';
+import { PipelineService } from '../pipeline/pipeline.service';
+
 import { E2eStartController } from './e2e-start.controller';
 import { MockExploreOrchestrator } from './mock-explore-orchestrator';
 import { MockRepoConnector } from './mock-repo-connector';
@@ -87,8 +88,8 @@ import { MockRepoConnector } from './mock-repo-connector';
     // ── Export ───────────────────────────────────────────────────────────────
     ConfluenceAdapter,
 
-    // ── E2E pipeline service + start controller ───────────────────────────────
-    E2ePipelineService,
+    // ── Pipeline service + start controller ──────────────────────────────────
+    PipelineService,
   ],
 })
 export class E2eAppModule {}
