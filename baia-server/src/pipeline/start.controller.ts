@@ -1,9 +1,10 @@
 import { Body, Controller, HttpCode, HttpStatus, Logger, Param, Post } from '@nestjs/common';
 
-import { E2ePipelineService } from '../e2e/e2e-pipeline.service';
-import { StartPipelineBody, StartPipelineResult } from '../e2e/e2e-start.controller';
 import { RunsService } from '../runs/runs.service';
 import { CredentialStoreService } from '../security/credential-store.service';
+
+import { PipelineService } from './pipeline.service';
+import { StartPipelineBody, StartPipelineResult } from './pipeline.types';
 
 const ENV_REPO_REF = 'env-repo';
 
@@ -20,7 +21,7 @@ export class StartController {
 
   constructor(
     private readonly runsService: RunsService,
-    private readonly pipelineService: E2ePipelineService,
+    private readonly pipelineService: PipelineService,
     private readonly credentialStore: CredentialStoreService
   ) {}
 

@@ -15,7 +15,7 @@ import {
 import { IngestionService } from '../code-analyst/ingestion.service';
 import { REPO_CONNECTOR } from '../code-analyst/repo-connector';
 import { RuleExtractorService } from '../code-analyst/rule-extractor.service';
-import { E2ePipelineService } from '../e2e/e2e-pipeline.service';
+import { PipelineService } from './pipeline.service';
 import { ActionExecutorService } from '../explore/action-executor.service';
 import { ActionPlannerService } from '../explore/action-planner.service';
 import { CrawlCaptureService } from '../explore/crawl-capture.service';
@@ -73,7 +73,7 @@ import { StartController } from './start.controller';
     ReconcileOrchestrator,
 
     // ── Pipeline service ─────────────────────────────────────────────────────
-    E2ePipelineService,
+    PipelineService,
   ],
 })
 export class PipelineModule {}

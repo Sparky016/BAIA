@@ -2,21 +2,8 @@ import { Body, Controller, HttpCode, HttpStatus, Logger, Param, Post } from '@ne
 
 import { RunsService } from '../runs/runs.service';
 import { CredentialStoreService } from '../security/credential-store.service';
-
-import { E2ePipelineService } from './e2e-pipeline.service';
-
-export interface StartPipelineBody {
-  instructions: string;
-  repoUrl?: string;
-  repoProvider?: 'github' | 'azure';
-  credentialsRef?: string;
-  confluenceCredentialsRef?: string;
-}
-
-export interface StartPipelineResult {
-  accepted: boolean;
-  runId: string;
-}
+import { PipelineService } from '../pipeline/pipeline.service';
+import { StartPipelineBody, StartPipelineResult } from '../pipeline/pipeline.types';
 
 /**
  * E2E-only controller that triggers the full BAIA pipeline for a queued run.
@@ -31,7 +18,7 @@ export class E2eStartController {
   constructor(
     private readonly runsService: RunsService,
     private readonly credentialStore: CredentialStoreService,
-    private readonly pipelineService: E2ePipelineService
+    private readonly pipelineService: PipelineService
   ) {}
 
   @Post(':id/start')
