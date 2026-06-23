@@ -1,5 +1,3 @@
-import { randomBytes } from 'node:crypto';
-
 import { Module } from '@nestjs/common';
 import { chromium } from 'playwright';
 
@@ -32,10 +30,7 @@ import { LlmModule } from '../llm/llm.module';
 import { ReconcileOrchestrator } from '../reconcile/reconcile.orchestrator';
 import { ReconciliationService } from '../reconcile/reconciliation.service';
 import { RunsModule } from '../runs/runs.module';
-import {
-  CREDENTIAL_ENCRYPTION_KEY,
-  CredentialStoreService,
-} from '../security/credential-store.service';
+import { SecurityModule } from '../security/security.module';
 
 import { StartController } from './start.controller';
 
@@ -49,22 +44,9 @@ import { StartController } from './start.controller';
  * instances and break shared run state.
  */
 @Module({
-  imports: [RunsModule, LlmModule, GherkinModule],
+  imports: [RunsModule, LlmModule, GherkinModule, SecurityModule],
   controllers: [StartController],
   providers: [
-    // ── Security ─────────────────────────────────────────────────────────────
-    {
-      provide: CREDENTIAL_ENCRYPTION_KEY,
-      useFactory: () => {
-        let key = process.env['CREDENTIAL_ENCRYPTION_KEY'];
-        if (!key || key.trim().length === 0) {
-          key = randomBytes(32).toString('hex');
-        }
-        return key;
-      },
-    },
-    CredentialStoreService,
-
     // ── Phase 1 – Explore ────────────────────────────────────────────────────
     { provide: CHROMIUM_LAUNCHER, useValue: chromium },
     {

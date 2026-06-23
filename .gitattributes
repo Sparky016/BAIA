@@ -1,0 +1,13 @@
+# Normalize all text files to LF in the repository and on checkout, so the
+# Prettier `endOfLine: "lf"` rule passes on every platform (including Windows).
+* text=auto eol=lf
+
+# Binary assets — never normalize or diff as text.
+*.png binary
+*.ico binary
+*.zip binary
+*.db binary
+*.sqlite binary
+*.vsidx binary
+*.suo binary
+*.wsuo binary
