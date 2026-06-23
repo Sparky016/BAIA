@@ -9,9 +9,17 @@ import { RunsSseController } from './runs.sse.controller';
 @Module({
   controllers: [RunsController, RunsSseController],
   providers: [
-    { provide: RunStateMachine, useFactory: () => new RunStateMachine() },
-    RunsService,
     RunsEventsService,
+    {
+      provide: RunStateMachine,
+      useFactory: (runsEvents: RunsEventsService) => {
+        const machine = new RunStateMachine();
+        machine.onTransition(e => runsEvents.emit(e.runId, e));
+        return machine;
+      },
+      inject: [RunsEventsService],
+    },
+    RunsService,
   ],
   exports: [RunsService, RunStateMachine, RunsEventsService],
 })

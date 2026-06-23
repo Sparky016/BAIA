@@ -41,16 +41,7 @@ export class ExploreOrchestrator {
    * @throws {NotFoundException} if `runId` is unknown.
    */
   async executePhase1(runId: string, targetUrl: string, instructions: string): Promise<void> {
-    const run = this.runsService.getRun(runId);
-    const fromStatus = run.status;
-
     this.runsService.transitionRun(runId, RunStatus.Exploring);
-    this.runsEvents.emit(runId, {
-      runId,
-      from: fromStatus,
-      to: RunStatus.Exploring,
-      at: Date.now(),
-    });
     this.logger.log(`Run ${runId}: queued → exploring`);
 
     try {
@@ -113,12 +104,6 @@ export class ExploreOrchestrator {
       });
 
       this.runsService.transitionRun(runId, RunStatus.Analyzing);
-      this.runsEvents.emit(runId, {
-        runId,
-        from: RunStatus.Exploring,
-        to: RunStatus.Analyzing,
-        at: Date.now(),
-      });
       this.logger.log(`Run ${runId}: exploring → analyzing`);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
@@ -130,13 +115,6 @@ export class ExploreOrchestrator {
       this.emitExploreEvent(runId, 'error', `Phase 1 failed: ${message}`, { error: message });
 
       this.runsService.transitionRun(runId, RunStatus.Failed);
-      // Terminal transition — stream auto-completes after this emit.
-      this.runsEvents.emit(runId, {
-        runId,
-        from: RunStatus.Exploring,
-        to: RunStatus.Failed,
-        at: Date.now(),
-      });
       throw err;
     } finally {
       await this.runner.teardown();

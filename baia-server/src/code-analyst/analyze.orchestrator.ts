@@ -67,12 +67,6 @@ export class AnalyzeOrchestrator {
       );
       this.logger.log(`Run ${runId}: Phase 2 skipped (no repo params)`);
       this.runsService.transitionRun(runId, RunStatus.Reconciling);
-      this.runsEvents.emit(runId, {
-        runId,
-        from: RunStatus.Analyzing,
-        to: RunStatus.Reconciling,
-        at: Date.now(),
-      });
       return;
     }
 
@@ -106,12 +100,6 @@ export class AnalyzeOrchestrator {
       });
 
       this.runsService.transitionRun(runId, RunStatus.Reconciling);
-      this.runsEvents.emit(runId, {
-        runId,
-        from: RunStatus.Analyzing,
-        to: RunStatus.Reconciling,
-        at: Date.now(),
-      });
       this.logger.log(`Run ${runId}: analyzing → reconciling`);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
@@ -120,12 +108,6 @@ export class AnalyzeOrchestrator {
       this.emitAnalyzeEvent(runId, 'error', `Phase 2 failed: ${message}`, { error: message });
 
       this.runsService.transitionRun(runId, RunStatus.Failed);
-      this.runsEvents.emit(runId, {
-        runId,
-        from: RunStatus.Analyzing,
-        to: RunStatus.Failed,
-        at: Date.now(),
-      });
     }
   }
 

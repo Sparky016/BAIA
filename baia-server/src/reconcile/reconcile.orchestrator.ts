@@ -83,12 +83,6 @@ export class ReconcileOrchestrator {
       );
 
       this.runsService.transitionRun(runId, RunStatus.Review);
-      this.runsEvents.emit(runId, {
-        runId,
-        from: RunStatus.Reconciling,
-        to: RunStatus.Review,
-        at: Date.now(),
-      });
       this.logger.log(`Run ${runId}: reconciling → review`);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
@@ -97,12 +91,6 @@ export class ReconcileOrchestrator {
       this.emitEvent(runId, 'error', `Reconciliation failed: ${message}`, { error: message });
 
       this.runsService.transitionRun(runId, RunStatus.Failed);
-      this.runsEvents.emit(runId, {
-        runId,
-        from: RunStatus.Reconciling,
-        to: RunStatus.Failed,
-        at: Date.now(),
-      });
     }
   }
 
