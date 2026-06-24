@@ -174,6 +174,15 @@ export async function buildOctokitFactory(): Promise<GitHubApiClientFactory> {
   };
 }
 
+// ── Concurrency control ────────────────────────────────────────────────────
+
+/**
+ * Maximum number of simultaneous `getContents` requests issued during
+ * {@link GitHubConnector.clone}.  Keeps throughput high while staying well
+ * within GitHub's API rate limits.
+ */
+const CONCURRENCY = 5;
+
 // ── GitHubConnector ────────────────────────────────────────────────────────
 
 /**
@@ -359,10 +368,18 @@ export class GitHubConnector implements RepoConnector {
       const blobs = entries.filter((e) => e.type === 'blob');
       this.logger.log(`Fetching ${blobs.length} files from ${this.owner}/${this.repo}`);
 
-      for (const entry of blobs) {
-        const { content, encoding } = await client.getContents(this.owner, this.repo, entry.path);
-        const text = encoding === 'base64' ? decodeBase64(content) : content;
-        files.set(entry.path, text);
+      // Bounded-concurrency parallel fetch: process blobs in batches of CONCURRENCY
+      // to maximize throughput without overwhelming the GitHub API rate limit.
+      for (let i = 0; i < blobs.length; i += CONCURRENCY) {
+        const batch = blobs.slice(i, i + CONCURRENCY);
+        const results = await Promise.all(
+          batch.map((entry) => client.getContents(this.owner, this.repo, entry.path))
+        );
+        for (let j = 0; j < batch.length; j++) {
+          const { content, encoding } = results[j];
+          const text = encoding === 'base64' ? decodeBase64(content) : content;
+          files.set(batch[j].path, text);
+        }
       }
 
       this.logger.log(`Clone complete: ${files.size} files fetched`);
