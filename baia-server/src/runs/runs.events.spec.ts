@@ -311,6 +311,53 @@ describe('RunsEventsService', () => {
       expect(received).toHaveLength(1);
       expect((received[0] as ExploreEvent).message).toBe('before complete');
     });
+
+    it('prevents emit() after complete() from resurrecting the stream', () => {
+      const received: RunStreamEvent[] = [];
+      const sub = service.stream(RUN_ID).subscribe((e) => received.push(e));
+
+      service.emit(RUN_ID, makeExploreEvent('action', 'before complete'));
+      const activeBeforeComplete = service.activeStreams;
+      service.complete(RUN_ID);
+      const activeAfterComplete = service.activeStreams;
+
+      // Emit after complete — should not create a new subject
+      service.emit(RUN_ID, makeExploreEvent('action', 'after complete resurrection attempt'));
+      const activeAfterEmit = service.activeStreams;
+
+      sub.unsubscribe();
+
+      // Verify that:
+      // 1. activeStreams goes from 1 → 0 after complete()
+      expect(activeBeforeComplete).toBe(1);
+      expect(activeAfterComplete).toBe(0);
+      // 2. activeStreams stays at 0 after emit() — no resurrection
+      expect(activeAfterEmit).toBe(0);
+      // 3. No event was received after complete()
+      expect(received).toHaveLength(1);
+      expect((received[0] as ExploreEvent).message).toBe('before complete');
+    });
+
+    it('prevents emit() after terminal transition from resurrecting the stream', () => {
+      const received: RunStreamEvent[] = [];
+      const sub = service.stream(RUN_ID).subscribe((e) => received.push(e));
+
+      service.emit(RUN_ID, makeTransition(RunStatus.Queued, RunStatus.Done));
+      const activeAfterTerminal = service.activeStreams;
+
+      // Emit after terminal transition — should not create a new subject
+      service.emit(RUN_ID, makeExploreEvent('action', 'after terminal'));
+      const activeAfterEmit = service.activeStreams;
+
+      sub.unsubscribe();
+
+      // Verify that activeStreams stays at 0
+      expect(activeAfterTerminal).toBe(0);
+      expect(activeAfterEmit).toBe(0);
+      // Only the terminal transition was received
+      expect(received).toHaveLength(1);
+      expect((received[0] as RunTransitionEvent).to).toBe(RunStatus.Done);
+    });
   });
 
   // ---------------------------------------------------------------------------
