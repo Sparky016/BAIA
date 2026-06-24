@@ -433,6 +433,64 @@ describe('GitHubConnector', () => {
 
       assertTokenNotLogged(loggerSpies, VALID_TOKEN);
     });
+
+    it('fetches all blobs via bounded-concurrency (getContents called once per blob)', async () => {
+      // Build a tree with 12 blobs to exercise multiple batches of 5.
+      const blobPaths = Array.from({ length: 12 }, (_, i) => `src/file${i}.ts`);
+      const treeEntries = [
+        ...blobPaths.map((path) => ({ path, type: 'blob', size: 10 })),
+        { path: 'src/dir', type: 'tree' }, // one directory entry — must NOT be fetched
+      ];
+
+      const getContents = jest.fn().mockImplementation((_owner: string, _repo: string, path: string) =>
+        Promise.resolve({
+          content: Buffer.from(`// ${path}`).toString('base64'),
+          encoding: 'base64',
+        })
+      );
+
+      const client = makeMockClient({ getTree: jest.fn().mockResolvedValue(treeEntries), getContents });
+      const connector = makeConnector(client);
+      await connector.auth(VALID_CREDS);
+
+      const result = await connector.clone();
+
+      // getContents called exactly once per blob, never for the tree entry.
+      expect(getContents).toHaveBeenCalledTimes(12);
+      for (const path of blobPaths) {
+        expect(getContents).toHaveBeenCalledWith('acme', 'my-app', path);
+      }
+      expect(getContents).not.toHaveBeenCalledWith('acme', 'my-app', 'src/dir');
+
+      // Result map contains all 12 blobs.
+      expect(result.files!.size).toBe(12);
+      for (const path of blobPaths) {
+        expect(result.files!.has(path)).toBe(true);
+      }
+    });
+
+    it('preserves correct content for all blobs when fetched in batches', async () => {
+      // 7 blobs — spans two batches (5 + 2) so the boundary is exercised.
+      const blobPaths = Array.from({ length: 7 }, (_, i) => `file${i}.ts`);
+      const treeEntries = blobPaths.map((path) => ({ path, type: 'blob', size: 8 }));
+
+      const getContents = jest.fn().mockImplementation((_owner: string, _repo: string, path: string) =>
+        Promise.resolve({
+          content: Buffer.from(`content:${path}`).toString('base64'),
+          encoding: 'base64',
+        })
+      );
+
+      const client = makeMockClient({ getTree: jest.fn().mockResolvedValue(treeEntries), getContents });
+      const connector = makeConnector(client);
+      await connector.auth(VALID_CREDS);
+
+      const result = await connector.clone();
+
+      for (const path of blobPaths) {
+        expect(result.files!.get(path)).toBe(`content:${path}`);
+      }
+    });
   });
 
   // ── RepoConnectorError ─────────────────────────────────────────────────
