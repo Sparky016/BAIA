@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 
 import { ConfigService } from './config/config.service';
+import { ExportModule } from './export/export.module';
 import { HealthController } from './health/health.controller';
 import { PipelineModule } from './pipeline/pipeline.module';
 import { RunsModule } from './runs/runs.module';
@@ -14,6 +15,7 @@ import { RunsModule } from './runs/runs.module';
     }),
     RunsModule,
     PipelineModule,
+    ExportModule,
   ],
   controllers: [HealthController],
   providers: [ConfigService],

@@ -5,13 +5,17 @@ import { ExploreOrchestrator } from '../explore/explore.orchestrator';
 import { ReconcileOrchestrator } from '../reconcile/reconcile.orchestrator';
 
 /**
- * E2E-only service that chains Phase 1 → Phase 2 → Reconcile in sequence.
- * Called by E2eStartController as a fire-and-forget background operation so
- * that the /start endpoint can return immediately (202 Accepted).
+ * Chains Phase 1 (Explore) → Phase 2 (Analyse) → Phase 3 (Reconcile) in
+ * sequence. Called by StartController as a fire-and-forget background
+ * operation so that the /start endpoint can return 202 immediately.
+ *
+ * In E2E mode (E2E=true) the concrete orchestrators bound to
+ * ExploreOrchestrator / repo connectors are replaced with deterministic mocks
+ * by PipelineModule — this service itself is identical in both modes.
  */
 @Injectable()
-export class E2ePipelineService {
-  private readonly logger = new Logger(E2ePipelineService.name);
+export class PipelineService {
+  private readonly logger = new Logger(PipelineService.name);
 
   constructor(
     private readonly exploreOrchestrator: ExploreOrchestrator,
