@@ -14,7 +14,7 @@ import { RunsSseController } from './runs.sse.controller';
       provide: RunStateMachine,
       useFactory: (runsEvents: RunsEventsService) => {
         const machine = new RunStateMachine();
-        machine.onTransition(e => runsEvents.emit(e.runId, e));
+        machine.onTransition((e) => runsEvents.emit(e.runId, e));
         return machine;
       },
       inject: [RunsEventsService],
