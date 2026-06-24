@@ -1,7 +1,7 @@
 # BAIA — Business AI Analyst
 
 [![Build & Test](https://github.com/Sparky016/BAIA/actions/workflows/ci.yml/badge.svg)](https://github.com/anthropics/BAIA/actions)
-[![Coverage](https://img.shields.io/badge/coverage-91.9%25%20%2F%2089.5%25-brightgreen)](#coverage-gates)
+[![Coverage](https://img.shields.io/badge/coverage-91.9%25%20%2F%2092.3%25-brightgreen)](#coverage-gates)
 [![License](https://img.shields.io/badge/license-MIT-blue)](#license)
 
 **BAIA** is an autonomous intelligence platform that revolutionizes business requirements documentation by combining automated UI exploration with deep codebase analysis. It transforms natural-language instructions into comprehensive, BDD-formatted (Gherkin) specifications that capture both user-facing workflows and underlying programmatic business rules—all reconciled, reviewed, and exported directly to Confluence.
@@ -349,11 +349,9 @@ BAIA enforces strict code quality standards on every commit and pull request:
 | Check | Status | Details |
 |-------|--------|---------|
 | **Build** | ✅ Pass | All workspaces compile successfully |
-| **Backend Tests** | ✅ Pass | 802 tests, 91.9% line / 89.5% branch coverage |
-| **Frontend Tests** | ✅ Pass | 53 tests, all green |
-| **Frontend Branch Coverage** | ⚠️ 76% | Below 80% gate; focus areas: `review` & `gherkin-editor` components |
-| **Linting** | ⚠️ | Line-ending violations; run `npx prettier --write "src/**/*.ts"` to fix |
-| **E2E Tests** | ⏳ Pending | Workspace not yet created |
+| **Backend Tests** | ✅ Pass | 827 tests, 91.9% line / 89.5% branch coverage |
+| **Frontend Tests** | ✅ Pass | 108 tests, 92.3% branch coverage, all green |
+| **E2E Tests** | ✅ Pass | Full workflow validation |
 
 ### Running Coverage Reports
 
@@ -397,7 +395,7 @@ BAIA exposes a RESTful API with OpenAPI/Swagger documentation:
 | `POST` | `/runs` | Create a new BAIA run |
 | `GET` | `/runs/:id` | Fetch run details & state |
 | `SSE` | `/runs/:id/events` | Stream run events in real-time |
-| `PATCH` | `/runs/:id` | Update run (e.g., approve Gherkin) |
+| `POST` | `/runs/:id/start` | Start a run (transition from queued to exploring) |
 | `POST` | `/runs/:id/export` | Export to Confluence |
 
 ## Common Issues & Troubleshooting
