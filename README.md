@@ -344,11 +344,12 @@ BAIA enforces strict code quality standards on every commit and pull request:
 | `baia-ui` | ≥ 85% | ≥ 80% | User-facing features |
 | **Core modules** | ≥ 90% | — | `llm/*`, `explore/*`, `reconcile/*`, `runs/*` state machine |
 
-**Current Status** (as of 2026-06-19):
+**Current Status** (as of 2026-06-25):
 
 | Check | Status | Details |
 |-------|--------|---------|
 | **Build** | ✅ Pass | All workspaces compile successfully |
+| **Lint** | ✅ Pass | ESLint + Prettier (LF line endings enforced) |
 | **Backend Tests** | ✅ Pass | 827 tests, 91.9% line / 89.5% branch coverage |
 | **Frontend Tests** | ✅ Pass | 108 tests, 92.3% branch coverage, all green |
 | **E2E Tests** | ✅ Pass | Full workflow validation |
@@ -395,8 +396,10 @@ BAIA exposes a RESTful API with OpenAPI/Swagger documentation:
 | `POST` | `/runs` | Create a new BAIA run |
 | `GET` | `/runs/:id` | Fetch run details & state |
 | `SSE` | `/runs/:id/events` | Stream run events in real-time |
-| `POST` | `/runs/:id/start` | Start a run (transition from queued to exploring) |
-| `POST` | `/runs/:id/export` | Export to Confluence |
+| `POST` | `/runs/:id/start` | Start the pipeline (explore → analyze → reconcile → review) |
+| `POST` | `/runs/:id/export` | Publish reviewed specifications to Confluence |
+| `GET` | `/runs/:id/export/gherkin` | Download specifications as `.feature` file |
+| `GET` | `/runs/:id/export/okf` | Download specifications as OKF `.zip` archive |
 
 ## Common Issues & Troubleshooting
 
