@@ -1,5 +1,5 @@
 import { ExploreEvent, RunStatus } from '@baia/shared';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Observable, Subject } from 'rxjs';
 
 import { RunTransitionEvent } from './run-events.types';
@@ -32,16 +32,34 @@ const TERMINAL_STATUSES: ReadonlySet<RunStatus> = new Set([RunStatus.Done, RunSt
  */
 @Injectable()
 export class RunsEventsService {
+  private readonly logger = new Logger(RunsEventsService.name);
+
   /** Live subjects keyed by runId. */
   private readonly subjects = new Map<string, Subject<RunStreamEvent>>();
+
+  /** Tracks run IDs that have been completed to prevent silent resurrection. */
+  private readonly completedRunIds = new Set<string>();
 
   /**
    * Emit `event` on the subject for `runId`, creating the subject if absent.
    *
    * After emission, if the event is a state-machine transition into a terminal
    * status, the subject is completed and removed from the registry.
+   *
+   * If `runId` has already been completed, this is a no-op and a warning is logged.
    */
   emit(runId: string, event: RunStreamEvent): void {
+    // Guard against resurrection: if this run was already completed,
+    // do not create a new subject or emit the event.
+    if (this.completedRunIds.has(runId)) {
+      this.logger.warn(
+        `Attempted to emit event on completed run "${runId}". ` +
+          'This is likely a race condition where the run was completed (terminal state or explicit complete()) ' +
+          'and then a stray emit() was invoked. Event will be silently dropped.'
+      );
+      return;
+    }
+
     const subject = this.getOrCreate(runId);
 
     // Only emit if the subject is still open (not already completed).
@@ -77,11 +95,16 @@ export class RunsEventsService {
    * immediately inside `complete()`.  Deleting first ensures that any observer
    * that checks `activeStreams` inside its `complete` handler sees the updated
    * count.
+   *
+   * The runId is added to the completed set to prevent `emit()` from resurrecting
+   * the stream if called after completion (a race condition).
    */
   complete(runId: string): void {
     const subject = this.subjects.get(runId);
     // Remove from registry first so activeStreams is correct when observers fire.
     this.subjects.delete(runId);
+    // Mark as completed to prevent silent resurrection by emit()
+    this.completedRunIds.add(runId);
     if (subject && !subject.closed) {
       subject.complete();
     }

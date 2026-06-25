@@ -1,11 +1,15 @@
 import 'reflect-metadata';
 
+// Set E2E mode before any module is imported so that PipelineModule and
+// StartController can read process.env['E2E'] at module-evaluation time.
+process.env['E2E'] = 'true';
+
 import { NestFactory } from '@nestjs/core';
 
-import { E2eAppModule } from './e2e/e2e-app.module';
+import { AppModule } from './app.module';
 
 async function bootstrap(): Promise<void> {
-  const app = await NestFactory.create(E2eAppModule, { logger: ['error', 'warn', 'log'] });
+  const app = await NestFactory.create(AppModule, { logger: ['error', 'warn', 'log'] });
 
   app.enableCors({ origin: '*' });
   app.setGlobalPrefix('api');
