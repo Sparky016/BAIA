@@ -5,6 +5,8 @@ import { IllegalRunTransitionError } from '../runs/run-state-machine';
 import { RunsEventsService } from '../runs/runs.events';
 import { RunsService } from '../runs/runs.service';
 
+import { OutputWriterService } from '../output/output-writer.service';
+
 import { ReconciliationService } from './reconciliation.service';
 import { UnifiedDocMapper } from './unified-doc.mapper';
 
@@ -24,7 +26,8 @@ export class ReconcileOrchestrator {
   constructor(
     private readonly runsService: RunsService,
     private readonly runsEvents: RunsEventsService,
-    private readonly reconciliationService: ReconciliationService
+    private readonly reconciliationService: ReconciliationService,
+    private readonly outputWriter: OutputWriterService
   ) {}
 
   /**
@@ -69,6 +72,7 @@ export class ReconcileOrchestrator {
       unifiedDoc.sourceRunId = runId;
 
       this.runsService.storeUnifiedDoc(runId, unifiedDoc);
+      this.outputWriter.saveUnifiedDoc(runId, unifiedDoc);
 
       const scenarioCount = unifiedDoc.features.reduce((n, f) => n + f.scenarios.length, 0);
       this.emitEvent(

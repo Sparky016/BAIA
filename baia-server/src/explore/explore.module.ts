@@ -9,6 +9,7 @@ import { RunsService } from '../runs/runs.service';
 import { ActionExecutorService } from './action-executor.service';
 import { ActionPlannerService } from './action-planner.service';
 import { CrawlCaptureService } from './crawl-capture.service';
+import { ExitGateService } from './exit-gate.service';
 import { ExploreOrchestrator } from './explore.orchestrator';
 import {
   CHROMIUM_LAUNCHER,
@@ -33,6 +34,7 @@ import {
     ActionExecutorService,
     ActionPlannerService,
     CrawlCaptureService,
+    ExitGateService,
     ExploreOrchestrator,
   ],
   exports: [
@@ -40,6 +42,7 @@ import {
     ActionExecutorService,
     ActionPlannerService,
     CrawlCaptureService,
+    ExitGateService,
     ExploreOrchestrator,
   ],
 })

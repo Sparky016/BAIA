@@ -5,6 +5,7 @@ import { IllegalRunTransitionError } from '../runs/run-state-machine';
 import { RunStateMachine } from '../runs/run-state-machine';
 import { RunsEventsService, RunStreamEvent } from '../runs/runs.events';
 import { RunsService } from '../runs/runs.service';
+import { OutputWriterService } from '../output/output-writer.service';
 
 import { ReconcileOrchestrator } from './reconcile.orchestrator';
 import { ReconciliationService } from './reconciliation.service';
@@ -60,10 +61,17 @@ describe('ReconcileOrchestrator', () => {
   beforeEach(() => {
     jest.spyOn(Logger.prototype, 'error').mockImplementation(() => {});
 
-    runsEvents = new RunsEventsService();
+    const mockOutputWriter = {
+      initRun: jest.fn(),
+      updateRunSummary: jest.fn(),
+      appendEvent: jest.fn(),
+      saveUnifiedDoc: jest.fn(),
+    } as unknown as OutputWriterService;
+
+    runsEvents = new RunsEventsService(mockOutputWriter);
     const stateMachine = new RunStateMachine();
     stateMachine.onTransition(e => runsEvents.emit(e.runId, e));
-    runsService = new RunsService(stateMachine);
+    runsService = new RunsService(stateMachine, mockOutputWriter);
 
     reconciliationService = {
       reconcile: jest.fn(),
@@ -72,7 +80,8 @@ describe('ReconcileOrchestrator', () => {
     orchestrator = new ReconcileOrchestrator(
       runsService,
       runsEvents,
-      reconciliationService as unknown as ReconciliationService
+      reconciliationService as unknown as ReconciliationService,
+      mockOutputWriter
     );
   });
 

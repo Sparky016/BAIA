@@ -36,6 +36,7 @@ This dual-source approach ensures documentation accuracy: UI specifications are 
 - **Natural Language Processing**: Convert plain-English instructions into executable Playwright scripts via LLM
 - **Dynamic Action Planning**: Intelligent parsing of clicks, form fills, navigation, and assertions
 - **DOM Capture**: Real-time collection of UI elements, states, and interaction sequences
+- **Early Exit Gates**: Automated detection of 404 pages or repeated browser states (same URL/observation 3 times consecutively) to terminate explore loops safely and proceed to analysis
 
 ### 📊 Code Intelligence
 - **Repository Ingestion**: Secure connectors for GitHub and Azure Repos
@@ -46,9 +47,12 @@ This dual-source approach ensures documentation accuracy: UI specifications are 
 - **Gherkin Generation**: Automatic conversion of observed behavior to Given-When-Then specifications
 - **Quality Validation**: Built-in Gherkin syntax and semantic validation
 - **Unified Enrichment**: Merge UI behavior with backend rules for comprehensive specifications
+- **Local Artifact Archiving**: Automatically saves run summaries, screenshot progressions, Gherkin features, business rules, and unified markdown reports locally
 
 ### 👁️ Review & Approval
-- **Interactive Dashboard**: Angular 19 frontend with real-time progress tracking
+- **Interactive Dashboard**: Angular 19 frontend with active-phase pulsing indicators and green progress connections
+- **Live Activity Log**: Auto-scrolling event log, live tail listener status, and live event counts
+- **Elapsed Phase Timers**: Real-time tracking of active run phase duration (seconds/minutes)
 - **Collaborative Editing**: Edit and refine Gherkin before export
 - **SSE Updates**: Live event streaming from backend orchestrator
 
@@ -157,12 +161,13 @@ npm run verify
 │  │ • Action       │  │   API          │  │   Gherkin      │   │
 │  │   planner      │  │ • Rule         │  │                │   │
 │  │ • DOM capture  │  │   extraction   │  │                │   │
+│  │ • Exit gate    │  │                │  │                │   │
 │  └────────────────┘  └────────────────┘  └────────────────┘   │
 │         │                   │                     │             │
 │         └─────────────────┬─┘─────────────────────┘             │
 │                           │                                     │
 │  ┌─────────────────────────────────────────────────────────┐   │
-│  │              LLM Service (GitHub Copilot)               │   │
+│  │          LLM Service (Copilot / BYOK / Claude)          │   │
 │  │ • Action planning    • Gherkin generation               │   │
 │  │ • Rule extraction    • Reconciliation prompting         │   │
 │  └─────────────────────────────────────────────────────────┘   │
@@ -187,7 +192,7 @@ npm run verify
            ▼
     [External Services]
     • Playwright Browser
-    • LLM (GitHub Copilot)
+    • LLMs (GitHub Copilot / Anthropic Claude / OpenAI / etc.)
     • GitHub API
     • Azure Repos API
     • Confluence REST API
@@ -198,21 +203,31 @@ npm run verify
 | Module | Purpose | Key Components |
 |--------|---------|-----------------|
 | **runs/** | Orchestration & state management | State machine, SSE controller, run lifecycle |
-| **llm/** | LLM interface & isolation | LlmService port, CopilotLlmAdapter, chunking |
-| **explore/** | UI automation & crawling | Playwright runner, action planner, DOM capture |
+| **llm/** | LLM interface & isolation | LlmService port, CopilotLlmAdapter, ClaudeLlmAdapter, chunking |
+| **explore/** | UI automation & crawling | Playwright runner, action planner, DOM capture, ExitGateService |
 | **gherkin/** | BDD specification generation | Generator, validator, Gherkin formatter |
 | **code-analyst/** | Repository analysis | GitHub/Azure connectors, ingestion, rule extraction |
 | **reconcile/** | Unification & enrichment | Merge UI behavior with backend rules |
 | **export/** | Confluence integration | Confluence adapter, REST client, export controller |
+| **output/** | Run output artifacts exporter | OutputWriterService, OutputModule, file exports |
 | **security/** | Credential & data protection | Encrypted store, PII redaction utilities |
 | **config/** | Environment & feature flags | Configuration service, validation |
 
-### LLM Isolation Pattern
+### LLM Isolation & Fallback Pattern
 
-All LLM calls are routed through the `LlmService` interface. Only `CopilotLlmAdapter` directly imports the GitHub Copilot SDK, ensuring:
+All LLM calls are routed through the `LlmService` interface. This ensures:
 - **Testability**: All modules can be unit tested with `MockLlmService`
-- **Pluggability**: LLM providers can be swapped by implementing `LlmService`
+- **Pluggability**: LLM providers can be swapped by implementing `LlmService` (e.g., standard Copilot SDK, BYOK custom endpoints, or native Anthropic Claude API)
 - **Clean Dependencies**: No SDK leakage into business logic
+
+#### Provider Selection Logic
+
+At startup, the provider is selected dynamically from environment variables (first match wins):
+
+1. **GitHub Copilot SDK**: Selected when `COPILOT_TOKEN` is present.
+2. **BYOK (Bring Your Own Key)**: Selected when `BYOK_PROVIDER_TYPE`, `BYOK_BASE_URL`, and `BYOK_MODEL` are present (and `COPILOT_TOKEN` is empty). Supports `openai`, `azure`, and `anthropic` providers.
+3. **Anthropic Claude API**: Selected when `ANTHROPIC_API_KEY` is present. Uses `ClaudeLlmAdapter` with `@anthropic-ai/sdk` (defaults to `claude-opus-4-8` or specified via `ANTHROPIC_MODEL`).
+4. **Mock LLM Service**: Development/test fallback when no credentials are configured.
 
 ## Project Structure
 
@@ -242,6 +257,7 @@ BAIA/
 │   │   ├── code-analyst/     # Repository analysis
 │   │   ├── reconcile/        # Rule reconciliation
 │   │   ├── export/           # Confluence export
+│   │   ├── output/           # Run output artifacts exporter
 │   │   ├── security/         # Credential & data protection
 │   │   ├── config/           # Configuration
 │   │   ├── health/           # Health checks
@@ -270,6 +286,8 @@ BAIA/
 │   ├── playwright.config.ts
 │   ├── tests/
 │   └── package.json
+│
+├── output/                   # Generated run output artifacts (git-ignored)
 │
 ├── MyCMS/                    # Sample ASP.NET MVC target app
 │   ├── Controllers/

@@ -17,6 +17,7 @@
     "format:check": "prettier --check src"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.106.0",
     "@baia/shared": "*",
     "@github/copilot-sdk": "^1.0.2",
     "@nestjs/common": "^10.3.0",

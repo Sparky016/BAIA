@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 
+import { ClaudeLlmAdapter } from './claude-llm.adapter';
 import { CopilotLlmAdapter } from './copilot-llm.adapter';
 import { ByokProviderConfig, CopilotSdkClient } from './copilot-sdk-client';
 import { LLM_SERVICE } from './llm.constants';
@@ -49,6 +50,13 @@ function buildLlmService(): LlmService {
     return new CopilotLlmAdapter(sdkClient, { model: byokModel, maxRetries, retryDelayMs });
   }
 
+  // Anthropic Claude fallback — when Copilot/BYOK are unavailable.
+  const anthropicApiKey = process.env['ANTHROPIC_API_KEY']?.trim();
+  if (anthropicApiKey) {
+    const model = process.env['ANTHROPIC_MODEL']?.trim() ?? 'claude-opus-4-8';
+    return new ClaudeLlmAdapter(anthropicApiKey, model);
+  }
+
   // Development / test fallback — no credentials configured.
   return new MockLlmService();
 }
@@ -56,11 +64,13 @@ function buildLlmService(): LlmService {
 /**
  * LLM integration module.
  *
- * Provider selection is determined at startup from environment variables:
+ * Provider selection is determined at startup from environment variables
+ * (first match wins):
  *
- * - `COPILOT_TOKEN` present → GitHub Copilot SDK (standard mode)
- * - `BYOK_PROVIDER_TYPE` + `BYOK_BASE_URL` + `BYOK_MODEL` present → BYOK mode
- * - Neither → MockLlmService (development / test fallback)
+ * 1. `COPILOT_TOKEN` present → GitHub Copilot SDK (standard mode)
+ * 2. `BYOK_PROVIDER_TYPE` + `BYOK_BASE_URL` + `BYOK_MODEL` present → BYOK mode
+ * 3. `ANTHROPIC_API_KEY` present → Anthropic Claude API (`claude-opus-4-8` default)
+ * 4. None → MockLlmService (development / test fallback)
  */
 @Module({
   providers: [

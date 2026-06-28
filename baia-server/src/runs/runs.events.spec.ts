@@ -2,6 +2,8 @@ import { ExploreEvent, RunStatus } from '@baia/shared';
 import { firstValueFrom, toArray } from 'rxjs';
 import { take } from 'rxjs/operators';
 
+import { OutputWriterService } from '../output/output-writer.service';
+
 import { RunTransitionEvent } from './run-events.types';
 import { RunStreamEvent, RunsEventsService } from './runs.events';
 
@@ -25,7 +27,8 @@ describe('RunsEventsService', () => {
   let service: RunsEventsService;
 
   beforeEach(() => {
-    service = new RunsEventsService();
+    const mockOutputWriter = { appendEvent: jest.fn() } as unknown as OutputWriterService;
+    service = new RunsEventsService(mockOutputWriter);
   });
 
   // ---------------------------------------------------------------------------

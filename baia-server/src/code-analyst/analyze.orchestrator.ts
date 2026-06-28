@@ -6,6 +6,8 @@ import { RunsEventsService } from '../runs/runs.events';
 import { RunsService } from '../runs/runs.service';
 import { CredentialStoreService } from '../security';
 
+import { OutputWriterService } from '../output/output-writer.service';
+
 import { AzureConnector } from './azure-connector';
 import { GitHubConnector } from './github-connector';
 import { IngestionService } from './ingestion.service';
@@ -32,7 +34,8 @@ export class AnalyzeOrchestrator {
     private readonly azureConnector: AzureConnector,
     private readonly ingestionService: IngestionService,
     private readonly ruleExtractor: RuleExtractorService,
-    private readonly credentialStore: CredentialStoreService
+    private readonly credentialStore: CredentialStoreService,
+    private readonly outputWriter: OutputWriterService
   ) {}
 
   /**
@@ -94,6 +97,7 @@ export class AnalyzeOrchestrator {
       });
 
       this.runsService.storeBusinessRules(runId, rules);
+      this.outputWriter.saveBusinessRules(runId, rules);
 
       this.emitAnalyzeEvent(runId, 'complete', 'Phase 2 analysis complete', {
         ruleCount: rules.length,

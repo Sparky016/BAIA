@@ -5,9 +5,12 @@ import { GherkinGeneratorService } from '../gherkin/gherkin-generator.service';
 import { RunsEventsService } from '../runs/runs.events';
 import { RunsService } from '../runs/runs.service';
 
+import { OutputWriterService } from '../output/output-writer.service';
+
 import { ActionExecutorService } from './action-executor.service';
 import { ActionPlannerService } from './action-planner.service';
 import { CrawlCaptureService } from './crawl-capture.service';
+import { ExitGateService } from './exit-gate.service';
 import { PlaywrightRunnerService } from './playwright-runner.service';
 
 /**
@@ -27,7 +30,9 @@ export class ExploreOrchestrator {
     private readonly executor: ActionExecutorService,
     private readonly planner: ActionPlannerService,
     private readonly crawler: CrawlCaptureService,
-    private readonly gherkinGen: GherkinGeneratorService
+    private readonly gherkinGen: GherkinGeneratorService,
+    private readonly outputWriter: OutputWriterService,
+    private readonly exitGate: ExitGateService
   ) {}
 
   /**
@@ -55,6 +60,7 @@ export class ExploreOrchestrator {
       trace.steps.push(initialStep);
 
       const initialShot = await this.runner.captureScreenshot();
+      this.outputWriter.saveScreenshot(runId, 0, initialShot.url, initialShot.data);
       this.emitExploreEvent(
         runId,
         'screenshot',
@@ -79,6 +85,15 @@ export class ExploreOrchestrator {
         }
       );
 
+      if (planResult.stopReason === 'goal-reached') {
+        this.emitExploreEvent(
+          runId,
+          'observation',
+          'Success criteria reached — goal met by planner',
+          { exitReason: 'success-criteria-reached', stepsUsed: planResult.stepsUsed }
+        );
+      }
+
       for (let i = 0; i < planResult.actions.length; i++) {
         const action = planResult.actions[i];
         const result = await this.executor.execute(page, action);
@@ -90,7 +105,16 @@ export class ExploreOrchestrator {
         const step = await this.crawler.captureStep(runId, page, i + 1, result.observation);
         trace.steps.push(step);
 
+        const exitDecision = this.exitGate.checkStep(trace.steps);
+        if (exitDecision.shouldExit) {
+          this.emitExploreEvent(runId, 'observation', exitDecision.message, {
+            exitReason: exitDecision.exitReason,
+          });
+          break;
+        }
+
         const shot = await this.runner.captureScreenshot();
+        this.outputWriter.saveScreenshot(runId, i + 1, shot.url, shot.data);
         this.emitExploreEvent(runId, 'screenshot', shot.url, {}, shot.data.toString('base64'));
       }
 
@@ -98,6 +122,7 @@ export class ExploreOrchestrator {
 
       const gherkinDoc = await this.gherkinGen.generateGherkin(trace);
       this.runsService.storeGherkinDoc(runId, gherkinDoc);
+      this.outputWriter.saveGherkinDoc(runId, gherkinDoc);
 
       this.emitExploreEvent(runId, 'complete', 'Phase 1 exploration complete', {
         featureCount: gherkinDoc.features.length,

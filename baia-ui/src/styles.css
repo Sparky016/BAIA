@@ -339,6 +339,12 @@ nav a.router-link-active {
   margin-bottom: var(--spacing-lg);
 }
 
+.header-chips {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
 .run-id-chip {
   font-size: var(--label-size);
   color: var(--on-surface-muted);
@@ -348,22 +354,42 @@ nav a.router-link-active {
   padding: var(--spacing-xs) var(--spacing-md);
 }
 
+.phase-counter-chip {
+  font-size: var(--label-size);
+  font-weight: 600;
+  color: var(--green);
+  background: var(--forest);
+  border: 1px solid var(--green);
+  border-radius: var(--radius-full);
+  padding: var(--spacing-xs) var(--spacing-md);
+}
+
+/* --- Phase Stepper --- */
+
 .phase-stepper {
   display: flex;
   align-items: center;
-  margin-bottom: var(--spacing-lg);
+  margin-bottom: var(--spacing-sm);
   flex-wrap: wrap;
   gap: 0;
 }
 
 .phase-connector {
   width: 32px;
-  height: 1px;
+  height: 2px;
   background: var(--hairline);
   flex-shrink: 0;
+  transition: background 0.4s ease;
+}
+
+.phase-connector.done {
+  background: var(--green);
 }
 
 .phase-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   padding: var(--spacing-xs) var(--spacing-md);
   border-radius: var(--radius-full);
   font-size: var(--label-size);
@@ -371,7 +397,7 @@ nav a.router-link-active {
   background: var(--surface-secondary);
   color: var(--on-surface-muted);
   border: 1px solid var(--hairline);
-  transition: all 0.2s;
+  transition: all 0.3s ease;
   white-space: nowrap;
 }
 
@@ -394,10 +420,55 @@ nav a.router-link-active {
   border-color: var(--red);
 }
 
+/* Pulsing dot inside the active phase chip */
+.phase-active-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  flex-shrink: 0;
+  animation: dot-pulse 1.2s ease-in-out infinite;
+}
+
 @keyframes pulse-chip {
   0%, 100% { box-shadow: 0 0 0 0 transparent; }
   50% { box-shadow: 0 0 0 4px rgba(114, 206, 123, 0.3); }
 }
+
+@keyframes dot-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.7); }
+}
+
+/* --- Indeterminate progress bar --- */
+
+.activity-progress {
+  height: 2px;
+  background: var(--hairline);
+  border-radius: 1px;
+  overflow: hidden;
+  margin-bottom: var(--spacing-lg);
+  position: relative;
+}
+
+.activity-progress-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 40%;
+  background: var(--green);
+  border-radius: 1px;
+  animation: progress-slide 1.8s ease-in-out infinite;
+}
+
+@keyframes progress-slide {
+  0%   { left: -40%; width: 40%; }
+  50%  { left: 40%; width: 30%; }
+  100% { left: 110%; width: 40%; }
+}
+
+/* --- Op Strip --- */
 
 .op-strip {
   background: var(--surface-secondary);
@@ -416,7 +487,47 @@ nav a.router-link-active {
   color: var(--on-surface-muted);
   margin-bottom: 4px;
   display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.op-label-left {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.op-label-right {
+  display: flex;
+  align-items: center;
   gap: var(--spacing-md);
+}
+
+.op-stat {
+  font-size: var(--label-size);
+  color: var(--on-surface-muted);
+}
+
+.op-elapsed {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--on-surface-muted);
+  opacity: 0.7;
+}
+
+/* Live pulsing dot */
+.live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--green);
+  flex-shrink: 0;
+  animation: live-dot-blink 1.4s ease-in-out infinite;
+}
+
+@keyframes live-dot-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.25; }
 }
 
 .op-strip .op-message {
@@ -425,11 +536,39 @@ nav a.router-link-active {
   font-weight: 500;
 }
 
+/* --- Layout --- */
+
 .progress-layout {
   display: grid;
   grid-template-columns: 2fr 1fr;
   gap: var(--spacing-lg);
   align-items: start;
+}
+
+/* --- Events Log --- */
+
+.events-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--spacing-xs) var(--spacing-sm);
+}
+
+.events-header-label {
+  font-size: var(--label-size);
+  color: var(--on-surface-muted);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+.events-count-badge {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--on-surface-muted);
+  background: var(--surface-secondary);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-full);
+  padding: 1px 8px;
 }
 
 .events-log {
@@ -441,6 +580,7 @@ nav a.router-link-active {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  scroll-behavior: smooth;
 }
 
 .event {
@@ -480,6 +620,33 @@ nav a.router-link-active {
   line-height: 1.4;
 }
 
+/* Live tail row at the bottom of the event log */
+.events-live-tail {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) 0 2px;
+  margin-top: var(--spacing-xs);
+  border-top: 1px solid var(--hairline);
+}
+
+.live-dot-sm {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  flex-shrink: 0;
+  animation: live-dot-blink 1.4s ease-in-out infinite;
+}
+
+.events-live-label {
+  font-size: 11px;
+  color: var(--on-surface-muted);
+  font-style: italic;
+}
+
+/* --- Screenshot Panel --- */
+
 .screenshot-panel {
   background: var(--surface-card);
   border-radius: var(--radius-md);
@@ -501,6 +668,23 @@ nav a.router-link-active {
   border-radius: var(--radius-sm);
   display: block;
   border: 1px solid var(--hairline);
+}
+
+.screenshot-placeholder {
+  background: var(--surface-card);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-lg);
+  position: sticky;
+  top: var(--spacing-md);
+  border: 1px dashed var(--hairline);
+}
+
+.placeholder-content {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-size: var(--label-size);
+  color: var(--on-surface-muted);
 }
 
 .no-events {

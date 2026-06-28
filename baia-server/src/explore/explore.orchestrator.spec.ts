@@ -3,6 +3,7 @@ import { Logger } from '@nestjs/common';
 import { Page } from 'playwright';
 
 import { GherkinGeneratorService } from '../gherkin/gherkin-generator.service';
+import { OutputWriterService } from '../output/output-writer.service';
 import { RunTransitionEvent } from '../runs/run-events.types';
 import { RunStateMachine } from '../runs/run-state-machine';
 import { RunsEventsService, RunStreamEvent } from '../runs/runs.events';
@@ -12,6 +13,7 @@ import { ActionExecutorService, ActionResult } from './action-executor.service';
 import { ActionPlannerService, ActionPlannerResult } from './action-planner.service';
 import { CrawlCaptureService, CapturedStep, ExploreTrace } from './crawl-capture.service';
 import { ExploreOrchestrator } from './explore.orchestrator';
+import { ExitGateService, ExitDecision } from './exit-gate.service';
 import { PlaywrightRunnerService } from './playwright-runner.service';
 
 // ---------------------------------------------------------------------------
@@ -79,6 +81,7 @@ describe('ExploreOrchestrator', () => {
   let planner: jest.Mocked<ActionPlannerService>;
   let crawler: jest.Mocked<CrawlCaptureService>;
   let gherkinGen: jest.Mocked<GherkinGeneratorService>;
+  let exitGate: jest.Mocked<ExitGateService>;
   let mockPage: ReturnType<typeof makeMockPage>;
 
   const RUN_REQUEST = {
@@ -92,10 +95,18 @@ describe('ExploreOrchestrator', () => {
   beforeEach(() => {
     jest.spyOn(Logger.prototype, 'error').mockImplementation(() => {});
 
-    runsEvents = new RunsEventsService();
+    const mockOutputWriter = {
+      initRun: jest.fn(),
+      updateRunSummary: jest.fn(),
+      appendEvent: jest.fn(),
+      saveScreenshot: jest.fn(),
+      saveGherkinDoc: jest.fn(),
+    } as unknown as OutputWriterService;
+
+    runsEvents = new RunsEventsService(mockOutputWriter);
     const stateMachine = new RunStateMachine();
     stateMachine.onTransition(e => runsEvents.emit(e.runId, e));
-    runsService = new RunsService(stateMachine);
+    runsService = new RunsService(stateMachine, mockOutputWriter);
 
     mockPage = makeMockPage(RUN_REQUEST.targetUrl);
 
@@ -126,6 +137,10 @@ describe('ExploreOrchestrator', () => {
       generateGherkin: jest.fn(),
     } as unknown as jest.Mocked<GherkinGeneratorService>;
 
+    exitGate = {
+      checkStep: jest.fn().mockReturnValue({ shouldExit: false, exitReason: null, message: 'Continue' }),
+    } as unknown as jest.Mocked<ExitGateService>;
+
     orchestrator = new ExploreOrchestrator(
       runsService,
       runsEvents,
@@ -133,7 +148,9 @@ describe('ExploreOrchestrator', () => {
       executor,
       planner,
       crawler,
-      gherkinGen
+      gherkinGen,
+      mockOutputWriter,
+      exitGate
     );
   });
 
@@ -299,6 +316,149 @@ describe('ExploreOrchestrator', () => {
     it('does not store gherkin doc on failed run', () => {
       const run = runsService.getRun(runId);
       expect(run.gherkinDoc).toBeUndefined();
+    });
+  });
+
+  // ── Exit gate ─────────────────────────────────────────────────────────────
+
+  describe('exit gate', () => {
+    function setupHappyPathMocks(runId: string, actionCount = 3) {
+      const trace = makeTrace(runId);
+      crawler.createTrace.mockReturnValue(trace);
+      crawler.captureStep.mockImplementation(async (_rid, _page, stepIndex) => makeStep(stepIndex));
+      executor.execute.mockImplementation(async (_page, action) => {
+        if (action.type === 'navigate') return makeNavResult();
+        return { ok: true, observation: `executed ${action.type}` };
+      });
+      runner.captureScreenshot.mockResolvedValue({
+        url: 'https://example.com',
+        data: Buffer.from('fake-png'),
+      });
+      planner.planActions.mockResolvedValue(makePlanResult(actionCount));
+      gherkinGen.generateGherkin.mockResolvedValue(makeGherkinDoc());
+    }
+
+    describe('404-detected', () => {
+      let runId: string;
+      let collectedEvents: RunStreamEvent[];
+
+      beforeEach(async () => {
+        collectedEvents = [];
+        const run = runsService.createRun(RUN_REQUEST);
+        runId = run.runId;
+        setupHappyPathMocks(runId, 3);
+
+        // Exit gate triggers on first action step
+        exitGate.checkStep.mockImplementation((steps) => {
+          if (steps.length >= 1) {
+            return { shouldExit: true, exitReason: '404-detected', message: 'Exit gate: 404 page detected at https://example.com' } as ExitDecision;
+          }
+          return { shouldExit: false, exitReason: null, message: 'Continue' };
+        });
+
+        runsEvents.stream(runId).subscribe((e) => collectedEvents.push(e));
+        await orchestrator.executePhase1(runId, RUN_REQUEST.targetUrl, RUN_REQUEST.instructions);
+      });
+
+      it('breaks the loop early — only 1 action executed instead of 3', () => {
+        // navigate (initial) + 1 action = 2 executor calls
+        const actionCalls = (executor.execute as jest.Mock).mock.calls.filter(
+          ([, action]) => action.type !== 'navigate'
+        );
+        expect(actionCalls).toHaveLength(1);
+      });
+
+      it('emits an observation event with exitReason 404-detected', () => {
+        const exitEvent = collectedEvents.find(
+          (e) => 'type' in e && (e as { type: string; details?: Record<string, unknown> }).type === 'observation' &&
+            (e as { details?: Record<string, unknown> }).details?.exitReason === '404-detected'
+        );
+        expect(exitEvent).toBeDefined();
+      });
+
+      it('still transitions to analyzing (soft stop)', () => {
+        const run = runsService.getRun(runId);
+        expect(run.status).toBe(RunStatus.Analyzing);
+      });
+    });
+
+    describe('repeated-result', () => {
+      let runId: string;
+      let collectedEvents: RunStreamEvent[];
+
+      beforeEach(async () => {
+        collectedEvents = [];
+        const run = runsService.createRun(RUN_REQUEST);
+        runId = run.runId;
+        setupHappyPathMocks(runId, 4);
+
+        // Exit gate triggers after 2nd action step (initial step + 2 action steps = length 3)
+        exitGate.checkStep.mockImplementation((steps) => {
+          if (steps.length >= 3) {
+            return { shouldExit: true, exitReason: 'repeated-result', message: 'Exit gate: same result observed 3 times in a row' } as ExitDecision;
+          }
+          return { shouldExit: false, exitReason: null, message: 'Continue' };
+        });
+
+        runsEvents.stream(runId).subscribe((e) => collectedEvents.push(e));
+        await orchestrator.executePhase1(runId, RUN_REQUEST.targetUrl, RUN_REQUEST.instructions);
+      });
+
+      it('breaks the loop early — only 2 actions executed instead of 4', () => {
+        const actionCalls = (executor.execute as jest.Mock).mock.calls.filter(
+          ([, action]) => action.type !== 'navigate'
+        );
+        expect(actionCalls).toHaveLength(2);
+      });
+
+      it('emits an observation event with exitReason repeated-result', () => {
+        const exitEvent = collectedEvents.find(
+          (e) => 'type' in e && (e as { type: string; details?: Record<string, unknown> }).type === 'observation' &&
+            (e as { details?: Record<string, unknown> }).details?.exitReason === 'repeated-result'
+        );
+        expect(exitEvent).toBeDefined();
+      });
+
+      it('still transitions to analyzing (soft stop)', () => {
+        const run = runsService.getRun(runId);
+        expect(run.status).toBe(RunStatus.Analyzing);
+      });
+    });
+
+    describe('success-criteria-reached (planner-level)', () => {
+      let runId: string;
+      let collectedEvents: RunStreamEvent[];
+
+      beforeEach(async () => {
+        collectedEvents = [];
+        const run = runsService.createRun(RUN_REQUEST);
+        runId = run.runId;
+        setupHappyPathMocks(runId, 1);
+
+        // Planner signals goal-reached
+        planner.planActions.mockResolvedValue({
+          actions: [{ type: 'click', selector: '#btn' }],
+          goalSummary: 'Goal achieved',
+          stepsUsed: 1,
+          stopReason: 'goal-reached',
+        });
+
+        runsEvents.stream(runId).subscribe((e) => collectedEvents.push(e));
+        await orchestrator.executePhase1(runId, RUN_REQUEST.targetUrl, RUN_REQUEST.instructions);
+      });
+
+      it('emits an observation event with exitReason success-criteria-reached', () => {
+        const exitEvent = collectedEvents.find(
+          (e) => 'type' in e && (e as { type: string; details?: Record<string, unknown> }).type === 'observation' &&
+            (e as { details?: Record<string, unknown> }).details?.exitReason === 'success-criteria-reached'
+        );
+        expect(exitEvent).toBeDefined();
+      });
+
+      it('continues to analyzing normally', () => {
+        const run = runsService.getRun(runId);
+        expect(run.status).toBe(RunStatus.Analyzing);
+      });
     });
   });
 

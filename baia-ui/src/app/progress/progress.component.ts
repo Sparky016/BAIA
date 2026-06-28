@@ -1,4 +1,14 @@
-import { Component, computed, inject, OnDestroy, OnInit } from '@angular/core';
+import {
+  Component,
+  computed,
+  effect,
+  ElementRef,
+  inject,
+  OnDestroy,
+  OnInit,
+  signal,
+  ViewChild,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ExploreEvent, RunStatus } from '@baia/shared';
@@ -26,10 +36,19 @@ export class ProgressComponent implements OnInit, OnDestroy {
   protected readonly store = inject(RunStore);
   private readonly runsApi = inject(RunsApiService);
 
+  @ViewChild('eventsLog') private eventsLog?: ElementRef<HTMLDivElement>;
+
   readonly runId: string = this.route.snapshot.params['id'] ?? '';
   private eventSource: EventSource | null = null;
+  private elapsedInterval: ReturnType<typeof setInterval> | null = null;
+  private phaseStartedAt: number = Date.now();
 
   readonly phases = ['exploring', 'analyzing', 'reconciling', 'review', 'done'] as const;
+
+  readonly elapsedSeconds = signal(0);
+  private readonly phaseEventOffset = signal(0);
+
+  protected readonly isRunning = computed(() => this.store.isRunning());
 
   protected readonly currentOperation = computed(() => {
     const events = this.store.events();
@@ -54,6 +73,37 @@ export class ProgressComponent implements OnInit, OnDestroy {
     this.store.events().filter(e => e.type !== 'screenshot')
   );
 
+  protected readonly phaseEventsCount = computed(() =>
+    this.store.events().length - this.phaseEventOffset()
+  );
+
+  protected readonly currentPhaseLabel = computed(() => {
+    const s = this.store.status();
+    if (!s) return '';
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  });
+
+  protected readonly elapsedDisplay = computed(() => {
+    const s = this.elapsedSeconds();
+    if (s < 60) return `${s}s`;
+    const m = Math.floor(s / 60);
+    const rem = s % 60;
+    return `${m}m ${rem}s`;
+  });
+
+  constructor() {
+    // Auto-scroll to bottom whenever visible events update.
+    effect(() => {
+      this.visibleEvents();
+      Promise.resolve().then(() => {
+        if (this.eventsLog?.nativeElement) {
+          const el = this.eventsLog.nativeElement;
+          el.scrollTop = el.scrollHeight;
+        }
+      });
+    });
+  }
+
   ngOnInit(): void {
     if (!this.runId) return;
 
@@ -67,11 +117,20 @@ export class ProgressComponent implements OnInit, OnDestroy {
       }
     }
 
+    this.phaseStartedAt = Date.now();
+    this.elapsedInterval = setInterval(() => {
+      this.elapsedSeconds.set(Math.floor((Date.now() - this.phaseStartedAt) / 1000));
+    }, 1000);
+
     this.connect();
   }
 
   ngOnDestroy(): void {
     this.disconnect();
+    if (this.elapsedInterval) {
+      clearInterval(this.elapsedInterval);
+      this.elapsedInterval = null;
+    }
   }
 
   protected openEventSource(url: string): EventSource {
@@ -97,6 +156,9 @@ export class ProgressComponent implements OnInit, OnDestroy {
   private handleEvent(event: RunStreamEvent): void {
     if ('to' in event) {
       this.store.setStatus((event as RunTransitionEvent).to);
+      this.phaseStartedAt = Date.now();
+      this.elapsedSeconds.set(0);
+      this.phaseEventOffset.set(this.store.events().length);
       if ((event as RunTransitionEvent).to === RunStatus.Review) {
         void this.router.navigate(['/review', this.runId]);
       }
@@ -118,6 +180,11 @@ export class ProgressComponent implements OnInit, OnDestroy {
     return {
       active: phase === status,
       done: pIdx > 0 && index < pIdx,
+      failed: status === RunStatus.Failed && phase === this.phases[pIdx >= 0 ? pIdx : 0],
     };
+  }
+
+  protected connectorClass(index: number): Record<string, boolean> {
+    return { done: this.phaseIndex() > index };
   }
 }

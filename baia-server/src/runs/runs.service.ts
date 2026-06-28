@@ -8,6 +8,8 @@ import {
 } from '@baia/shared';
 import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 
+import { OutputWriterService } from '../output/output-writer.service';
+
 import { RunStateMachine } from './run-state-machine';
 
 /**
@@ -97,7 +99,10 @@ export class RunsService {
   private readonly runs = new Map<string, RunSummary>();
   private nextId = 1;
 
-  constructor(private readonly stateMachine: RunStateMachine) {}
+  constructor(
+    private readonly stateMachine: RunStateMachine,
+    private readonly outputWriter: OutputWriterService
+  ) {}
 
   /**
    * Validate `body`, create a new run in `queued`, and return the summary.
@@ -123,6 +128,7 @@ export class RunsService {
     };
 
     this.runs.set(runId, summary);
+    this.outputWriter.initRun(runId, summary);
     this.logger.log(`Run created: ${runId} | targetUrl=${request.targetUrl}`);
     return summary;
   }
@@ -158,6 +164,7 @@ export class RunsService {
     this.stateMachine.transition(runId, run.status, to);
     const updated: RunSummary = { ...run, status: to, updatedAt: new Date() };
     this.runs.set(runId, updated);
+    this.outputWriter.updateRunSummary(runId, { status: to, updatedAt: updated.updatedAt });
     this.logger.log(`Run ${runId}: ${run.status} → ${to}`);
     return updated;
   }

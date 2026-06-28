@@ -6,6 +6,7 @@ import { RunsEventsService, RunStreamEvent } from '../runs/runs.events';
 import { RunStateMachine } from '../runs/run-state-machine';
 import { RunsService } from '../runs/runs.service';
 import { CredentialStoreService } from '../security';
+import { OutputWriterService } from '../output/output-writer.service';
 
 import { AnalyzeOrchestrator } from './analyze.orchestrator';
 import { AzureConnector } from './azure-connector';
@@ -79,10 +80,17 @@ describe('AnalyzeOrchestrator', () => {
   beforeEach(() => {
     jest.spyOn(Logger.prototype, 'error').mockImplementation(() => {});
 
-    runsEvents = new RunsEventsService();
+    const mockOutputWriter = {
+      initRun: jest.fn(),
+      updateRunSummary: jest.fn(),
+      appendEvent: jest.fn(),
+      saveBusinessRules: jest.fn(),
+    } as unknown as OutputWriterService;
+
+    runsEvents = new RunsEventsService(mockOutputWriter);
     const stateMachine = new RunStateMachine();
     stateMachine.onTransition(e => runsEvents.emit(e.runId, e));
-    runsService = new RunsService(stateMachine);
+    runsService = new RunsService(stateMachine, mockOutputWriter);
 
     githubConnector = makeMockConnector() as unknown as jest.Mocked<GitHubConnector>;
     azureConnector = makeMockConnector() as unknown as jest.Mocked<AzureConnector>;
@@ -106,7 +114,8 @@ describe('AnalyzeOrchestrator', () => {
       azureConnector as unknown as AzureConnector,
       ingestionService as unknown as IngestionService,
       ruleExtractor as unknown as RuleExtractorService,
-      credentialStore as unknown as CredentialStoreService
+      credentialStore as unknown as CredentialStoreService,
+      mockOutputWriter
     );
   });
 

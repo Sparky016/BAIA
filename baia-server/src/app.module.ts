@@ -4,6 +4,7 @@ import { ConfigModule } from '@nestjs/config';
 import { ConfigService } from './config/config.service';
 import { ExportModule } from './export/export.module';
 import { HealthController } from './health/health.controller';
+import { OutputModule } from './output/output.module';
 import { PipelineModule } from './pipeline/pipeline.module';
 import { RunsModule } from './runs/runs.module';
 
@@ -13,6 +14,7 @@ import { RunsModule } from './runs/runs.module';
       isGlobal: true,
       envFilePath: '.env',
     }),
+    OutputModule,
     RunsModule,
     PipelineModule,
     ExportModule,

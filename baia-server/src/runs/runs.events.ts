@@ -2,6 +2,8 @@ import { ExploreEvent, RunStatus } from '@baia/shared';
 import { Injectable, Logger } from '@nestjs/common';
 import { Observable, Subject } from 'rxjs';
 
+import { OutputWriterService } from '../output/output-writer.service';
+
 import { RunTransitionEvent } from './run-events.types';
 
 /**
@@ -33,6 +35,8 @@ const TERMINAL_STATUSES: ReadonlySet<RunStatus> = new Set([RunStatus.Done, RunSt
 @Injectable()
 export class RunsEventsService {
   private readonly logger = new Logger(RunsEventsService.name);
+
+  constructor(private readonly outputWriter: OutputWriterService) {}
 
   /** Live subjects keyed by runId. */
   private readonly subjects = new Map<string, Subject<RunStreamEvent>>();
@@ -67,6 +71,7 @@ export class RunsEventsService {
       return;
     }
 
+    this.outputWriter.appendEvent(runId, event);
     subject.next(event);
 
     if (this.isTerminalTransition(event)) {

@@ -2,6 +2,8 @@ import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { RunStatus } from '@baia/shared';
 
+import { OutputWriterService } from '../output/output-writer.service';
+
 import { IllegalRunTransitionError, RunStateMachine } from './run-state-machine';
 import { FieldError, RunsService } from './runs.service';
 
@@ -22,6 +24,11 @@ describe('RunsService', () => {
     // RunStateMachine takes an optional Clock function as its first constructor
     // arg.  NestJS DI cannot resolve a plain function type, so we supply a
     // factory provider that instantiates it directly.
+    const mockOutputWriter: jest.Mocked<Partial<OutputWriterService>> = {
+      initRun: jest.fn(),
+      updateRunSummary: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         RunsService,
@@ -29,6 +36,7 @@ describe('RunsService', () => {
           provide: RunStateMachine,
           useFactory: () => new RunStateMachine(),
         },
+        { provide: OutputWriterService, useValue: mockOutputWriter },
       ],
     }).compile();
 
