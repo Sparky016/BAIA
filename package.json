@@ -3,6 +3,10 @@
   "version": "0.0.0",
   "description": "Business AI Analyst - autonomous agent for UI behaviour capture and business rule extraction",
   "private": true,
+  "engines": {
+    "node": ">=22.0.0",
+    "npm": ">=10.0.0"
+  },
   "workspaces": [
     "baia-shared",
     "baia-ui",
