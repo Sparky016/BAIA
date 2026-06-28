@@ -9,6 +9,7 @@ function makeStep(overrides: Partial<CapturedStep> = {}): CapturedStep {
     domSnapshot: '<html><body><h1>Welcome</h1></body></html>',
     networkEvents: [],
     observation: 'Clicked button',
+    ok: true,
     ...overrides,
   };
 }
@@ -133,6 +134,29 @@ describe('ExitGateService', () => {
       const result = service.checkStep(steps);
       expect(result.shouldExit).toBe(true);
       expect(result.exitReason).toBe('repeated-result');
+    });
+  });
+
+  describe('checkStep — repeated-failure detection', () => {
+    it('triggers when the last 3 steps all have ok: false', () => {
+      const steps = [
+        makeStep({ ok: false, observation: 'timeout A' }),
+        makeStep({ ok: false, observation: 'timeout B' }),
+        makeStep({ ok: false, observation: 'timeout C' }),
+      ];
+      const result = service.checkStep(steps);
+      expect(result.shouldExit).toBe(true);
+      expect(result.exitReason).toBe('repeated-failure');
+    });
+
+    it('does not trigger when one of the last 3 steps has ok: true', () => {
+      const steps = [
+        makeStep({ ok: false, observation: 'fail 1' }),
+        makeStep({ ok: true, observation: 'success' }),
+        makeStep({ ok: false, observation: 'fail 2' }),
+      ];
+      const result = service.checkStep(steps);
+      expect(result.shouldExit).toBe(false);
     });
   });
 

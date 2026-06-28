@@ -20,6 +20,7 @@ import { MockRepoConnector } from '../e2e/mock-repo-connector';
 import { ActionExecutorService } from '../explore/action-executor.service';
 import { ActionPlannerService } from '../explore/action-planner.service';
 import { CrawlCaptureService } from '../explore/crawl-capture.service';
+import { ExitGateService } from '../explore/exit-gate.service';
 import { ExploreOrchestrator } from '../explore/explore.orchestrator';
 import {
   CHROMIUM_LAUNCHER,
@@ -73,6 +74,7 @@ const isE2e = process.env['E2E'] === 'true';
           ActionExecutorService,
           ActionPlannerService,
           CrawlCaptureService,
+          ExitGateService,
           ExploreOrchestrator,
         ]),
 

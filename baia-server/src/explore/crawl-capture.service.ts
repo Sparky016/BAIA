@@ -19,6 +19,7 @@ export interface CapturedStep {
   domSnapshot: string;
   networkEvents: NetworkCapture[];
   observation: string;
+  ok: boolean;
 }
 
 export interface ExploreTrace {
@@ -39,7 +40,8 @@ export class CrawlCaptureService {
     runId: string,
     page: Page,
     stepIndex: number,
-    observation: string
+    observation: string,
+    ok: boolean = true
   ): Promise<CapturedStep> {
     const url = page.url();
     const rawDom = await page.content();
@@ -49,7 +51,7 @@ export class CrawlCaptureService {
       timestamp: new Date(),
       type: 'observation',
       message: `Step ${stepIndex}: ${observation}`,
-      details: { url, stepIndex },
+      details: { url, stepIndex, ok },
     };
     this.runsEventsService.emit(runId, event);
 
@@ -60,6 +62,7 @@ export class CrawlCaptureService {
       domSnapshot,
       networkEvents: [],
       observation,
+      ok,
     };
   }
 

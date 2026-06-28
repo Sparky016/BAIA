@@ -102,7 +102,7 @@ export class ExploreOrchestrator {
           actionType: action.type,
           ok: result.ok,
         });
-        const step = await this.crawler.captureStep(runId, page, i + 1, result.observation);
+        const step = await this.crawler.captureStep(runId, page, i + 1, result.observation, result.ok);
         trace.steps.push(step);
 
         const exitDecision = this.exitGate.checkStep(trace.steps);
