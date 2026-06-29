@@ -77,6 +77,123 @@ export const ACTION_PLANNING_OUTPUT_SCHEMA: ObjectSchema = {
   additionalProperties: false,
 } satisfies JsonSchema;
 
+// ─── Step-by-step planning types ────────────────────────────────────────────────
+
+/** Input for single-step planning (one action at a time with optional vision). */
+export interface StepPlannerInput {
+  /** Natural-language goal the agent is working toward. */
+  readonly instruction: string;
+  /** Current page URL. */
+  readonly currentUrl: string;
+  /** Simplified DOM snapshot of the current page. */
+  readonly domSnapshot: string;
+  /** Optional base-64 PNG screenshot for visual analysis. */
+  readonly screenshotBase64?: string;
+  /** Human-readable descriptions of previously executed actions. */
+  readonly previousActions?: readonly string[];
+}
+
+/** Structured output for a single planning step. */
+export interface StepPlannerOutput {
+  /** What the model observes on the current page. */
+  readonly pageDescription: string;
+  /** The single next action to execute, or null when the goal is complete. */
+  readonly nextAction: PlannedAction | null;
+  /** True when the goal has been achieved and no further actions are needed. */
+  readonly goalReached: boolean;
+}
+
+/** Runtime JSON schema for {@link StepPlannerOutput}. */
+export const STEP_PLANNER_OUTPUT_SCHEMA: ObjectSchema = {
+  type: 'object',
+  properties: {
+    pageDescription: { type: 'string' },
+    nextAction: {
+      type: 'object',
+      properties: {
+        action: { type: 'string' },
+        selector: { type: 'string' },
+        value: { type: 'string' },
+        reason: { type: 'string' },
+      },
+      required: ['action', 'selector', 'reason'],
+      additionalProperties: false,
+    },
+    goalReached: { type: 'boolean' },
+  },
+  required: ['pageDescription', 'goalReached'],
+  additionalProperties: false,
+} satisfies JsonSchema;
+
+/**
+ * Render the step-by-step planning prompt.
+ *
+ * When a screenshot is provided it should be sent alongside this prompt via
+ * `LlmService.completeWithVision`. When no screenshot is available pass this
+ * prompt to the standard `completeJson`.
+ */
+export function renderStepPlannerPrompt(input: StepPlannerInput): string {
+  const { instruction, currentUrl, domSnapshot, screenshotBase64, previousActions = [] } = input;
+
+  const previousActionsSection =
+    previousActions.length > 0
+      ? `## Actions already taken\n${previousActions.map((a, i) => `${i + 1}. ${a}`).join('\n')}\n\n`
+      : '';
+
+  const screenshotNote = screenshotBase64
+    ? 'A screenshot of the current page is provided as the image above. Use it to visually identify form fields, buttons, and page state.'
+    : 'No screenshot is available — analyse the DOM only.';
+
+  return `You are a web automation agent completing a goal one step at a time.
+
+At each step you will:
+1. Describe what you see on the current page
+2. Decide the single best next action to take toward the goal
+3. Signal when the goal is fully achieved
+
+## Goal
+${instruction}
+
+## Current URL
+${currentUrl}
+
+${previousActionsSection}## Current page DOM
+\`\`\`html
+${domSnapshot}
+\`\`\`
+
+${screenshotNote}
+
+## Selector strategy (preferred order)
+1. ID attribute — #fieldId or input[id="fieldId"]
+2. Name attribute — input[name="fieldName"]
+3. ARIA label — [aria-label="Label text"]
+4. Placeholder text — input[placeholder="Enter your name"]
+5. Data test ID — [data-testid="submit-btn"]
+6. Button/link text — button:has-text("Start Quote") or a:has-text("Get a Quote")
+7. Label association — label:has-text("First Name") + input
+AVOID fragile position selectors like div:nth-child(2) > span > input.
+
+## Rules
+- If the goal is already complete based on the current page state and actions taken, set goalReached=true and omit nextAction.
+- Otherwise return exactly ONE action in nextAction.
+- The "value" field is required for fill and select actions; omit it for all others.
+- Use the actual data values specified in the instruction (names, ID numbers, etc).
+- pageDescription must concisely describe the current visible page state.
+
+Respond with a JSON object matching this exact schema:
+{
+  "pageDescription": "<what you see on the current page>",
+  "nextAction": { "action": "<verb>", "selector": "<css or text selector>", "value": "<optional>", "reason": "<why this action>" },
+  "goalReached": false
+}
+If the goal is complete:
+{
+  "pageDescription": "<what you see>",
+  "goalReached": true
+}`;
+}
+
 // ─── Render function ─────────────────────────────────────────────────────────────
 
 /**

@@ -60,9 +60,18 @@ export class CopilotSdkClient implements CopilotClient {
   private readonly nativeClient: NativeCopilotClient;
 
   constructor(private readonly config: CopilotSdkClientConfig) {
-    this.nativeClient = config.gitHubToken
-      ? new NativeCopilotClient({ gitHubToken: config.gitHubToken, useLoggedInUser: false })
-      : new NativeCopilotClient();
+    try {
+      this.nativeClient = config.gitHubToken
+        ? new NativeCopilotClient({ gitHubToken: config.gitHubToken, useLoggedInUser: false })
+        : new NativeCopilotClient();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      throw new Error(
+        `Failed to initialize @github/copilot-sdk client: ${msg}. ` +
+          'Verify that @github/copilot-sdk is installed (npm install --workspace=baia-server) ' +
+          'and that COPILOT_TOKEN is a valid GitHub token with Copilot access.'
+      );
+    }
   }
 
   async complete(

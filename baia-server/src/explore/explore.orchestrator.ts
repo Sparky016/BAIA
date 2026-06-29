@@ -55,56 +55,53 @@ export class ExploreOrchestrator {
       const page = this.runner.getPage()!;
       const trace = this.crawler.createTrace(runId);
 
+      // Navigate to the target URL before entering the perceive-plan-act loop.
       const navResult = await this.executor.execute(page, { type: 'navigate', url: targetUrl });
-      const initialStep = await this.crawler.captureStep(runId, page, 0, navResult.observation);
-      trace.steps.push(initialStep);
+      this.logger.log(`Run ${runId}: navigated — ${navResult.observation}`);
 
-      const initialShot = await this.runner.captureScreenshot();
-      this.outputWriter.saveScreenshot(runId, 0, initialShot.url, initialShot.data);
-      this.emitExploreEvent(
-        runId,
-        'screenshot',
-        initialShot.url,
-        {},
-        initialShot.data.toString('base64')
-      );
+      const previousActions: string[] = [];
+      const MAX_STEPS = 20;
 
-      const planResult = await this.planner.planActions({
-        instruction: instructions,
-        currentUrl: page.url(),
-        domSnapshot: initialStep.domSnapshot,
-      });
+      for (let step = 0; step < MAX_STEPS; step++) {
+        // 1. Perceive — screenshot + DOM capture.
+        const shot = await this.runner.captureScreenshot();
+        this.outputWriter.saveScreenshot(runId, step, shot.url, shot.data);
+        this.emitExploreEvent(runId, 'screenshot', shot.url, { step }, shot.data.toString('base64'));
 
-      this.emitExploreEvent(
-        runId,
-        'observation',
-        `Planned ${planResult.actions.length} action(s): ${planResult.goalSummary}`,
-        {
-          stopReason: planResult.stopReason,
-          stepsUsed: planResult.stepsUsed,
+        const capturedStep = await this.crawler.captureStep(runId, page, step, 'perceiving page state');
+        trace.steps.push(capturedStep);
+
+        // 2. Plan — decide the single next action using screenshot + DOM.
+        const stepResult = await this.planner.planNextStep({
+          instruction: instructions,
+          currentUrl: page.url(),
+          domSnapshot: capturedStep.domSnapshot,
+          screenshotBase64: shot.data.toString('base64'),
+          previousActions,
+        });
+
+        this.emitExploreEvent(runId, 'observation', stepResult.pageDescription, { step });
+
+        // 3. Check goal completion.
+        if (stepResult.goalReached || !stepResult.action) {
+          this.emitExploreEvent(runId, 'observation', 'Goal reached — stopping exploration', {
+            exitReason: 'success-criteria-reached',
+            step,
+          });
+          break;
         }
-      );
 
-      if (planResult.stopReason === 'goal-reached') {
-        this.emitExploreEvent(
-          runId,
-          'observation',
-          'Success criteria reached — goal met by planner',
-          { exitReason: 'success-criteria-reached', stepsUsed: planResult.stepsUsed }
-        );
-      }
+        // 4. Act — execute the planned action.
+        const result = await this.executor.execute(page, stepResult.action);
+        previousActions.push(result.observation);
 
-      for (let i = 0; i < planResult.actions.length; i++) {
-        const action = planResult.actions[i];
-        const result = await this.executor.execute(page, action);
         this.emitExploreEvent(runId, 'action', result.observation, {
-          actionIndex: i,
-          actionType: action.type,
+          step,
+          actionType: stepResult.action.type,
           ok: result.ok,
         });
-        const step = await this.crawler.captureStep(runId, page, i + 1, result.observation, result.ok);
-        trace.steps.push(step);
 
+        // 5. Exit gate check after acting.
         const exitDecision = this.exitGate.checkStep(trace.steps);
         if (exitDecision.shouldExit) {
           this.emitExploreEvent(runId, 'observation', exitDecision.message, {
@@ -112,10 +109,6 @@ export class ExploreOrchestrator {
           });
           break;
         }
-
-        const shot = await this.runner.captureScreenshot();
-        this.outputWriter.saveScreenshot(runId, i + 1, shot.url, shot.data);
-        this.emitExploreEvent(runId, 'screenshot', shot.url, {}, shot.data.toString('base64'));
       }
 
       trace.completedAt = new Date();

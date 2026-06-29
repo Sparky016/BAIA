@@ -73,6 +73,10 @@ COPILOT_RETRY_DELAY_MS=500
 CREDENTIAL_ENCRYPTION_KEY=
 ```
 
+> [!IMPORTANT]
+> GitHub Copilot mode relies on the `@github/copilot-sdk` npm package.
+> Make sure to run `npm install` inside the `baia-server/` directory. If the install fails (e.g. registry authorization issues with scoped `@github/` packages), you must configure your npm client's GitHub registry credentials or switch to **Option B (BYOK)**.
+
 #### Option B: BYOK (Bring Your Own Key)
 
 Leave `COPILOT_TOKEN` blank and fill the BYOK section. Supported providers: `openai`, `azure`, `anthropic`.
@@ -861,6 +865,7 @@ The test (`e2e/tests/baia-pipeline.spec.ts`) drives the full pipeline:
 | Form submit does nothing | API errors | Check browser console and backend terminal for errors |
 | Pipeline hangs | LLM timeout / Playwright issue | Check backend logs for error details; try Mock LLM mode |
 | `MockLlmService` used unexpectedly | No LLM credentials configured | Set `COPILOT_TOKEN` or `BYOK_*` variables in `.env` |
+| Copilot SDK not available error | `@github/copilot-sdk` package is missing in `node_modules` | Run `npm install` in `baia-server/`. If it fails (e.g. scoped registry auth issue), verify npm auth, or switch to **Option B (BYOK)** or **Option C (Mock)** |
 | Playwright browser not found | Chromium not installed | Run `npx playwright install chromium` |
 | SSE connection drops | Backend restart / network issue | Refresh the progress page to reconnect |
 | Export returns 409 | Run not in `review` state | Complete the pipeline first, or wait for `review` status |

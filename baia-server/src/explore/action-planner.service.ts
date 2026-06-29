@@ -7,7 +7,11 @@ import {
   ACTION_PLANNING_OUTPUT_SCHEMA,
   ActionPlanningOutput,
   PlannedAction,
+  STEP_PLANNER_OUTPUT_SCHEMA,
+  StepPlannerInput,
+  StepPlannerOutput,
   renderActionPlanningPrompt,
+  renderStepPlannerPrompt,
 } from '../llm/prompts/action-planning.prompt';
 
 export interface ActionPlannerInput {
@@ -23,6 +27,17 @@ export interface ActionPlannerResult {
   goalSummary: string;
   stepsUsed: number;
   stopReason: 'goal-reached' | 'max-steps' | 'no-progress' | 'error';
+}
+
+export type { StepPlannerInput };
+
+export interface StepPlannerResult {
+  /** The single action to execute next, or null when goalReached is true. */
+  readonly action: Action | null;
+  /** True when the LLM determined the goal is complete. */
+  readonly goalReached: boolean;
+  /** LLM's description of the current page state. */
+  readonly pageDescription: string;
 }
 
 const DEFAULT_MAX_STEPS = 10;
@@ -130,6 +145,64 @@ export class ActionPlannerService {
       goalSummary,
       stepsUsed: maxSteps,
       stopReason: 'max-steps',
+    };
+  }
+
+  /**
+   * Plan the single next action to take based on the current page state.
+   *
+   * Uses vision (screenshot) when available and the active {@link LlmService}
+   * supports {@link LlmService.completeWithVision}; falls back to DOM-only
+   * planning otherwise.
+   */
+  async planNextStep(input: StepPlannerInput): Promise<StepPlannerResult> {
+    this.logger.log(`Step planning — url=${input.currentUrl}, vision=${!!input.screenshotBase64}`);
+
+    const prompt = renderStepPlannerPrompt(input);
+
+    let output: StepPlannerOutput;
+    try {
+      if (
+        input.screenshotBase64 &&
+        typeof (this.llmService as { completeWithVision?: unknown }).completeWithVision === 'function'
+      ) {
+        output = await (
+          this.llmService as Required<Pick<LlmService, 'completeWithVision'>>
+        ).completeWithVision<StepPlannerOutput>(prompt, STEP_PLANNER_OUTPUT_SCHEMA, input.screenshotBase64);
+      } else {
+        output = await this.llmService.completeJson<StepPlannerOutput>(
+          prompt,
+          STEP_PLANNER_OUTPUT_SCHEMA
+        );
+      }
+    } catch (err) {
+      if (err instanceof LlmError && err.code === 'SCHEMA_VALIDATION') {
+        this.logger.warn('Step planning schema validation failed — retrying once');
+        try {
+          output = await this.llmService.completeJson<StepPlannerOutput>(
+            prompt,
+            STEP_PLANNER_OUTPUT_SCHEMA
+          );
+        } catch (retryErr) {
+          this.logger.error(
+            `Step planning retry failed: ${retryErr instanceof Error ? retryErr.message : String(retryErr)}`
+          );
+          throw retryErr;
+        }
+      } else {
+        throw err;
+      }
+    }
+
+    const { pageDescription, nextAction, goalReached } = output;
+    this.logger.log(
+      `Step plan — goalReached=${goalReached}, nextAction=${nextAction?.action ?? 'none'}`
+    );
+
+    return {
+      action: nextAction ? mapPlannedAction(nextAction) : null,
+      goalReached,
+      pageDescription,
     };
   }
 }

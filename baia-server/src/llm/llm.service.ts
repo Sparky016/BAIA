@@ -182,6 +182,27 @@ export interface LlmService {
    *         by rejecting the async iterator.
    */
   stream?(prompt: string, opts?: LlmCompletionOptions): AsyncIterable<string>;
+
+  /**
+   * Optional multimodal variant of {@link completeJson}. Sends a screenshot
+   * alongside the text prompt so the model can visually analyse the page.
+   *
+   * Implementations that do not support vision MAY omit this method; callers
+   * MUST feature-detect (`'completeWithVision' in llmService`) before calling
+   * and fall back to text-only {@link completeJson} when absent.
+   *
+   * @param prompt          Non-empty user prompt (JSON-output instruction).
+   * @param schema          Runtime schema the parsed output must satisfy.
+   * @param screenshotBase64 Base-64-encoded PNG of the current page.
+   * @param opts            Optional per-request tuning.
+   * @throws {LlmError} Same error contract as {@link completeJson}.
+   */
+  completeWithVision?<T>(
+    prompt: string,
+    schema: JsonSchema,
+    screenshotBase64: string,
+    opts?: LlmCompletionOptions
+  ): Promise<T>;
 }
 
 /**

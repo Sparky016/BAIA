@@ -34,4 +34,9 @@ async function bootstrap(): Promise<void> {
   logger.log(`Swagger docs available at http://localhost:${port}/api-docs`);
 }
 
-bootstrap();
+bootstrap().catch((err: unknown) => {
+  const message = err instanceof Error ? err.message : String(err);
+  // Use process.stderr directly — NestJS logger may not be available if bootstrap failed.
+  process.stderr.write(`[Bootstrap] Server failed to start: ${message}\n`);
+  process.exit(1);
+});

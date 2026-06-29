@@ -51,6 +51,33 @@ function buildParams(
   };
 }
 
+function buildParamsWithImage(
+  prompt: string,
+  screenshotBase64: string,
+  model: string,
+  opts?: LlmCompletionOptions
+): Anthropic.Messages.MessageCreateParams {
+  return {
+    model,
+    max_tokens: opts?.maxTokens ?? DEFAULT_MAX_TOKENS,
+    thinking: { type: 'adaptive' },
+    ...(opts?.system && { system: opts.system }),
+    ...(opts?.stop?.length && { stop_sequences: [...opts.stop] }),
+    messages: [
+      {
+        role: 'user',
+        content: [
+          {
+            type: 'image',
+            source: { type: 'base64', media_type: 'image/png', data: screenshotBase64 },
+          },
+          { type: 'text', text: prompt },
+        ],
+      },
+    ],
+  };
+}
+
 /**
  * LlmService implementation backed by the Anthropic Claude API.
  *
@@ -137,6 +164,67 @@ export class ClaudeLlmAdapter implements LlmService {
   countTokens(text: string): number {
     if (text.length === 0) return 0;
     return Math.ceil(text.length / CHARS_PER_TOKEN);
+  }
+
+  async completeWithVision<T>(
+    prompt: string,
+    schema: JsonSchema,
+    screenshotBase64: string,
+    opts?: LlmCompletionOptions
+  ): Promise<T> {
+    if (typeof prompt !== 'string' || prompt.trim().length === 0) {
+      throw new LlmError('INVALID_INPUT', 'Prompt must be a non-empty string');
+    }
+    if (schema === undefined || schema === null) {
+      throw new LlmError('INVALID_INPUT', 'A JSON schema is required for completeWithVision');
+    }
+
+    const jsonPrompt = `${prompt}\n\nRespond with valid JSON only — no markdown, no prose, no code fences.`;
+
+    try {
+      const requestOpts = opts?.timeoutMs ? { timeout: opts.timeoutMs } : undefined;
+      const stream = this.client.messages.stream(
+        buildParamsWithImage(jsonPrompt, screenshotBase64, this.model, opts),
+        requestOpts
+      );
+      const response = await stream.finalMessage();
+
+      const textBlock = response.content.find((b) => b.type === 'text');
+      if (!textBlock || textBlock.type !== 'text') {
+        throw new LlmError('PROVIDER_ERROR', 'Claude returned no text content');
+      }
+
+      const cleaned = textBlock.text
+        .replace(/^```(?:json)?\s*/i, '')
+        .replace(/\s*```\s*$/, '')
+        .trim();
+
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(cleaned);
+      } catch (e) {
+        throw new LlmError(
+          'SCHEMA_VALIDATION',
+          `Claude vision response is not valid JSON: ${(e as Error).message}`,
+          { output: textBlock.text },
+          e
+        );
+      }
+
+      const validationError = validateJsonSchema(parsed, schema);
+      if (validationError) {
+        throw new LlmError(
+          'SCHEMA_VALIDATION',
+          `Claude vision JSON output failed schema validation: ${validationError}`,
+          { output: parsed, path: validationError }
+        );
+      }
+
+      return parsed as T;
+    } catch (err) {
+      if (err instanceof LlmError) throw err;
+      throw mapToLlmError(err, 'ClaudeLlmAdapter.completeWithVision');
+    }
   }
 
   async *stream(prompt: string, opts?: LlmCompletionOptions): AsyncIterable<string> {

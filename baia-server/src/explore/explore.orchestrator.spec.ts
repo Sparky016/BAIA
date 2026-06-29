@@ -10,7 +10,7 @@ import { RunsEventsService, RunStreamEvent } from '../runs/runs.events';
 import { RunsService } from '../runs/runs.service';
 
 import { ActionExecutorService, ActionResult } from './action-executor.service';
-import { ActionPlannerService, ActionPlannerResult } from './action-planner.service';
+import { ActionPlannerService, StepPlannerResult } from './action-planner.service';
 import { CrawlCaptureService, CapturedStep, ExploreTrace } from './crawl-capture.service';
 import { ExploreOrchestrator } from './explore.orchestrator';
 import { ExitGateService, ExitDecision } from './exit-gate.service';
@@ -60,12 +60,17 @@ function makeNavResult(url = 'https://example.com'): ActionResult {
   return { ok: true, observation: `Navigated to ${url}` };
 }
 
-function makePlanResult(actionCount = 1): ActionPlannerResult {
-  const actions = Array.from({ length: actionCount }, (_, i) => ({
-    type: 'click' as const,
-    selector: `#btn-${i}`,
+/** Build sequential mock step-planner results: N click actions then goalReached. */
+function makeStepResults(actionCount = 1): StepPlannerResult[] {
+  const actions = Array.from({ length: actionCount }, (_, i): StepPlannerResult => ({
+    action: { type: 'click', selector: `#btn-${i}` },
+    goalReached: false,
+    pageDescription: `Page for step ${i}`,
   }));
-  return { actions, goalSummary: 'Test goal', stepsUsed: actionCount, stopReason: 'goal-reached' };
+  return [
+    ...actions,
+    { action: null, goalReached: true, pageDescription: 'Goal reached page' },
+  ];
 }
 
 // ---------------------------------------------------------------------------
@@ -124,7 +129,7 @@ describe('ExploreOrchestrator', () => {
     } as unknown as jest.Mocked<ActionExecutorService>;
 
     planner = {
-      planActions: jest.fn(),
+      planNextStep: jest.fn(),
     } as unknown as jest.Mocked<ActionPlannerService>;
 
     crawler = {
@@ -180,7 +185,7 @@ describe('ExploreOrchestrator', () => {
         data: Buffer.from('fake-png'),
       });
 
-      planner.planActions.mockResolvedValue(makePlanResult(2));
+      makeStepResults(2).forEach((r) => (planner.planNextStep as jest.Mock).mockResolvedValueOnce(r));
       gherkinGen.generateGherkin.mockResolvedValue(gherkinDoc);
 
       runsEvents.stream(runId).subscribe((e) => collectedEvents.push(e));
@@ -242,8 +247,8 @@ describe('ExploreOrchestrator', () => {
       expect(runner.teardown).toHaveBeenCalledTimes(1);
     });
 
-    it('captures initial step + one step per action', () => {
-      // 1 initial (nav) + 2 action steps = 3 total captureStep calls
+    it('captures one step per perceive-plan-act iteration', () => {
+      // 2 action iterations + 1 goal-reached iteration = 3 total captureStep calls
       expect(crawler.captureStep).toHaveBeenCalledTimes(3);
     });
   });
@@ -269,7 +274,7 @@ describe('ExploreOrchestrator', () => {
         url: 'https://example.com',
         data: Buffer.from('fake-png'),
       });
-      planner.planActions.mockRejectedValue(new Error('LLM unavailable'));
+      (planner.planNextStep as jest.Mock).mockRejectedValue(new Error('LLM unavailable'));
 
       runsEvents.stream(runId).subscribe((e) => collectedEvents.push(e));
 
@@ -334,7 +339,7 @@ describe('ExploreOrchestrator', () => {
         url: 'https://example.com',
         data: Buffer.from('fake-png'),
       });
-      planner.planActions.mockResolvedValue(makePlanResult(actionCount));
+      makeStepResults(actionCount).forEach((r) => (planner.planNextStep as jest.Mock).mockResolvedValueOnce(r));
       gherkinGen.generateGherkin.mockResolvedValue(makeGherkinDoc());
     }
 
@@ -404,11 +409,11 @@ describe('ExploreOrchestrator', () => {
         await orchestrator.executePhase1(runId, RUN_REQUEST.targetUrl, RUN_REQUEST.instructions);
       });
 
-      it('breaks the loop early — only 2 actions executed instead of 4', () => {
+      it('breaks the loop early — only 3 actions executed instead of 4', () => {
         const actionCalls = (executor.execute as jest.Mock).mock.calls.filter(
           ([, action]) => action.type !== 'navigate'
         );
-        expect(actionCalls).toHaveLength(2);
+        expect(actionCalls).toHaveLength(3);
       });
 
       it('emits an observation event with exitReason repeated-result', () => {
@@ -433,14 +438,25 @@ describe('ExploreOrchestrator', () => {
         collectedEvents = [];
         const run = runsService.createRun(RUN_REQUEST);
         runId = run.runId;
-        setupHappyPathMocks(runId, 1);
 
-        // Planner signals goal-reached
-        planner.planActions.mockResolvedValue({
-          actions: [{ type: 'click', selector: '#btn' }],
-          goalSummary: 'Goal achieved',
-          stepsUsed: 1,
-          stopReason: 'goal-reached',
+        const trace = makeTrace(runId);
+        crawler.createTrace.mockReturnValue(trace);
+        crawler.captureStep.mockImplementation(async (_rid, _page, stepIndex) => makeStep(stepIndex));
+        executor.execute.mockImplementation(async (_page, action) => {
+          if (action.type === 'navigate') return makeNavResult();
+          return { ok: true, observation: `executed ${action.type}` };
+        });
+        runner.captureScreenshot.mockResolvedValue({
+          url: 'https://example.com',
+          data: Buffer.from('fake-png'),
+        });
+        gherkinGen.generateGherkin.mockResolvedValue(makeGherkinDoc());
+
+        // Planner signals goal-reached on the first step
+        (planner.planNextStep as jest.Mock).mockResolvedValue({
+          action: null,
+          goalReached: true,
+          pageDescription: 'Goal already achieved',
         });
 
         runsEvents.stream(runId).subscribe((e) => collectedEvents.push(e));
