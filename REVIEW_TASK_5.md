@@ -17,10 +17,10 @@
 
 ## Acceptance Criteria
 
-- [ ] `BusinessRule` statements/snippets are passed through `redactString()` before being stored and before being written to `output/`.
-- [ ] Event `message`/`details` are redacted before being persisted to the event log (and, if adopted per the note above, before being sent over SSE).
-- [ ] A documented limitation exists (README or code comment) describing that screenshots are not content-redacted, with guidance for safe usage.
-- [ ] New tests confirm a rule/event containing a fake secret pattern (e.g. `ghp_xxx...`) is redacted in the persisted output.
+- [x] `BusinessRule` statements/snippets are passed through `redactString()` before being stored and before being written to `output/`.
+- [x] Event `message`/`details` are redacted before being persisted to the event log (and, if adopted per the note above, before being sent over SSE).
+- [x] A documented limitation exists (README or code comment) describing that screenshots are not content-redacted, with guidance for safe usage.
+- [x] New tests confirm a rule/event containing a fake secret pattern (e.g. `ghp_xxx...`) is redacted in the persisted output.
 
 ## Affected Files
 

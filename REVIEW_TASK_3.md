@@ -25,13 +25,13 @@ This task addresses reviewer concern #1 directly: "the explorer doesn't complete
 
 ## Acceptance Criteria
 
-- [ ] `MAX_STEPS` is configurable and its exhaustion emits a distinct, clearly-labeled event and marks the run/document as incomplete.
-- [ ] Phase 1 has an enforced wall-clock timeout with a distinct exit event.
-- [ ] Repeat-state detection is based on a structural comparison (URL + DOM fingerprint), not free-text `observation` equality.
-- [ ] 404 detection considers HTTP status code in addition to DOM text.
-- [ ] At least one class of transient action failure is retried before being reported as a hard failure.
-- [ ] An alternating fail/succeed pattern is detected and exits the loop within a bounded number of steps instead of running to `MAX_STEPS`.
-- [ ] New unit tests cover each of the six scenarios listed above.
+- [x] `MAX_STEPS` is configurable and its exhaustion emits a distinct, clearly-labeled event and marks the run/document as incomplete.
+- [x] Phase 1 has an enforced wall-clock timeout with a distinct exit event.
+- [x] Repeat-state detection is based on a structural comparison (URL + DOM fingerprint), not free-text `observation` equality.
+- [x] 404 detection considers HTTP status code in addition to DOM text.
+- [x] At least one class of transient action failure is retried before being reported as a hard failure.
+- [x] An alternating fail/succeed pattern is detected and exits the loop within a bounded number of steps instead of running to `MAX_STEPS`.
+- [x] New unit tests cover each of the six scenarios listed above.
 
 ## Affected Files
 

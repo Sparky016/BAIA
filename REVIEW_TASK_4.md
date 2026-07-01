@@ -32,12 +32,12 @@ Today, a genuinely stalled backend and a merely slow-but-working one look identi
 
 ## Acceptance Criteria
 
-- [ ] SSE stream sends periodic keepalive frames; a real network drop is distinguishable from a quiet-but-alive pipeline within one heartbeat interval.
-- [ ] Frontend automatically retries a dropped SSE connection with backoff and shows a "reconnecting" state before giving up.
-- [ ] Progress page shows a stall warning if a phase runs materially longer than expected, instead of silently continuing to count up.
-- [ ] `POST /api/runs/:id/cancel` exists, is documented in Swagger, stops the in-flight Playwright/LLM work, tears down the browser cleanly, and puts the run in a terminal state with a clear reason.
-- [ ] Progress page has a "Cancel run" affordance wired to the new endpoint, with a confirmation prompt before cancelling.
-- [ ] New tests cover: SSE reconnect behavior, cancel-mid-explore-loop behavior, cancel-during-LLM-call behavior.
+- [x] SSE stream sends periodic keepalive frames; a real network drop is distinguishable from a quiet-but-alive pipeline within one heartbeat interval.
+- [x] Frontend automatically retries a dropped SSE connection with backoff and shows a "reconnecting" state before giving up.
+- [x] Progress page shows a stall warning if a phase runs materially longer than expected, instead of silently continuing to count up.
+- [x] `POST /api/runs/:id/cancel` exists, is documented in Swagger, stops the in-flight Playwright/LLM work, tears down the browser cleanly, and puts the run in a terminal state with a clear reason.
+- [x] Progress page has a "Cancel run" affordance wired to the new endpoint, with a confirmation prompt before cancelling.
+- [x] New tests cover: SSE reconnect behavior, cancel-mid-explore-loop behavior, cancel-during-LLM-call behavior.
 
 ## Affected Files
 
