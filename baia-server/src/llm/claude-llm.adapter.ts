@@ -15,14 +15,32 @@ const CHARS_PER_TOKEN = 4;
 
 function mapToLlmError(err: unknown, context?: string): LlmError {
   const prefix = context ? `${context}: ` : '';
-  if (err instanceof Anthropic.AuthenticationError || err instanceof Anthropic.PermissionDeniedError) {
-    return new LlmError('PROVIDER_ERROR', `${prefix}Claude auth error: ${(err as Error).message}`, undefined, err);
+  if (
+    err instanceof Anthropic.AuthenticationError ||
+    err instanceof Anthropic.PermissionDeniedError
+  ) {
+    return new LlmError(
+      'PROVIDER_ERROR',
+      `${prefix}Claude auth error: ${(err as Error).message}`,
+      undefined,
+      err
+    );
   }
   if (err instanceof Anthropic.RateLimitError) {
-    return new LlmError('RATE_LIMITED', `${prefix}Claude rate-limited: ${(err as Error).message}`, undefined, err);
+    return new LlmError(
+      'RATE_LIMITED',
+      `${prefix}Claude rate-limited: ${(err as Error).message}`,
+      undefined,
+      err
+    );
   }
   if (err instanceof Anthropic.APIConnectionTimeoutError) {
-    return new LlmError('TIMEOUT', `${prefix}Claude request timed out: ${(err as Error).message}`, undefined, err);
+    return new LlmError(
+      'TIMEOUT',
+      `${prefix}Claude request timed out: ${(err as Error).message}`,
+      undefined,
+      err
+    );
   }
   if (err instanceof Anthropic.APIError) {
     return new LlmError(
@@ -106,7 +124,10 @@ export class ClaudeLlmAdapter implements LlmService {
 
     try {
       const requestOpts = opts?.timeoutMs ? { timeout: opts.timeoutMs } : undefined;
-      const stream = this.client.messages.stream(buildParams(prompt, this.model, opts), requestOpts);
+      const stream = this.client.messages.stream(
+        buildParams(prompt, this.model, opts),
+        requestOpts
+      );
       const response = await stream.finalMessage();
 
       const textBlock = response.content.find((b) => b.type === 'text');
@@ -121,7 +142,11 @@ export class ClaudeLlmAdapter implements LlmService {
     }
   }
 
-  async completeJson<T>(prompt: string, schema: JsonSchema, opts?: LlmCompletionOptions): Promise<T> {
+  async completeJson<T>(
+    prompt: string,
+    schema: JsonSchema,
+    opts?: LlmCompletionOptions
+  ): Promise<T> {
     if (typeof prompt !== 'string' || prompt.trim().length === 0) {
       throw new LlmError('INVALID_INPUT', 'Prompt must be a non-empty string');
     }
@@ -234,7 +259,10 @@ export class ClaudeLlmAdapter implements LlmService {
 
     try {
       const requestOpts = opts?.timeoutMs ? { timeout: opts.timeoutMs } : undefined;
-      const sdkStream = this.client.messages.stream(buildParams(prompt, this.model, opts), requestOpts);
+      const sdkStream = this.client.messages.stream(
+        buildParams(prompt, this.model, opts),
+        requestOpts
+      );
 
       for await (const event of sdkStream) {
         if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {

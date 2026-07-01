@@ -164,11 +164,16 @@ export class ActionPlannerService {
     try {
       if (
         input.screenshotBase64 &&
-        typeof (this.llmService as { completeWithVision?: unknown }).completeWithVision === 'function'
+        typeof (this.llmService as { completeWithVision?: unknown }).completeWithVision ===
+          'function'
       ) {
         output = await (
           this.llmService as Required<Pick<LlmService, 'completeWithVision'>>
-        ).completeWithVision<StepPlannerOutput>(prompt, STEP_PLANNER_OUTPUT_SCHEMA, input.screenshotBase64);
+        ).completeWithVision<StepPlannerOutput>(
+          prompt,
+          STEP_PLANNER_OUTPUT_SCHEMA,
+          input.screenshotBase64
+        );
       } else {
         output = await this.llmService.completeJson<StepPlannerOutput>(
           prompt,

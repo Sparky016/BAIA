@@ -2,10 +2,9 @@ import { ExploreEvent, RunStatus } from '@baia/shared';
 import { Injectable, Logger } from '@nestjs/common';
 
 import { GherkinGeneratorService } from '../gherkin/gherkin-generator.service';
+import { OutputWriterService } from '../output/output-writer.service';
 import { RunsEventsService } from '../runs/runs.events';
 import { RunsService } from '../runs/runs.service';
-
-import { OutputWriterService } from '../output/output-writer.service';
 
 import { ActionExecutorService } from './action-executor.service';
 import { ActionPlannerService } from './action-planner.service';
@@ -65,10 +64,21 @@ export class ExploreOrchestrator {
       for (let step = 0; step < MAX_STEPS; step++) {
         // 1. Perceive — screenshot + DOM capture.
         const shot = await this.runner.captureScreenshot();
-        this.outputWriter.saveScreenshot(runId, step, shot.url, shot.data);
-        this.emitExploreEvent(runId, 'screenshot', shot.url, { step }, shot.data.toString('base64'));
+        await this.outputWriter.saveScreenshot(runId, step, shot.url, shot.data);
+        this.emitExploreEvent(
+          runId,
+          'screenshot',
+          shot.url,
+          { step },
+          shot.data.toString('base64')
+        );
 
-        const capturedStep = await this.crawler.captureStep(runId, page, step, 'perceiving page state');
+        const capturedStep = await this.crawler.captureStep(
+          runId,
+          page,
+          step,
+          'perceiving page state'
+        );
         trace.steps.push(capturedStep);
 
         // 2. Plan — decide the single next action using screenshot + DOM.
@@ -115,7 +125,7 @@ export class ExploreOrchestrator {
 
       const gherkinDoc = await this.gherkinGen.generateGherkin(trace);
       this.runsService.storeGherkinDoc(runId, gherkinDoc);
-      this.outputWriter.saveGherkinDoc(runId, gherkinDoc);
+      await this.outputWriter.saveGherkinDoc(runId, gherkinDoc);
 
       this.emitExploreEvent(runId, 'complete', 'Phase 1 exploration complete', {
         featureCount: gherkinDoc.features.length,
