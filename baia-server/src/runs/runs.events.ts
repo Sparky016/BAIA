@@ -71,7 +71,9 @@ export class RunsEventsService {
       return;
     }
 
-    this.outputWriter.appendEvent(runId, event);
+    Promise.resolve(this.outputWriter.appendEvent(runId, event)).catch((err: unknown) =>
+      this.logger.warn(`Failed to append event to output for run ${runId}: ${err}`)
+    );
     subject.next(event);
 
     if (this.isTerminalTransition(event)) {

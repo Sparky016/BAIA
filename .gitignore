@@ -44,8 +44,8 @@ Thumbs.db
 # Claude Code
 .claude/
 
-# Run output artifacts
-output/
+# Run output artifacts (runtime, not source code)
+baia-server/output/
 
 # Logs
 *.log

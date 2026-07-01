@@ -2,7 +2,11 @@ import { Injectable } from '@nestjs/common';
 
 import { CapturedStep } from './crawl-capture.service';
 
-export type ExitReason = 'success-criteria-reached' | '404-detected' | 'repeated-result' | 'repeated-failure';
+export type ExitReason =
+  | 'success-criteria-reached'
+  | '404-detected'
+  | 'repeated-result'
+  | 'repeated-failure';
 
 export interface ExitDecision {
   shouldExit: boolean;
@@ -60,7 +64,12 @@ export class ExitGateService {
     if (steps.length < 3) return false;
     const last3 = steps.slice(-3);
     const [a, b, c] = last3;
-    return a.url === b.url && b.url === c.url && a.observation === b.observation && b.observation === c.observation;
+    return (
+      a.url === b.url &&
+      b.url === c.url &&
+      a.observation === b.observation &&
+      b.observation === c.observation
+    );
   }
 
   private isRepeatedFailure(steps: CapturedStep[]): boolean {

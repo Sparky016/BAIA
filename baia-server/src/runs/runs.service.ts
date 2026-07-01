@@ -128,7 +128,9 @@ export class RunsService {
     };
 
     this.runs.set(runId, summary);
-    this.outputWriter.initRun(runId, summary);
+    Promise.resolve(this.outputWriter.initRun(runId, summary)).catch((err: unknown) =>
+      this.logger.error(`Failed to init output for run ${runId}: ${err}`)
+    );
     this.logger.log(`Run created: ${runId} | targetUrl=${request.targetUrl}`);
     return summary;
   }
@@ -143,6 +145,14 @@ export class RunsService {
       throw new NotFoundException(`Run '${runId}' not found.`);
     }
     return run;
+  }
+
+  /**
+   * Retrieve a run by id without throwing.
+   * Returns `undefined` when the id is unknown, instead of `NotFoundException`.
+   */
+  tryGetRun(runId: string): RunSummary | undefined {
+    return this.runs.get(runId);
   }
 
   /**
@@ -164,7 +174,11 @@ export class RunsService {
     this.stateMachine.transition(runId, run.status, to);
     const updated: RunSummary = { ...run, status: to, updatedAt: new Date() };
     this.runs.set(runId, updated);
-    this.outputWriter.updateRunSummary(runId, { status: to, updatedAt: updated.updatedAt });
+    Promise.resolve(
+      this.outputWriter.updateRunSummary(runId, { status: to, updatedAt: updated.updatedAt })
+    ).catch((err: unknown) =>
+      this.logger.error(`Failed to update run summary for ${runId}: ${err}`)
+    );
     this.logger.log(`Run ${runId}: ${run.status} → ${to}`);
     return updated;
   }
