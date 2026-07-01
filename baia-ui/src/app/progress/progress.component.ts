@@ -83,6 +83,19 @@ export class ProgressComponent implements OnInit, OnDestroy {
     return s.charAt(0).toUpperCase() + s.slice(1);
   });
 
+  private readonly phaseDescriptions: Record<string, string> = {
+    exploring: 'Navigating the site and recording what happens',
+    analyzing: 'Reading the source code for business rules',
+    reconciling: 'Merging observed behavior with code-derived rules',
+    review: 'Your turn to review and approve',
+  };
+
+  protected readonly currentPhaseDescription = computed(() => {
+    const s = this.store.status();
+    if (!s) return '';
+    return this.phaseDescriptions[s] ?? '';
+  });
+
   protected readonly elapsedDisplay = computed(() => {
     const s = this.elapsedSeconds();
     if (s < 60) return `${s}s`;

@@ -33,6 +33,7 @@
       <div class="op-label-left">
         <span class="live-dot" *ngIf="isRunning()"></span>
         <span>{{ currentPhaseLabel() }}</span>
+        <span class="phase-gloss" *ngIf="currentPhaseDescription()">— {{ currentPhaseDescription() }}</span>
         <span class="op-elapsed" *ngIf="isRunning() && elapsedSeconds() > 0">
           {{ elapsedDisplay() }}
         </span>

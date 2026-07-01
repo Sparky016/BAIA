@@ -46,6 +46,16 @@ export class GherkinEditorComponent implements OnInit {
     }
   }
 
+  provenanceTitle(provenance: string): string {
+    const titles: Record<string, string> = {
+      ui: 'Observed in the live browser session',
+      code: 'Extracted from source code',
+      merged: 'Confirmed by both browser observation and source code',
+      conflict: 'Browser observation and source code contradict each other',
+    };
+    return titles[provenance] ?? provenance;
+  }
+
   private deepCopy(doc: GherkinDoc): GherkinDoc {
     return JSON.parse(JSON.stringify(doc));
   }

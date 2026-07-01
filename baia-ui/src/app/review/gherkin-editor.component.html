@@ -1,4 +1,18 @@
 <div class="gherkin-editor" *ngIf="editableDoc; else noDoc">
+
+  <!-- Provenance Legend -->
+  <div class="provenance-legend">
+    <span class="legend-label">Badge meanings:</span>
+    <span class="provenance-badge" data-provenance="ui" title="Observed in the live browser session">ui</span>
+    <span class="legend-desc">Observed in the live browser session</span>
+    <span class="provenance-badge" data-provenance="code" title="Extracted from source code">code</span>
+    <span class="legend-desc">Extracted from source code</span>
+    <span class="provenance-badge" data-provenance="merged" title="Confirmed by both browser observation and source code">merged</span>
+    <span class="legend-desc">Confirmed by both browser observation and source code</span>
+    <span class="provenance-badge" data-provenance="conflict" title="Browser observation and source code contradict each other">conflict</span>
+    <span class="legend-desc">Browser observation and source code contradict each other</span>
+  </div>
+
   <div *ngFor="let feature of editableDoc.features; let fi = index" class="feature">
     <div class="feature-header">
       <span class="keyword">Feature:</span>
@@ -13,7 +27,7 @@
       <div *ngFor="let step of scenario.steps; let sti = index" class="step">
         <span class="keyword provenance-{{ step.provenance }}">{{ step.keyword }}</span>
         <input [value]="step.text" (input)="updateStepText(fi, si, sti, $any($event.target).value)" />
-        <span class="provenance-badge" [attr.data-provenance]="step.provenance">{{ step.provenance }}</span>
+        <span class="provenance-badge" [attr.data-provenance]="step.provenance" [attr.title]="provenanceTitle(step.provenance)">{{ step.provenance }}</span>
       </div>
     </div>
   </div>
