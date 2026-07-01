@@ -3,6 +3,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Observable, Subject } from 'rxjs';
 
 import { OutputWriterService } from '../output/output-writer.service';
+import { redactString } from '../security/redaction';
 
 import { RunTransitionEvent } from './run-events.types';
 
@@ -71,10 +72,16 @@ export class RunsEventsService {
       return;
     }
 
-    Promise.resolve(this.outputWriter.appendEvent(runId, event)).catch((err: unknown) =>
+    // Persist a redacted copy so that raw LLM error text, API tokens, or other
+    // secrets that may appear in event messages / details are never written to
+    // the output file. We do NOT mutate the original event so the SSE subject
+    // still carries the original (callers may rely on exact equality).
+    const redactedEvent = this.redactEvent(event);
+
+    Promise.resolve(this.outputWriter.appendEvent(runId, redactedEvent)).catch((err: unknown) =>
       this.logger.warn(`Failed to append event to output for run ${runId}: ${err}`)
     );
-    subject.next(event);
+    subject.next(redactedEvent);
 
     if (this.isTerminalTransition(event)) {
       this.complete(runId);
@@ -125,6 +132,40 @@ export class RunsEventsService {
   // ---------------------------------------------------------------------------
   // Private helpers
   // ---------------------------------------------------------------------------
+
+  /**
+   * Return a shallow clone of `event` with string fields redacted.
+   *
+   * For `ExploreEvent`: redacts `message` and any string values inside
+   * `details`. For `RunTransitionEvent`: no user-visible text fields exist, so
+   * the event is returned as-is (the clone is still a new object reference).
+   *
+   * The original event is never mutated.
+   */
+  private redactEvent(event: RunStreamEvent): RunStreamEvent {
+    // ExploreEvent has `type` and `message`; RunTransitionEvent has `from`/`to`.
+    if (!('message' in event)) {
+      // RunTransitionEvent — no text to redact, but return a clone for safety.
+      return { ...event };
+    }
+
+    const exploreEvent = event as ExploreEvent;
+    const redactedDetails =
+      exploreEvent.details !== undefined
+        ? Object.fromEntries(
+            Object.entries(exploreEvent.details).map(([k, v]) => [
+              k,
+              typeof v === 'string' ? redactString(v) : v,
+            ])
+          )
+        : undefined;
+
+    return {
+      ...exploreEvent,
+      message: redactString(exploreEvent.message),
+      ...(redactedDetails !== undefined ? { details: redactedDetails } : {}),
+    };
+  }
 
   private getOrCreate(runId: string): Subject<RunStreamEvent> {
     let subject = this.subjects.get(runId);

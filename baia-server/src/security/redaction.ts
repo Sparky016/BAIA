@@ -91,6 +91,24 @@ const REDACTION_RULES: readonly RedactionRule[] = [
     pattern: /([a-z][a-z0-9+.-]*:\/\/[^\s:/@]+:)([^\s/@]+)(@)/gi,
     build: (g) => `${g[0]}${REDACTION_PLACEHOLDER}${g[2]}`,
   },
+  // AWS access key IDs (AKIA…).
+  {
+    pattern: /\b(AKIA[0-9A-Z]{16})\b/g,
+    build: () => REDACTION_PLACEHOLDER,
+  },
+  // .env-style assignments: `KEY="value"` / `KEY=value` where the value is
+  // at least 8 non-whitespace characters. Matches uppercase env-var names
+  // (letters, digits, underscores) followed by `=` and an optional quote.
+  {
+    pattern: /\b([A-Z][A-Z0-9_]{2,}=(?:["']?)([^\s"']{8,})(?:["']?))/g,
+    build: (g) => {
+      // Preserve the key-name and `=` prefix; replace only the value part.
+      const full = g[0] ?? '';
+      const eqIdx = full.indexOf('=');
+      if (eqIdx === -1) return REDACTION_PLACEHOLDER;
+      return full.slice(0, eqIdx + 1) + REDACTION_PLACEHOLDER;
+    },
+  },
   // GitHub fine-grained / classic personal access tokens & app tokens.
   {
     pattern: /\b(gh[pousr]_[A-Za-z0-9]{16,255})\b/g,

@@ -1,4 +1,4 @@
-import { ExploreEvent, RunStatus } from '@baia/shared';
+import { BusinessRule, ExploreEvent, RunStatus } from '@baia/shared';
 import { Injectable, Logger } from '@nestjs/common';
 
 import { OutputWriterService } from '../output/output-writer.service';
@@ -6,6 +6,7 @@ import { IllegalRunTransitionError } from '../runs/run-state-machine';
 import { RunsEventsService } from '../runs/runs.events';
 import { RunsService } from '../runs/runs.service';
 import { CredentialStoreService } from '../security';
+import { redactString } from '../security/redaction';
 
 import { AzureConnector } from './azure-connector';
 import { GitHubConnector } from './github-connector';
@@ -95,11 +96,19 @@ export class AnalyzeOrchestrator {
         ruleCount: rules.length,
       });
 
-      this.runsService.storeBusinessRules(runId, rules);
-      await this.outputWriter.saveBusinessRules(runId, rules);
+      // Redact secrets that may appear in LLM-extracted rule text before
+      // persisting to the run store or the output file.
+      const redactedRules: BusinessRule[] = rules.map((rule) => ({
+        ...rule,
+        description: redactString(rule.description),
+        category: redactString(rule.category),
+      }));
+
+      this.runsService.storeBusinessRules(runId, redactedRules);
+      await this.outputWriter.saveBusinessRules(runId, redactedRules);
 
       this.emitAnalyzeEvent(runId, 'complete', 'Phase 2 analysis complete', {
-        ruleCount: rules.length,
+        ruleCount: redactedRules.length,
       });
 
       this.runsService.transitionRun(runId, RunStatus.Reconciling);
