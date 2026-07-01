@@ -8,6 +8,8 @@ import { RunsService } from '../runs/runs.service';
 import { CredentialStoreService } from '../security';
 import { redactString } from '../security/redaction';
 
+import { toUserMessage } from '../common/user-facing-error';
+
 import { AzureConnector } from './azure-connector';
 import { GitHubConnector } from './github-connector';
 import { IngestionService } from './ingestion.service';
@@ -117,7 +119,9 @@ export class AnalyzeOrchestrator {
       const message = err instanceof Error ? err.message : String(err);
       this.logger.error(`Run ${runId}: Phase 2 failed — ${message}`);
 
-      this.emitAnalyzeEvent(runId, 'error', `Phase 2 failed: ${message}`, { error: message });
+      this.emitAnalyzeEvent(runId, 'error', toUserMessage(err, 'Phase 2 (Analyze)'), {
+        error: message,
+      });
 
       this.runsService.transitionRun(runId, RunStatus.Failed);
     }

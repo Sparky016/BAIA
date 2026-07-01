@@ -2,6 +2,7 @@ import { ExploreEvent, RunStatus } from '@baia/shared';
 import { Injectable, Logger } from '@nestjs/common';
 
 import { ConfigService } from '../config/config.service';
+import { toUserMessage } from '../common/user-facing-error';
 import { GherkinGeneratorService } from '../gherkin/gherkin-generator.service';
 import { OutputWriterService } from '../output/output-writer.service';
 import { RunsEventsService } from '../runs/runs.events';
@@ -172,7 +173,9 @@ export class ExploreOrchestrator {
         err instanceof Error ? err.stack : err
       );
 
-      this.emitExploreEvent(runId, 'error', `Phase 1 failed: ${message}`, { error: message });
+      this.emitExploreEvent(runId, 'error', toUserMessage(err, 'Phase 1 (Explore)'), {
+        error: message,
+      });
 
       this.runsService.transitionRun(runId, RunStatus.Failed);
       throw err;

@@ -6,6 +6,8 @@ import { IllegalRunTransitionError } from '../runs/run-state-machine';
 import { RunsEventsService } from '../runs/runs.events';
 import { RunsService } from '../runs/runs.service';
 
+import { toUserMessage } from '../common/user-facing-error';
+
 import { ReconciliationService } from './reconciliation.service';
 import { UnifiedDocMapper } from './unified-doc.mapper';
 
@@ -91,7 +93,9 @@ export class ReconcileOrchestrator {
       const message = err instanceof Error ? err.message : String(err);
       this.logger.error(`Run ${runId}: reconciliation failed — ${message}`);
 
-      this.emitEvent(runId, 'error', `Reconciliation failed: ${message}`, { error: message });
+      this.emitEvent(runId, 'error', toUserMessage(err, 'Phase 3 (Reconcile)'), {
+        error: message,
+      });
 
       this.runsService.transitionRun(runId, RunStatus.Failed);
     }

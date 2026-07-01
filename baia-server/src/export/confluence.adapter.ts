@@ -144,6 +144,12 @@ export class ConfluenceAdapter {
       );
     }
 
+    // A 404 from the search endpoint means the space/page doesn't exist yet —
+    // treat it as "not found" rather than an error so the caller can create it.
+    if (res.status === 404) {
+      return null;
+    }
+
     if (!res.ok) {
       throw new ConfluenceAdapterError(
         `Confluence API error searching for page (HTTP ${res.status}).`,
