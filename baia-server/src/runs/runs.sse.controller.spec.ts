@@ -1,7 +1,7 @@
 import { MessageEvent } from '@nestjs/common';
 import { ExploreEvent, RunStatus } from '@baia/shared';
 import { firstValueFrom, Subject, toArray } from 'rxjs';
-import { take } from 'rxjs/operators';
+import { take, filter } from 'rxjs/operators';
 
 import { RunTransitionEvent } from './run-events.types';
 import { RunStreamEvent, RunsEventsService } from './runs.events';
@@ -227,6 +227,84 @@ describe('RunsSseController', () => {
         mockService.emit(RUN_ID, t);
       }
       mockService.complete(RUN_ID);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // Heartbeat
+  // ---------------------------------------------------------------------------
+
+  describe('heartbeat', () => {
+    it('emits a heartbeat frame with { type: "heartbeat" } data', (done) => {
+      jest.useFakeTimers();
+
+      const heartbeatReceived: MessageEvent[] = [];
+
+      const sub = controller.streamEvents(RUN_ID).subscribe({
+        next: (msg: MessageEvent) => {
+          if ((msg.data as { type?: string }).type === 'heartbeat') {
+            heartbeatReceived.push(msg);
+          }
+        },
+      });
+
+      // Advance time past the first heartbeat interval (15 s)
+      jest.advanceTimersByTime(16_000);
+
+      expect(heartbeatReceived).toHaveLength(1);
+      expect(heartbeatReceived[0].data).toEqual({ type: 'heartbeat' });
+
+      sub.unsubscribe();
+      jest.useRealTimers();
+      done();
+    });
+
+    it('emits heartbeats at ~15 s intervals', (done) => {
+      jest.useFakeTimers();
+
+      let heartbeatCount = 0;
+
+      const sub = controller.streamEvents(RUN_ID).subscribe({
+        next: (msg: MessageEvent) => {
+          if ((msg.data as { type?: string }).type === 'heartbeat') {
+            heartbeatCount++;
+          }
+        },
+      });
+
+      // Advance past 3 heartbeat intervals
+      jest.advanceTimersByTime(46_000);
+
+      expect(heartbeatCount).toBe(3);
+
+      sub.unsubscribe();
+      jest.useRealTimers();
+      done();
+    });
+
+    it('heartbeats and run events are interleaved in the same observable', (done) => {
+      jest.useFakeTimers();
+
+      const received: MessageEvent[] = [];
+      const exploreEvent = makeExploreEvent('action', 'clicked');
+
+      const sub = controller.streamEvents(RUN_ID).subscribe({
+        next: (msg: MessageEvent) => received.push(msg),
+      });
+
+      // Emit a run event synchronously
+      mockService.emit(RUN_ID, exploreEvent);
+      // Advance past first heartbeat
+      jest.advanceTimersByTime(16_000);
+
+      // Should have: 1 run event + 1 heartbeat
+      expect(received).toHaveLength(2);
+      expect(received[0].data).toEqual(exploreEvent);
+      expect((received[1].data as { type?: string }).type).toBe('heartbeat');
+
+      sub.unsubscribe();
+      jest.useRealTimers();
+      done();
     });
   });
 

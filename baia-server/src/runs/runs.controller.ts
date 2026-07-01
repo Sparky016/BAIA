@@ -2,6 +2,7 @@ import { RunSummary } from '@baia/shared';
 import { Body, Controller, Get, HttpCode, HttpStatus, Logger, Param, Post } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 
+import { RunCancellationService } from './run-cancellation.service';
 import { RunsService } from './runs.service';
 
 const RUN_REQUEST_SCHEMA = {
@@ -50,7 +51,10 @@ const RUN_SUMMARY_SCHEMA = {
 export class RunsController {
   private readonly logger = new Logger(RunsController.name);
 
-  constructor(private readonly runsService: RunsService) {}
+  constructor(
+    private readonly runsService: RunsService,
+    private readonly cancellationService: RunCancellationService
+  ) {}
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
@@ -95,5 +99,15 @@ export class RunsController {
   getRun(@Param('id') id: string): RunSummary {
     this.logger.debug(`GET /runs/${id}`);
     return this.runsService.getRun(id);
+  }
+
+  @Post(':id/cancel')
+  @ApiOperation({ summary: 'Cancel an in-flight run' })
+  @ApiParam({ name: 'id', description: 'The run identifier', example: 'run-0001' })
+  @ApiResponse({ status: 200, description: 'Cancellation accepted.' })
+  cancelRun(@Param('id') id: string): { accepted: boolean; runId: string } {
+    this.logger.log(`POST /runs/${id}/cancel — cancellation requested`);
+    this.cancellationService.cancel(id);
+    return { accepted: true, runId: id };
   }
 }

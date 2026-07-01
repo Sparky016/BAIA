@@ -32,6 +32,7 @@ import { GherkinModule } from '../gherkin/gherkin.module';
 import { LlmModule } from '../llm/llm.module';
 import { ReconcileOrchestrator } from '../reconcile/reconcile.orchestrator';
 import { ReconciliationService } from '../reconcile/reconciliation.service';
+import { RunCancellationService } from '../runs/run-cancellation.service';
 import { RunsModule } from '../runs/runs.module';
 import { SecurityModule } from '../security/security.module';
 
@@ -107,6 +108,7 @@ const isE2e = process.env['E2E'] === 'true';
     // ── Pipeline service ─────────────────────────────────────────────────────
     PipelineService,
     ConfigService,
+    RunCancellationService,
   ],
 })
 export class PipelineModule {}

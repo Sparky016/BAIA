@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 
+import { RunCancellationService } from './run-cancellation.service';
 import { RunStateMachine } from './run-state-machine';
 import { RunsController } from './runs.controller';
 import { RunsEventsService } from './runs.events';
@@ -20,7 +21,8 @@ import { RunsSseController } from './runs.sse.controller';
       inject: [RunsEventsService],
     },
     RunsService,
+    RunCancellationService,
   ],
-  exports: [RunsService, RunStateMachine, RunsEventsService],
+  exports: [RunsService, RunStateMachine, RunsEventsService, RunCancellationService],
 })
 export class RunsModule {}

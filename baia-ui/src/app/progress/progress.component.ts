@@ -43,12 +43,23 @@ export class ProgressComponent implements OnInit, OnDestroy {
   private elapsedInterval: ReturnType<typeof setInterval> | null = null;
   private phaseStartedAt: number = Date.now();
 
+  private reconnectAttempts = 0;
+  private readonly MAX_RECONNECT_ATTEMPTS = 5;
+  private reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
+  readonly isReconnecting = signal(false);
+
+  readonly isCancelling = signal(false);
+
   readonly phases = ['exploring', 'analyzing', 'reconciling', 'review', 'done'] as const;
 
   readonly elapsedSeconds = signal(0);
   private readonly phaseEventOffset = signal(0);
 
   protected readonly isRunning = computed(() => this.store.isRunning());
+
+  readonly isStalling = computed(() =>
+    this.store.isRunning() && this.elapsedSeconds() > 90 && !this.isReconnecting()
+  );
 
   protected readonly currentOperation = computed(() => {
     const events = this.store.events();
@@ -144,6 +155,10 @@ export class ProgressComponent implements OnInit, OnDestroy {
       clearInterval(this.elapsedInterval);
       this.elapsedInterval = null;
     }
+    if (this.reconnectTimeout) {
+      clearTimeout(this.reconnectTimeout);
+      this.reconnectTimeout = null;
+    }
   }
 
   protected openEventSource(url: string): EventSource {
@@ -153,12 +168,30 @@ export class ProgressComponent implements OnInit, OnDestroy {
   private connect(): void {
     this.eventSource = this.openEventSource(`/api/runs/${this.runId}/events`);
     this.eventSource.onmessage = (ev: MessageEvent<string>) => {
+      this.reconnectAttempts = 0;
+      this.isReconnecting.set(false);
       const data = JSON.parse(ev.data) as RunStreamEvent;
       this.handleEvent(data);
     };
     this.eventSource.onerror = () => {
       this.disconnect();
+      if (this.reconnectAttempts < this.MAX_RECONNECT_ATTEMPTS && !this.isTerminal()) {
+        const delay = Math.min(Math.pow(2, this.reconnectAttempts) * 1000, 30_000);
+        this.reconnectAttempts++;
+        this.isReconnecting.set(true);
+        this.reconnectTimeout = setTimeout(() => {
+          this.isReconnecting.set(false);
+          this.connect();
+        }, delay);
+      } else {
+        this.store.setError('Connection to server lost. Please refresh the page.');
+      }
     };
+  }
+
+  private isTerminal(): boolean {
+    const s = this.store.status();
+    return s === RunStatus.Done || s === RunStatus.Failed;
   }
 
   private disconnect(): void {
@@ -167,6 +200,7 @@ export class ProgressComponent implements OnInit, OnDestroy {
   }
 
   private handleEvent(event: RunStreamEvent): void {
+    if ((event as { type?: string }).type === 'heartbeat') return;
     if ('to' in event) {
       this.store.setStatus((event as RunTransitionEvent).to);
       this.phaseStartedAt = Date.now();
@@ -185,6 +219,21 @@ export class ProgressComponent implements OnInit, OnDestroy {
         this.store.appendEvent(exploreEvent);
       }
     }
+  }
+
+  protected cancelRun(): void {
+    if (!confirm('Cancel this run? In-progress exploration will be lost.')) return;
+    this.isCancelling.set(true);
+    this.runsApi.cancelRun(this.runId).subscribe({
+      next: () => {
+        this.isCancelling.set(false);
+        void this.router.navigate(['/input']);
+      },
+      error: () => {
+        this.isCancelling.set(false);
+        this.store.setError('Failed to cancel the run. Please try again.');
+      },
+    });
   }
 
   protected phaseClass(phase: string, index: number): Record<string, boolean> {

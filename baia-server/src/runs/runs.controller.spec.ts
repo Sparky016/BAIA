@@ -2,6 +2,7 @@ import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { RunStatus, RunSummary } from '@baia/shared';
 
+import { RunCancellationService } from './run-cancellation.service';
 import { RunsController } from './runs.controller';
 import { RunsService } from './runs.service';
 
@@ -30,6 +31,7 @@ function makeSummary(partial: Partial<RunSummary> = {}): RunSummary {
 describe('RunsController', () => {
   let controller: RunsController;
   let runsService: jest.Mocked<RunsService>;
+  let cancellationService: jest.Mocked<RunCancellationService>;
 
   beforeEach(async () => {
     const mockService: jest.Mocked<Partial<RunsService>> = {
@@ -38,13 +40,23 @@ describe('RunsController', () => {
       getAllRuns: jest.fn(),
     };
 
+    const mockCancellationService: jest.Mocked<Partial<RunCancellationService>> = {
+      cancel: jest.fn(),
+      isCancelled: jest.fn(),
+      clear: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       controllers: [RunsController],
-      providers: [{ provide: RunsService, useValue: mockService }],
+      providers: [
+        { provide: RunsService, useValue: mockService },
+        { provide: RunCancellationService, useValue: mockCancellationService },
+      ],
     }).compile();
 
     controller = module.get<RunsController>(RunsController);
     runsService = module.get(RunsService);
+    cancellationService = module.get(RunCancellationService);
   });
 
   // ── POST /runs ─────────────────────────────────────────────────────────────
@@ -194,6 +206,27 @@ describe('RunsController', () => {
       expect(result.runId).toBe('run-0001');
       expect(result.status).toBe(RunStatus.Exploring);
       expect(result.createdAt).toEqual(now);
+    });
+  });
+
+  // ── POST /runs/:id/cancel ──────────────────────────────────────────────────
+
+  describe('cancelRun()', () => {
+    it('calls RunCancellationService.cancel with the run id', () => {
+      const result = controller.cancelRun('run-0001');
+      expect(cancellationService.cancel).toHaveBeenCalledWith('run-0001');
+      expect(cancellationService.cancel).toHaveBeenCalledTimes(1);
+    });
+
+    it('returns { accepted: true, runId } on success', () => {
+      const result = controller.cancelRun('run-0042');
+      expect(result).toEqual({ accepted: true, runId: 'run-0042' });
+    });
+
+    it('passes the correct runId through to the response', () => {
+      const result = controller.cancelRun('run-xyz');
+      expect(result.runId).toBe('run-xyz');
+      expect(result.accepted).toBe(true);
     });
   });
 });

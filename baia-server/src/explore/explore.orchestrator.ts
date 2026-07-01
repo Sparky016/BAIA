@@ -5,6 +5,7 @@ import { ConfigService } from '../config/config.service';
 import { toUserMessage } from '../common/user-facing-error';
 import { GherkinGeneratorService } from '../gherkin/gherkin-generator.service';
 import { OutputWriterService } from '../output/output-writer.service';
+import { RunCancellationService } from '../runs/run-cancellation.service';
 import { RunsEventsService } from '../runs/runs.events';
 import { RunsService } from '../runs/runs.service';
 
@@ -34,7 +35,8 @@ export class ExploreOrchestrator {
     private readonly gherkinGen: GherkinGeneratorService,
     private readonly outputWriter: OutputWriterService,
     private readonly exitGate: ExitGateService,
-    private readonly configService: ConfigService
+    private readonly configService: ConfigService,
+    private readonly cancellationService: RunCancellationService
   ) {}
 
   /**
@@ -78,6 +80,15 @@ export class ExploreOrchestrator {
           break;
         }
 
+        // Check for user-requested cancellation.
+        if (this.cancellationService.isCancelled(runId)) {
+          this.emitExploreEvent(runId, 'observation', 'Run cancelled by user', {
+            exitReason: 'cancelled',
+            step,
+          });
+          break;
+        }
+
         // 1. Perceive — screenshot + DOM capture.
         const shot = await this.runner.captureScreenshot();
         await this.outputWriter.saveScreenshot(runId, step, shot.url, shot.data);
@@ -107,6 +118,15 @@ export class ExploreOrchestrator {
           screenshotBase64: shot.data.toString('base64'),
           previousActions: previousActions.map((p) => `${p.ok ? '✓' : '✗'} ${p.action}`),
         });
+
+        // Fast-path cancellation check after the LLM/planner await.
+        if (this.cancellationService.isCancelled(runId)) {
+          this.emitExploreEvent(runId, 'observation', 'Run cancelled by user', {
+            exitReason: 'cancelled',
+            step,
+          });
+          break;
+        }
 
         this.emitExploreEvent(runId, 'observation', stepResult.pageDescription, { step });
 
