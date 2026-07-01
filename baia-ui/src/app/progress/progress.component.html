@@ -22,6 +22,16 @@
     </ng-container>
   </div>
 
+  <!-- Reconnecting banner -->
+  <div class="reconnecting-banner" *ngIf="isReconnecting()">
+    <span>Connection lost — reconnecting…</span>
+  </div>
+
+  <!-- Stall warning banner -->
+  <div class="stall-warning" *ngIf="isStalling()">
+    <span>This is taking longer than usual. The pipeline is still running — please wait or cancel.</span>
+  </div>
+
   <!-- Indeterminate progress bar — visible while running -->
   <div class="activity-progress" *ngIf="isRunning()">
     <div class="activity-progress-fill"></div>
@@ -33,6 +43,7 @@
       <div class="op-label-left">
         <span class="live-dot" *ngIf="isRunning()"></span>
         <span>{{ currentPhaseLabel() }}</span>
+        <span class="phase-gloss" *ngIf="currentPhaseDescription()">— {{ currentPhaseDescription() }}</span>
         <span class="op-elapsed" *ngIf="isRunning() && elapsedSeconds() > 0">
           {{ elapsedDisplay() }}
         </span>
@@ -48,6 +59,14 @@
       </div>
     </div>
     <div class="op-message">{{ currentOperation() }}</div>
+    <button
+      class="cancel-btn"
+      *ngIf="isRunning() && !isCancelling()"
+      (click)="cancelRun()"
+    >
+      Cancel run
+    </button>
+    <span *ngIf="isCancelling()" class="cancel-pending">Cancelling…</span>
   </div>
 
   <!-- Two-column body -->

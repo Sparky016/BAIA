@@ -579,6 +579,59 @@ describe('ActionExecutorService', () => {
     });
   });
 
+  // ── retry logic ───────────────────────────────────────────────────────────
+
+  describe('retry logic', () => {
+    it('retries a timed-out click once before returning failure', async () => {
+      // First call throws a timeout, second call succeeds
+      page.click
+        .mockRejectedValueOnce(new Error('Timeout waiting for element'))
+        .mockResolvedValueOnce(undefined);
+
+      const action: ClickAction = { type: 'click', selector: '#btn' };
+      const result = await service.execute(page as never, action);
+
+      expect(page.click).toHaveBeenCalledTimes(2);
+      expect(result.ok).toBe(true);
+      expect(result.observation).toContain('succeeded after retry');
+    });
+
+    it('returns failure after retry if second attempt also fails', async () => {
+      page.click
+        .mockRejectedValueOnce(new Error('Timeout waiting for element'))
+        .mockRejectedValueOnce(new Error('Timeout waiting for element'));
+
+      const action: ClickAction = { type: 'click', selector: '#btn' };
+      const result = await service.execute(page as never, action);
+
+      expect(page.click).toHaveBeenCalledTimes(2);
+      expect(result.ok).toBe(false);
+    });
+
+    it('does NOT retry on non-transient errors', async () => {
+      page.click.mockRejectedValueOnce(new Error('Some other error'));
+
+      const action: ClickAction = { type: 'click', selector: '#btn' };
+      const result = await service.execute(page as never, action);
+
+      expect(page.click).toHaveBeenCalledTimes(1);
+      expect(result.ok).toBe(false);
+    });
+
+    it('retries a timed-out navigate once and returns success', async () => {
+      page.goto
+        .mockRejectedValueOnce(new Error('Navigation timeout'))
+        .mockResolvedValueOnce({ status: () => 200 } as never);
+
+      const action: NavigateAction = { type: 'navigate', url: 'https://example.com' };
+      const result = await service.execute(page as never, action);
+
+      expect(page.goto).toHaveBeenCalledTimes(2);
+      expect(result.ok).toBe(true);
+      expect(result.observation).toContain('succeeded after retry');
+    });
+  });
+
   // ── general invariants ────────────────────────────────────────────────────
 
   describe('general invariants', () => {

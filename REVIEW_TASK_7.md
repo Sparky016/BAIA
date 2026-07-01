@@ -22,13 +22,13 @@ Reviewer concern #4: "the UI is user friendly and self explanatory to use." The 
 
 ## Acceptance Criteria
 
-- [ ] A visible legend (or per-badge tooltip + aria-label) explains `ui`/`code`/`merged`/conflict provenance values on the review page.
-- [ ] Disabled export controls are accompanied by a visible explanation of what unlocks them.
-- [ ] The Instructions field includes a concrete example (ideally sourced from the PRD) and a one-line usage hint.
-- [ ] The Repository (optional) `<details>` section has custom styling consistent with `STYLE_GUIDE.md` tokens, not browser defaults.
-- [ ] A workflow step indicator (Input → Progress → Review) is visible on all three routes, not just the progress page.
-- [ ] Each pipeline phase name shown to the user is paired with a plain-language description.
-- [ ] Manually walking through `MANUAL_TEST_GUIDE.md` Phase 3 and 5 as a first-time user, every visible label/state is self-explanatory without referring to this review or the source code.
+- [x] A visible legend (or per-badge tooltip + aria-label) explains `ui`/`code`/`merged`/conflict provenance values on the review page.
+- [x] Disabled export controls are accompanied by a visible explanation of what unlocks them.
+- [x] The Instructions field includes a concrete example (ideally sourced from the PRD) and a one-line usage hint.
+- [x] The Repository (optional) `<details>` section has custom styling consistent with `STYLE_GUIDE.md` tokens, not browser defaults.
+- [x] A workflow step indicator (Input → Progress → Review) is visible on all three routes, not just the progress page.
+- [x] Each pipeline phase name shown to the user is paired with a plain-language description.
+- [x] Manually walking through `MANUAL_TEST_GUIDE.md` Phase 3 and 5 as a first-time user, every visible label/state is self-explanatory without referring to this review or the source code.
 
 ## Affected Files
 

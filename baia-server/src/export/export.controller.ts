@@ -15,6 +15,7 @@ import {
 import { ApiBody, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
 
+import { toUserMessage } from '../common/user-facing-error';
 import { RunsService } from '../runs/runs.service';
 
 import { ConfluenceAdapter, ConfluenceConfig } from './confluence.adapter';
@@ -125,12 +126,18 @@ export class ExportController {
 
     this.runsService.transitionRun(id, RunStatus.Exporting);
 
-    const result = await this.confluenceAdapter.publishPage(config, gherkinDoc);
-    this.logger.log(`Exported run ${id} to Confluence page ${result.pageUrl}`);
+    try {
+      const result = await this.confluenceAdapter.publishPage(config, gherkinDoc);
+      this.logger.log(`Exported run ${id} to Confluence page ${result.pageUrl}`);
 
-    this.runsService.transitionRun(id, RunStatus.Done);
+      this.runsService.transitionRun(id, RunStatus.Done);
 
-    return { url: result.pageUrl };
+      return { url: result.pageUrl };
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      this.logger.error(`Run ${id}: Export failed — ${message}`, err instanceof Error ? err.stack : err);
+      throw new BadRequestException(toUserMessage(err, 'Export'));
+    }
   }
 
   /**

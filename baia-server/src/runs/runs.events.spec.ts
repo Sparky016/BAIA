@@ -408,6 +408,72 @@ describe('RunsEventsService', () => {
   });
 
   // ---------------------------------------------------------------------------
+  // Redaction of event message / details before persistence
+  // ---------------------------------------------------------------------------
+
+  describe('redaction before persistence', () => {
+    it('redacts a GitHub PAT in event.message before calling outputWriter.appendEvent', () => {
+      const appendEventMock = jest.fn();
+      const mockOutputWriter = {
+        appendEvent: appendEventMock,
+      } as unknown as OutputWriterService;
+      const redactingService = new RunsEventsService(mockOutputWriter);
+
+      const fakeToken = 'ghp_1234567890abcdef1234567890abcdef12345678';
+      const event = makeExploreEvent('error', `LLM returned token=${fakeToken}`);
+
+      redactingService.emit(RUN_ID, event);
+
+      expect(appendEventMock).toHaveBeenCalledTimes(1);
+      const persistedEvent = appendEventMock.mock.calls[0][1] as ExploreEvent;
+      expect(persistedEvent.message).not.toContain(fakeToken);
+      expect(persistedEvent.message).toContain('[REDACTED]');
+    });
+
+    it('redacts a GitHub PAT in event.details string values before calling outputWriter.appendEvent', () => {
+      const appendEventMock = jest.fn();
+      const mockOutputWriter = {
+        appendEvent: appendEventMock,
+      } as unknown as OutputWriterService;
+      const redactingService = new RunsEventsService(mockOutputWriter);
+
+      const fakeToken = 'ghp_1234567890abcdef1234567890abcdef12345678';
+      const event: ExploreEvent = {
+        timestamp: new Date(),
+        type: 'error',
+        message: 'Something went wrong',
+        details: { error: `Authentication failed with token ${fakeToken}`, code: 401 },
+      };
+
+      redactingService.emit(RUN_ID, event);
+
+      expect(appendEventMock).toHaveBeenCalledTimes(1);
+      const persistedEvent = appendEventMock.mock.calls[0][1] as ExploreEvent;
+      expect(persistedEvent.details?.['error']).not.toContain(fakeToken);
+      expect(persistedEvent.details?.['error']).toContain('[REDACTED]');
+      // Non-string details values are passed through unchanged.
+      expect(persistedEvent.details?.['code']).toBe(401);
+    });
+
+    it('does not mutate the original event object', () => {
+      const appendEventMock = jest.fn();
+      const mockOutputWriter = {
+        appendEvent: appendEventMock,
+      } as unknown as OutputWriterService;
+      const redactingService = new RunsEventsService(mockOutputWriter);
+
+      const fakeToken = 'ghp_1234567890abcdef1234567890abcdef12345678';
+      const originalMessage = `token=${fakeToken}`;
+      const event = makeExploreEvent('error', originalMessage);
+
+      redactingService.emit(RUN_ID, event);
+
+      // Original event object must not be mutated.
+      expect(event.message).toBe(originalMessage);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
   // Edge cases
   // ---------------------------------------------------------------------------
 

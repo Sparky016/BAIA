@@ -273,11 +273,13 @@ describe('AnalyzeOrchestrator', () => {
       expect(failedIdx).toBeGreaterThan(errorIdx);
     });
 
-    it('error event includes failure message', () => {
+    it('error event includes a user-facing message', () => {
       const errorEvent = collectedEvents.find(
         (e) => 'type' in e && (e as { type: string }).type === 'error'
       ) as { message: string } | undefined;
-      expect(errorEvent?.message).toContain('Network timeout');
+      // User-facing message is now translated via toUserMessage(); the raw error
+      // is kept in the server log only, not surfaced to the client.
+      expect(errorEvent?.message).toContain('Something unexpected happened');
     });
 
     it('emits analyzing→failed transition', () => {
@@ -310,7 +312,9 @@ describe('AnalyzeOrchestrator', () => {
       const errorEvent = collectedEvents.find(
         (e) => 'type' in e && (e as { type: string }).type === 'error'
       ) as { message: string } | undefined;
-      expect(errorEvent?.message).toContain('Credential not found');
+      // User-facing message is now translated via toUserMessage(); raw error detail
+      // is kept in the server log only.
+      expect(errorEvent?.message).toContain('Something unexpected happened');
     });
   });
 
@@ -371,6 +375,91 @@ describe('AnalyzeOrchestrator', () => {
 
       expect(collectedEvents).toHaveLength(0);
       expect(ingestionService.ingestWithConnector).not.toHaveBeenCalled();
+    });
+  });
+
+  // ── Redaction of business rules ────────────────────────────────────────────
+
+  describe('business rule redaction', () => {
+    it('redacts secret-looking values in business rule descriptions before storing', async () => {
+      const runId = createAnalyzingRun();
+      const fakeToken = 'ghp_1234567890abcdef1234567890abcdef12345678';
+
+      const rulesWithSecret: BusinessRule[] = [
+        {
+          id: 'src/auth.ts::rule-0',
+          description: `Do not log the PAT: ${fakeToken}`,
+          category: 'security',
+          sourceRef: 'src/auth.ts:chunk0',
+        },
+      ];
+
+      ingestionService.ingestWithConnector.mockResolvedValue(makeIngestedRepo(1));
+      ruleExtractor.extractRules.mockResolvedValue(rulesWithSecret);
+
+      await orchestrator.executePhase2(
+        runId,
+        RUN_REQUEST.repoUrl,
+        'github',
+        RUN_REQUEST.credentialsRef
+      );
+
+      const storedRules = runsService.getRun(runId).businessRules ?? [];
+      expect(storedRules).toHaveLength(1);
+      expect(storedRules[0].description).not.toContain(fakeToken);
+      expect(storedRules[0].description).toContain('[REDACTED]');
+    });
+
+    it('passes redacted rules to outputWriter.saveBusinessRules', async () => {
+      const runId = createAnalyzingRun();
+      const fakeToken = 'ghp_1234567890abcdef1234567890abcdef12345678';
+
+      const rulesWithSecret: BusinessRule[] = [
+        {
+          id: 'src/config.ts::rule-1',
+          description: `Token value: ${fakeToken}`,
+          category: 'configuration',
+          sourceRef: 'src/config.ts:chunk0',
+        },
+      ];
+
+      ingestionService.ingestWithConnector.mockResolvedValue(makeIngestedRepo(1));
+      ruleExtractor.extractRules.mockResolvedValue(rulesWithSecret);
+
+      // Grab the outputWriter mock used by the orchestrator via the runsEvents service.
+      // We need to find the mock — it's stored as a local in beforeEach.
+      // Re-create a spy on the instance-level mock by inspecting the call args.
+      const saveBusinessRulesMock = jest.fn();
+      const mockOutputWriter = {
+        initRun: jest.fn(),
+        updateRunSummary: jest.fn(),
+        appendEvent: jest.fn(),
+        saveBusinessRules: saveBusinessRulesMock,
+      } as unknown as OutputWriterService;
+
+      // Build a fresh orchestrator with a capturable output writer.
+      const freshOrchestrator = new AnalyzeOrchestrator(
+        runsService,
+        runsEvents,
+        githubConnector as unknown as GitHubConnector,
+        azureConnector as unknown as AzureConnector,
+        ingestionService as unknown as IngestionService,
+        ruleExtractor as unknown as RuleExtractorService,
+        credentialStore as unknown as CredentialStoreService,
+        mockOutputWriter
+      );
+
+      await freshOrchestrator.executePhase2(
+        runId,
+        RUN_REQUEST.repoUrl,
+        'github',
+        RUN_REQUEST.credentialsRef
+      );
+
+      expect(saveBusinessRulesMock).toHaveBeenCalledTimes(1);
+      const savedRules: BusinessRule[] = saveBusinessRulesMock.mock.calls[0][1] as BusinessRule[];
+      expect(savedRules[0].description).not.toContain(fakeToken);
+      expect(savedRules[0].description).toContain('[REDACTED]');
     });
   });
 });

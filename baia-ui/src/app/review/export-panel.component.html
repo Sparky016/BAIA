@@ -1,4 +1,11 @@
 <div class="export-container">
+
+  <!-- Approval hint — shown only when not yet approved -->
+  <div class="approval-hint" *ngIf="!store.approved()">
+    <span class="approval-hint-icon">&#9432;</span>
+    Review and approve the Gherkin scenarios above to enable export and downloads.
+  </div>
+
   <!-- Confluence sync section -->
   <div class="export-section confluence-section">
     <h2>Sync to Confluence</h2>

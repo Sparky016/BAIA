@@ -2,6 +2,7 @@ import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { DocumentBuilder, OpenAPIObject, SwaggerModule } from '@nestjs/swagger';
 
+import { RunCancellationService } from '../runs/run-cancellation.service';
 import { RunsController } from '../runs/runs.controller';
 import { RunsService } from '../runs/runs.service';
 import { RunsSseController } from '../runs/runs.sse.controller';
@@ -26,6 +27,7 @@ describe('OpenAPI contract', () => {
       providers: [
         { provide: RunsService, useValue: {} },
         { provide: RunsEventsService, useValue: {} },
+        { provide: RunCancellationService, useValue: {} },
       ],
     }).compile();
 

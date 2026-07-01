@@ -1,4 +1,11 @@
 <nav>
   <a routerLink="/input">New Analysis</a>
+  <nav class="workflow-breadcrumb">
+    <span [class.active]="currentStep() === 1">1. Input</span>
+    <span class="separator">→</span>
+    <span [class.active]="currentStep() === 2">2. Progress</span>
+    <span class="separator">→</span>
+    <span [class.active]="currentStep() === 3">3. Review</span>
+  </nav>
 </nav>
 <router-outlet />

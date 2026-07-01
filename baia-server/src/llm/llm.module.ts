@@ -14,16 +14,10 @@ function buildLlmService(): LlmService {
     return selectProvider();
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    if (message.includes('Cannot find module') && message.includes('copilot-sdk')) {
-      startupLogger.error(
-        '@github/copilot-sdk is not installed. ' +
-          'Run `npm install` inside the baia-server workspace and restart the server.',
-        message
-      );
-    } else {
-      startupLogger.error(`LLM service failed to initialize: ${message}`);
-    }
-    throw err;
+    startupLogger.warn(
+      `LLM provider failed to initialize (${message}). Falling back to MockLlmService — responses will be synthetic.`
+    );
+    return new MockLlmService();
   }
 }
 

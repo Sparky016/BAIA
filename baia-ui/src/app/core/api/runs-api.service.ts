@@ -45,4 +45,11 @@ export class RunsApiService {
   downloadOkf(runId: string): Observable<Blob> {
     return this.http.get(`${this.baseUrl}/runs/${runId}/export/okf`, { responseType: 'blob' });
   }
+
+  cancelRun(runId: string): Observable<{ accepted: boolean; runId: string }> {
+    return this.http.post<{ accepted: boolean; runId: string }>(
+      `${this.baseUrl}/runs/${runId}/cancel`,
+      {}
+    );
+  }
 }

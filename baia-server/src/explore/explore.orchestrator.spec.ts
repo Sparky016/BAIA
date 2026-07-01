@@ -2,8 +2,10 @@ import { GherkinDoc, RunStatus } from '@baia/shared';
 import { Logger } from '@nestjs/common';
 import { Page } from 'playwright';
 
+import { ConfigService } from '../config/config.service';
 import { GherkinGeneratorService } from '../gherkin/gherkin-generator.service';
 import { OutputWriterService } from '../output/output-writer.service';
+import { RunCancellationService } from '../runs/run-cancellation.service';
 import { RunTransitionEvent } from '../runs/run-events.types';
 import { RunStateMachine } from '../runs/run-state-machine';
 import { RunsEventsService, RunStreamEvent } from '../runs/runs.events';
@@ -32,6 +34,7 @@ function makeStep(index: number): CapturedStep {
     domSnapshot: `<html>step${index}</html>`,
     networkEvents: [],
     observation: `observation ${index}`,
+    ok: true,
   };
 }
 
@@ -88,6 +91,8 @@ describe('ExploreOrchestrator', () => {
   let gherkinGen: jest.Mocked<GherkinGeneratorService>;
   let exitGate: jest.Mocked<ExitGateService>;
   let mockPage: ReturnType<typeof makeMockPage>;
+  let mockConfigService: jest.Mocked<ConfigService>;
+  let cancellationService: jest.Mocked<RunCancellationService>;
 
   const RUN_REQUEST = {
     targetUrl: 'https://example.com',
@@ -146,6 +151,17 @@ describe('ExploreOrchestrator', () => {
       checkStep: jest.fn().mockReturnValue({ shouldExit: false, exitReason: null, message: 'Continue' }),
     } as unknown as jest.Mocked<ExitGateService>;
 
+    mockConfigService = {
+      exploreMaxSteps: 20,
+      explorePhaseTimeoutMs: 600_000,
+    } as unknown as jest.Mocked<ConfigService>;
+
+    cancellationService = {
+      cancel: jest.fn(),
+      isCancelled: jest.fn().mockReturnValue(false),
+      clear: jest.fn(),
+    } as unknown as jest.Mocked<RunCancellationService>;
+
     orchestrator = new ExploreOrchestrator(
       runsService,
       runsEvents,
@@ -155,7 +171,9 @@ describe('ExploreOrchestrator', () => {
       crawler,
       gherkinGen,
       mockOutputWriter,
-      exitGate
+      exitGate,
+      mockConfigService,
+      cancellationService
     );
   });
 
@@ -299,11 +317,13 @@ describe('ExploreOrchestrator', () => {
       expect(failedIdx).toBeGreaterThan(errorIdx);
     });
 
-    it('error event includes failure message', () => {
+    it('error event includes a user-facing message', () => {
       const errorEvent = collectedEvents.find(
         (e) => 'type' in e && (e as { type: string }).type === 'error'
       ) as { message: string } | undefined;
-      expect(errorEvent?.message).toContain('LLM unavailable');
+      // User-facing message is now translated via toUserMessage(); the raw error
+      // is kept in the server log only, not surfaced to the client.
+      expect(errorEvent?.message).toContain('Something unexpected happened');
     });
 
     it('emits exploring→failed transition', () => {
@@ -492,6 +512,179 @@ describe('ExploreOrchestrator', () => {
 
       // Browser should NOT have been launched since the error is pre-try
       expect(runner.launch).not.toHaveBeenCalled();
+    });
+  });
+
+  // ── Budget exhaustion ─────────────────────────────────────────────────────
+
+  describe('budget exhaustion', () => {
+    it('emits a distinct budget-exhausted event when MAX_STEPS is reached without goal', async () => {
+      // Set a tiny budget so we can exhaust it quickly
+      (mockConfigService as unknown as { exploreMaxSteps: number }).exploreMaxSteps = 3;
+      (mockConfigService as unknown as { explorePhaseTimeoutMs: number }).explorePhaseTimeoutMs = 600_000;
+
+      const run = runsService.createRun(RUN_REQUEST);
+      const runId = run.runId;
+      const collectedEvents: RunStreamEvent[] = [];
+
+      const trace = makeTrace(runId);
+      crawler.createTrace.mockReturnValue(trace);
+      crawler.captureStep.mockImplementation(async (_rid, _page, stepIndex) => makeStep(stepIndex));
+      executor.execute.mockImplementation(async (_page, action) => {
+        if (action.type === 'navigate') return makeNavResult();
+        return { ok: true, observation: `executed ${action.type}` };
+      });
+      runner.captureScreenshot.mockResolvedValue({
+        url: 'https://example.com',
+        data: Buffer.from('fake-png'),
+      });
+
+      // Never return goalReached — always return an action to execute
+      (planner.planNextStep as jest.Mock).mockResolvedValue({
+        action: { type: 'click', selector: '#btn' },
+        goalReached: false,
+        pageDescription: 'Still working...',
+      });
+      gherkinGen.generateGherkin.mockResolvedValue(makeGherkinDoc());
+
+      runsEvents.stream(runId).subscribe((e) => collectedEvents.push(e));
+      await orchestrator.executePhase1(runId, RUN_REQUEST.targetUrl, RUN_REQUEST.instructions);
+
+      const budgetEvent = collectedEvents.find(
+        (e) =>
+          'type' in e &&
+          (e as { type: string; details?: Record<string, unknown> }).type === 'observation' &&
+          (e as { details?: Record<string, unknown> }).details?.exitReason === 'max-steps'
+      );
+      expect(budgetEvent).toBeDefined();
+    });
+  });
+
+  // ── Cancellation ──────────────────────────────────────────────────────────
+
+  describe('cancellation', () => {
+    it('exits the loop early when isCancelled returns true at top of iteration', async () => {
+      (mockConfigService as unknown as { exploreMaxSteps: number }).exploreMaxSteps = 20;
+      (mockConfigService as unknown as { explorePhaseTimeoutMs: number }).explorePhaseTimeoutMs = 600_000;
+
+      const run = runsService.createRun(RUN_REQUEST);
+      const runId = run.runId;
+      const collectedEvents: RunStreamEvent[] = [];
+
+      const trace = makeTrace(runId);
+      crawler.createTrace.mockReturnValue(trace);
+      crawler.captureStep.mockImplementation(async (_rid, _page, stepIndex) => makeStep(stepIndex));
+      executor.execute.mockImplementation(async (_page, action) => {
+        if (action.type === 'navigate') return makeNavResult();
+        return { ok: true, observation: `executed ${action.type}` };
+      });
+      runner.captureScreenshot.mockResolvedValue({
+        url: 'https://example.com',
+        data: Buffer.from('fake-png'),
+      });
+
+      // planner would never complete on its own — but cancellation triggers first
+      (planner.planNextStep as jest.Mock).mockResolvedValue({
+        action: { type: 'click', selector: '#btn' },
+        goalReached: false,
+        pageDescription: 'Still running...',
+      });
+      gherkinGen.generateGherkin.mockResolvedValue(makeGherkinDoc());
+
+      // Simulate cancellation being set after the first iteration
+      let callCount = 0;
+      cancellationService.isCancelled.mockImplementation(() => {
+        callCount++;
+        // Return true on the second check (top of second loop iteration)
+        return callCount > 2;
+      });
+
+      runsEvents.stream(runId).subscribe((e) => collectedEvents.push(e));
+      await orchestrator.executePhase1(runId, RUN_REQUEST.targetUrl, RUN_REQUEST.instructions);
+
+      const cancelledEvent = collectedEvents.find(
+        (e) =>
+          'type' in e &&
+          (e as { type: string; details?: Record<string, unknown> }).type === 'observation' &&
+          (e as { details?: Record<string, unknown> }).details?.exitReason === 'cancelled'
+      );
+      expect(cancelledEvent).toBeDefined();
+    });
+
+    it('transitions to analyzing even after cancellation (soft stop)', async () => {
+      (mockConfigService as unknown as { exploreMaxSteps: number }).exploreMaxSteps = 20;
+      (mockConfigService as unknown as { explorePhaseTimeoutMs: number }).explorePhaseTimeoutMs = 600_000;
+
+      const run = runsService.createRun(RUN_REQUEST);
+      const runId = run.runId;
+
+      const trace = makeTrace(runId);
+      crawler.createTrace.mockReturnValue(trace);
+      crawler.captureStep.mockImplementation(async (_rid, _page, stepIndex) => makeStep(stepIndex));
+      executor.execute.mockResolvedValue(makeNavResult());
+      runner.captureScreenshot.mockResolvedValue({
+        url: 'https://example.com',
+        data: Buffer.from('fake-png'),
+      });
+      (planner.planNextStep as jest.Mock).mockResolvedValue({
+        action: { type: 'click', selector: '#btn' },
+        goalReached: false,
+        pageDescription: 'Cancelled run page',
+      });
+      gherkinGen.generateGherkin.mockResolvedValue(makeGherkinDoc());
+
+      // Cancel immediately on the first check
+      cancellationService.isCancelled.mockReturnValue(true);
+
+      await orchestrator.executePhase1(runId, RUN_REQUEST.targetUrl, RUN_REQUEST.instructions);
+
+      const run2 = runsService.getRun(runId);
+      expect(run2.status).toBe(RunStatus.Analyzing);
+    });
+  });
+
+  // ── Phase timeout ─────────────────────────────────────────────────────────
+
+  describe('phase timeout', () => {
+    it('emits a timeout event when phase timeout is exceeded', async () => {
+      // Set a timeout of 0ms so it triggers immediately on the second iteration
+      (mockConfigService as unknown as { exploreMaxSteps: number }).exploreMaxSteps = 20;
+      (mockConfigService as unknown as { explorePhaseTimeoutMs: number }).explorePhaseTimeoutMs = 0;
+
+      const run = runsService.createRun(RUN_REQUEST);
+      const runId = run.runId;
+      const collectedEvents: RunStreamEvent[] = [];
+
+      const trace = makeTrace(runId);
+      crawler.createTrace.mockReturnValue(trace);
+      crawler.captureStep.mockImplementation(async (_rid, _page, stepIndex) => makeStep(stepIndex));
+      executor.execute.mockImplementation(async (_page, action) => {
+        if (action.type === 'navigate') return makeNavResult();
+        return { ok: true, observation: `executed ${action.type}` };
+      });
+      runner.captureScreenshot.mockResolvedValue({
+        url: 'https://example.com',
+        data: Buffer.from('fake-png'),
+      });
+
+      // Never return goalReached — always return an action to execute
+      (planner.planNextStep as jest.Mock).mockResolvedValue({
+        action: { type: 'click', selector: '#btn' },
+        goalReached: false,
+        pageDescription: 'Still working...',
+      });
+      gherkinGen.generateGherkin.mockResolvedValue(makeGherkinDoc());
+
+      runsEvents.stream(runId).subscribe((e) => collectedEvents.push(e));
+      await orchestrator.executePhase1(runId, RUN_REQUEST.targetUrl, RUN_REQUEST.instructions);
+
+      const timeoutEvent = collectedEvents.find(
+        (e) =>
+          'type' in e &&
+          (e as { type: string; details?: Record<string, unknown> }).type === 'observation' &&
+          (e as { details?: Record<string, unknown> }).details?.exitReason === 'timeout'
+      );
+      expect(timeoutEvent).toBeDefined();
     });
   });
 });

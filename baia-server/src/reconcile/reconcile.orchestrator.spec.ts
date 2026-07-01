@@ -221,11 +221,13 @@ describe('ReconcileOrchestrator', () => {
       expect(failedIdx).toBeGreaterThan(errorIdx);
     });
 
-    it('error event includes failure message', () => {
+    it('error event includes a user-facing message', () => {
       const errorEvent = collectedEvents.find(
         (e) => 'type' in e && (e as { type: string }).type === 'error'
       ) as { message: string } | undefined;
-      expect(errorEvent?.message).toContain('LLM quota exceeded');
+      // User-facing message is now translated via toUserMessage(); the raw error
+      // is kept in the server log only, not surfaced to the client.
+      expect(errorEvent?.message).toContain('Something unexpected happened');
     });
 
     it('emits reconciling→failed transition', () => {
@@ -251,7 +253,9 @@ describe('ReconcileOrchestrator', () => {
       const errorEvent = collectedEvents.find(
         (e) => 'type' in e && (e as { type: string }).type === 'error'
       ) as { message: string } | undefined;
-      expect(errorEvent?.message).toContain('No Gherkin document');
+      // User-facing message is now translated via toUserMessage(); raw error detail
+      // is kept in the server log only.
+      expect(errorEvent?.message).toContain('Something unexpected happened');
       expect(reconciliationService.reconcile).not.toHaveBeenCalled();
     });
   });

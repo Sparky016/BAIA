@@ -26,12 +26,12 @@ Several failure paths surface internal, technically-accurate-but-unhelpful text 
 
 ## Acceptance Criteria
 
-- [ ] A centralized `toUserMessage()` (or equivalent) maps known structured error types/codes to short, actionable, non-technical messages.
-- [ ] Phase failure events, export failures, and the global exception filter all use this mapping instead of raw `err.message`/`String(err)`.
-- [ ] `ConfluenceAdapter.findPage()` distinguishes "not found, proceed to create" from "unreachable/error, abort" and only the latter surfaces as a failure.
-- [ ] Credential "not found" vs. "decryption failed" produce distinguishable messages.
-- [ ] A malformed `COPILOT_TOKEN` no longer crashes server boot; it logs a warning and falls back per the existing provider-selection order.
-- [ ] New tests assert the friendly-message mapping for at least: LLM timeout, LLM rate-limit, missing credential, decryption failure, Confluence 404 vs 5xx.
+- [x] A centralized `toUserMessage()` (or equivalent) maps known structured error types/codes to short, actionable, non-technical messages.
+- [x] Phase failure events, export failures, and the global exception filter all use this mapping instead of raw `err.message`/`String(err)`.
+- [x] `ConfluenceAdapter.findPage()` distinguishes "not found, proceed to create" from "unreachable/error, abort" and only the latter surfaces as a failure.
+- [x] Credential "not found" vs. "decryption failed" produce distinguishable messages.
+- [x] A malformed `COPILOT_TOKEN` no longer crashes server boot; it logs a warning and falls back per the existing provider-selection order.
+- [x] New tests assert the friendly-message mapping for at least: LLM timeout, LLM rate-limit, missing credential, decryption failure, Confluence 404 vs 5xx.
 
 ## Affected Files
 

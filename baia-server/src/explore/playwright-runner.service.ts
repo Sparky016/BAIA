@@ -103,6 +103,11 @@ export class PlaywrightRunnerService {
   /**
    * Captures a full-page PNG screenshot of the current page.
    *
+   * **Security note:** Screenshots capture raw pixel data and cannot be
+   * content-redacted. Do not run BAIA against pages containing live sensitive
+   * data (credentials, PII, payment info). Use a test/staging environment
+   * instead.
+   *
    * @returns {@link ScreenshotResult} with the current URL and raw PNG bytes.
    * @throws {Error} if the service has not been launched yet.
    */

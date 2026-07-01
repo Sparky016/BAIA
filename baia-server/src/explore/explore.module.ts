@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { chromium } from 'playwright';
 
+import { ConfigService } from '../config/config.service';
 import { GherkinModule } from '../gherkin/gherkin.module';
 import { RunStateMachine } from '../runs/run-state-machine';
 import { RunsEventsService } from '../runs/runs.events';
@@ -36,6 +37,7 @@ import {
     CrawlCaptureService,
     ExitGateService,
     ExploreOrchestrator,
+    ConfigService,
   ],
   exports: [
     PlaywrightRunnerService,

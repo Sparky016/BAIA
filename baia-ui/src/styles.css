@@ -219,6 +219,82 @@ body {
 
 /* --- Component Overrides --- */
 
+/* --- Workflow Breadcrumb --- */
+.workflow-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: 0;
+  border: none;
+  background: transparent;
+  flex-direction: row;
+  margin-left: auto;
+}
+
+.workflow-breadcrumb span {
+  font-size: var(--label-size);
+  color: var(--on-surface-muted);
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.workflow-breadcrumb span.active {
+  color: var(--green);
+  font-weight: 700;
+}
+
+.workflow-breadcrumb .separator {
+  color: var(--hairline);
+  font-size: 12px;
+}
+
+/* --- Provenance Legend --- */
+.provenance-legend {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background-color: var(--surface-secondary);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--spacing-lg);
+  font-size: var(--label-size);
+  color: var(--on-surface-muted);
+}
+
+.provenance-legend .legend-label {
+  font-weight: 600;
+  color: var(--on-surface);
+  margin-right: var(--spacing-xs);
+}
+
+.provenance-legend .legend-desc {
+  color: var(--on-surface-muted);
+  margin-right: var(--spacing-md);
+}
+
+/* --- Approval Hint --- */
+.approval-hint {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md) var(--spacing-lg);
+  background-color: var(--surface-secondary);
+  border: 1px solid var(--hairline);
+  border-left: 4px solid var(--beige);
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--spacing-lg);
+  font-size: var(--label-size);
+  color: var(--on-surface-muted);
+}
+
+.approval-hint-icon {
+  font-size: 16px;
+  color: var(--beige);
+  flex-shrink: 0;
+}
+
 nav {
   display: flex;
   align-items: center;
@@ -292,6 +368,68 @@ nav a.router-link-active {
 .form-group select:focus {
   outline: none;
   border-color: var(--on-surface);
+}
+
+/* --- Field Hint (helper text below labels) --- */
+.field-hint {
+  display: block;
+  font-size: var(--label-size);
+  color: var(--on-surface-muted);
+  margin-bottom: var(--spacing-sm);
+  line-height: 1.4;
+}
+
+/* --- Repository Section (details/summary) --- */
+.repo-section {
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-sm);
+  background-color: var(--surface-secondary);
+  margin-bottom: var(--spacing-lg);
+  overflow: hidden;
+}
+
+.repo-section > summary {
+  display: flex;
+  align-items: center;
+  padding: var(--spacing-md) var(--spacing-lg);
+  font-size: var(--label-size);
+  font-weight: 500;
+  color: var(--on-surface);
+  cursor: pointer;
+  user-select: none;
+  list-style: none;
+  background-color: var(--surface-card);
+  border-bottom: 1px solid var(--hairline);
+  transition: background-color 0.2s ease;
+}
+
+.repo-section > summary::-webkit-details-marker {
+  display: none;
+}
+
+.repo-section > summary::before {
+  content: '▶';
+  font-size: 10px;
+  margin-right: var(--spacing-sm);
+  color: var(--on-surface-muted);
+  transition: transform 0.2s ease;
+}
+
+.repo-section[open] > summary::before {
+  transform: rotate(90deg);
+}
+
+.repo-section > summary:hover {
+  background-color: var(--surface-secondary);
+}
+
+.repo-section > .form-group {
+  padding: var(--spacing-md) var(--spacing-lg);
+  margin-bottom: 0;
+}
+
+.repo-section > .form-group:last-child {
+  padding-bottom: var(--spacing-lg);
 }
 
 /* Review Page */
@@ -515,6 +653,14 @@ nav a.router-link-active {
   opacity: 0.7;
 }
 
+/* Phase gloss — plain language description next to phase label */
+.phase-gloss {
+  font-size: var(--label-size);
+  color: var(--on-surface-muted);
+  font-style: italic;
+  font-weight: 400;
+}
+
 /* Live pulsing dot */
 .live-dot {
   width: 8px;
@@ -691,4 +837,44 @@ nav a.router-link-active {
   color: var(--on-surface-muted);
   font-size: var(--label-size);
   padding: var(--spacing-md);
+}
+
+.reconnecting-banner {
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 4px;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  font-size: 0.875rem;
+}
+
+.stall-warning {
+  background: #fff3cd;
+  border: 1px solid #fd7e14;
+  border-radius: 4px;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  font-size: 0.875rem;
+}
+
+.cancel-btn {
+  background: transparent;
+  border: 1px solid #dc3545;
+  color: #dc3545;
+  border-radius: 4px;
+  padding: 6px 14px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  margin-top: 8px;
+}
+.cancel-btn:hover {
+  background: #dc3545;
+  color: #fff;
+}
+
+.cancel-pending {
+  color: #6c757d;
+  font-size: 0.875rem;
+  margin-top: 8px;
+  display: inline-block;
 }
