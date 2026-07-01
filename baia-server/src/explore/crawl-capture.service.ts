@@ -20,6 +20,7 @@ export interface CapturedStep {
   networkEvents: NetworkCapture[];
   observation: string;
   ok: boolean;
+  httpStatus?: number; // HTTP status from the most recent navigation
 }
 
 export interface ExploreTrace {
@@ -41,7 +42,8 @@ export class CrawlCaptureService {
     page: Page,
     stepIndex: number,
     observation: string,
-    ok: boolean = true
+    ok: boolean = true,
+    httpStatus?: number
   ): Promise<CapturedStep> {
     const url = page.url();
     const rawDom = await page.content();
@@ -63,6 +65,7 @@ export class CrawlCaptureService {
       networkEvents: [],
       observation,
       ok,
+      ...(httpStatus !== undefined ? { httpStatus } : {}),
     };
   }
 

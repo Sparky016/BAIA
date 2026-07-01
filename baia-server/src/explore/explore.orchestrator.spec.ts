@@ -2,6 +2,7 @@ import { GherkinDoc, RunStatus } from '@baia/shared';
 import { Logger } from '@nestjs/common';
 import { Page } from 'playwright';
 
+import { ConfigService } from '../config/config.service';
 import { GherkinGeneratorService } from '../gherkin/gherkin-generator.service';
 import { OutputWriterService } from '../output/output-writer.service';
 import { RunTransitionEvent } from '../runs/run-events.types';
@@ -32,6 +33,7 @@ function makeStep(index: number): CapturedStep {
     domSnapshot: `<html>step${index}</html>`,
     networkEvents: [],
     observation: `observation ${index}`,
+    ok: true,
   };
 }
 
@@ -88,6 +90,7 @@ describe('ExploreOrchestrator', () => {
   let gherkinGen: jest.Mocked<GherkinGeneratorService>;
   let exitGate: jest.Mocked<ExitGateService>;
   let mockPage: ReturnType<typeof makeMockPage>;
+  let mockConfigService: jest.Mocked<ConfigService>;
 
   const RUN_REQUEST = {
     targetUrl: 'https://example.com',
@@ -146,6 +149,11 @@ describe('ExploreOrchestrator', () => {
       checkStep: jest.fn().mockReturnValue({ shouldExit: false, exitReason: null, message: 'Continue' }),
     } as unknown as jest.Mocked<ExitGateService>;
 
+    mockConfigService = {
+      exploreMaxSteps: 20,
+      explorePhaseTimeoutMs: 600_000,
+    } as unknown as jest.Mocked<ConfigService>;
+
     orchestrator = new ExploreOrchestrator(
       runsService,
       runsEvents,
@@ -155,7 +163,8 @@ describe('ExploreOrchestrator', () => {
       crawler,
       gherkinGen,
       mockOutputWriter,
-      exitGate
+      exitGate,
+      mockConfigService
     );
   });
 
@@ -492,6 +501,96 @@ describe('ExploreOrchestrator', () => {
 
       // Browser should NOT have been launched since the error is pre-try
       expect(runner.launch).not.toHaveBeenCalled();
+    });
+  });
+
+  // ── Budget exhaustion ─────────────────────────────────────────────────────
+
+  describe('budget exhaustion', () => {
+    it('emits a distinct budget-exhausted event when MAX_STEPS is reached without goal', async () => {
+      // Set a tiny budget so we can exhaust it quickly
+      (mockConfigService as unknown as { exploreMaxSteps: number }).exploreMaxSteps = 3;
+      (mockConfigService as unknown as { explorePhaseTimeoutMs: number }).explorePhaseTimeoutMs = 600_000;
+
+      const run = runsService.createRun(RUN_REQUEST);
+      const runId = run.runId;
+      const collectedEvents: RunStreamEvent[] = [];
+
+      const trace = makeTrace(runId);
+      crawler.createTrace.mockReturnValue(trace);
+      crawler.captureStep.mockImplementation(async (_rid, _page, stepIndex) => makeStep(stepIndex));
+      executor.execute.mockImplementation(async (_page, action) => {
+        if (action.type === 'navigate') return makeNavResult();
+        return { ok: true, observation: `executed ${action.type}` };
+      });
+      runner.captureScreenshot.mockResolvedValue({
+        url: 'https://example.com',
+        data: Buffer.from('fake-png'),
+      });
+
+      // Never return goalReached — always return an action to execute
+      (planner.planNextStep as jest.Mock).mockResolvedValue({
+        action: { type: 'click', selector: '#btn' },
+        goalReached: false,
+        pageDescription: 'Still working...',
+      });
+      gherkinGen.generateGherkin.mockResolvedValue(makeGherkinDoc());
+
+      runsEvents.stream(runId).subscribe((e) => collectedEvents.push(e));
+      await orchestrator.executePhase1(runId, RUN_REQUEST.targetUrl, RUN_REQUEST.instructions);
+
+      const budgetEvent = collectedEvents.find(
+        (e) =>
+          'type' in e &&
+          (e as { type: string; details?: Record<string, unknown> }).type === 'observation' &&
+          (e as { details?: Record<string, unknown> }).details?.exitReason === 'max-steps'
+      );
+      expect(budgetEvent).toBeDefined();
+    });
+  });
+
+  // ── Phase timeout ─────────────────────────────────────────────────────────
+
+  describe('phase timeout', () => {
+    it('emits a timeout event when phase timeout is exceeded', async () => {
+      // Set a timeout of 0ms so it triggers immediately on the second iteration
+      (mockConfigService as unknown as { exploreMaxSteps: number }).exploreMaxSteps = 20;
+      (mockConfigService as unknown as { explorePhaseTimeoutMs: number }).explorePhaseTimeoutMs = 0;
+
+      const run = runsService.createRun(RUN_REQUEST);
+      const runId = run.runId;
+      const collectedEvents: RunStreamEvent[] = [];
+
+      const trace = makeTrace(runId);
+      crawler.createTrace.mockReturnValue(trace);
+      crawler.captureStep.mockImplementation(async (_rid, _page, stepIndex) => makeStep(stepIndex));
+      executor.execute.mockImplementation(async (_page, action) => {
+        if (action.type === 'navigate') return makeNavResult();
+        return { ok: true, observation: `executed ${action.type}` };
+      });
+      runner.captureScreenshot.mockResolvedValue({
+        url: 'https://example.com',
+        data: Buffer.from('fake-png'),
+      });
+
+      // Never return goalReached — always return an action to execute
+      (planner.planNextStep as jest.Mock).mockResolvedValue({
+        action: { type: 'click', selector: '#btn' },
+        goalReached: false,
+        pageDescription: 'Still working...',
+      });
+      gherkinGen.generateGherkin.mockResolvedValue(makeGherkinDoc());
+
+      runsEvents.stream(runId).subscribe((e) => collectedEvents.push(e));
+      await orchestrator.executePhase1(runId, RUN_REQUEST.targetUrl, RUN_REQUEST.instructions);
+
+      const timeoutEvent = collectedEvents.find(
+        (e) =>
+          'type' in e &&
+          (e as { type: string; details?: Record<string, unknown> }).type === 'observation' &&
+          (e as { details?: Record<string, unknown> }).details?.exitReason === 'timeout'
+      );
+      expect(timeoutEvent).toBeDefined();
     });
   });
 });

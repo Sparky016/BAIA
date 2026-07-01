@@ -35,6 +35,11 @@ export interface ActionResult {
    * Present on both success and failure so callers can log progress.
    */
   observation: string;
+  /**
+   * HTTP response status for navigate actions.
+   * `undefined` for non-navigate actions or when navigation failed before receiving a response.
+   */
+  httpStatus?: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -85,34 +90,59 @@ export class ActionExecutorService {
   // ── Private handlers ──────────────────────────────────────────────────────
 
   private async executeNavigate(page: Page, action: NavigateAction): Promise<ActionResult> {
-    try {
-      const options = action.timeoutMs !== undefined ? { timeout: action.timeoutMs } : {};
-      await page.goto(action.url, options);
-      const finalUrl = page.url();
-      const observation = `Navigated to ${finalUrl}`;
-      this.logger.log(observation);
-      return { ok: true, observation };
-    } catch (err) {
-      const error = toMessage(err);
-      const observation = `Navigation to ${action.url} failed: ${error}`;
-      this.logger.warn(observation);
-      return { ok: false, error, observation };
+    const attempt = async (): Promise<ActionResult> => {
+      try {
+        const options = action.timeoutMs !== undefined ? { timeout: action.timeoutMs } : {};
+        const response = await page.goto(action.url, options);
+        const httpStatus = response?.status();
+        const finalUrl = page.url();
+        const observation = `Navigated to ${finalUrl}`;
+        this.logger.log(observation);
+        return { ok: true, observation, httpStatus };
+      } catch (err) {
+        const error = toMessage(err);
+        const observation = `Navigation to ${action.url} failed: ${error}`;
+        this.logger.warn(observation);
+        return { ok: false, error, observation };
+      }
+    };
+
+    const firstResult = await attempt();
+    if (!firstResult.ok && isTransientError(firstResult.error ?? '')) {
+      await page.waitForTimeout(1000).catch(() => {});
+      const retryResult = await attempt();
+      if (retryResult.ok) {
+        return { ...retryResult, observation: `${retryResult.observation} (succeeded after retry)` };
+      }
     }
+    return firstResult;
   }
 
   private async executeClick(page: Page, action: ClickAction): Promise<ActionResult> {
-    try {
-      const options = action.timeoutMs !== undefined ? { timeout: action.timeoutMs } : {};
-      await page.click(action.selector, options);
-      const observation = `Clicked element matching "${action.selector}"`;
-      this.logger.log(observation);
-      return { ok: true, observation };
-    } catch (err) {
-      const error = toMessage(err);
-      const observation = `Click on "${action.selector}" failed: ${error}`;
-      this.logger.warn(observation);
-      return { ok: false, error, observation };
+    const attempt = async (): Promise<ActionResult> => {
+      try {
+        const options = action.timeoutMs !== undefined ? { timeout: action.timeoutMs } : {};
+        await page.click(action.selector, options);
+        const observation = `Clicked element matching "${action.selector}"`;
+        this.logger.log(observation);
+        return { ok: true, observation };
+      } catch (err) {
+        const error = toMessage(err);
+        const observation = `Click on "${action.selector}" failed: ${error}`;
+        this.logger.warn(observation);
+        return { ok: false, error, observation };
+      }
+    };
+
+    const firstResult = await attempt();
+    if (!firstResult.ok && isTransientError(firstResult.error ?? '')) {
+      await page.waitForTimeout(1000).catch(() => {});
+      const retryResult = await attempt();
+      if (retryResult.ok) {
+        return { ...retryResult, observation: `${retryResult.observation} (succeeded after retry)` };
+      }
     }
+    return firstResult;
   }
 
   private async executeFill(page: Page, action: FillAction): Promise<ActionResult> {
@@ -263,6 +293,12 @@ export class ActionExecutorService {
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
+
+/** Detects transient failures (element not found, timeout) that are worth retrying. */
+function isTransientError(error: string): boolean {
+  const lower = error.toLowerCase();
+  return lower.includes('timeout') || lower.includes('waiting for') || lower.includes('not found');
+}
 
 /** Extracts a human-readable message from an unknown thrown value. */
 function toMessage(err: unknown): string {

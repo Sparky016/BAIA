@@ -7,6 +7,7 @@ import {
   AzureConnector,
   buildAzureApiClientFactory,
 } from '../code-analyst/azure-connector';
+import { ConfigService } from '../config/config.service';
 import {
   GITHUB_API_CLIENT_FACTORY,
   GitHubConnector,
@@ -105,6 +106,7 @@ const isE2e = process.env['E2E'] === 'true';
 
     // ── Pipeline service ─────────────────────────────────────────────────────
     PipelineService,
+    ConfigService,
   ],
 })
 export class PipelineModule {}

@@ -79,4 +79,12 @@ export class ConfigService {
   isProduction(): boolean {
     return this.nodeEnv === 'production';
   }
+
+  get exploreMaxSteps(): number {
+    return this.nestConfig.get<number>('EXPLORE_MAX_STEPS', 20);
+  }
+
+  get explorePhaseTimeoutMs(): number {
+    return this.nestConfig.get<number>('EXPLORE_PHASE_TIMEOUT_MS', 600_000); // 10 minutes
+  }
 }
