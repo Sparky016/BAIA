@@ -44,8 +44,8 @@ However, this safety net only covers errors thrown **inside** those try blocks. 
 
 ## Acceptance Criteria
 
-- [ ] A run whose failure originates outside an orchestrator's own try block still ends in `RunStatus.Failed` with an `error` event emitted and the SSE stream closed.
-- [ ] A global exception filter is registered in `main.ts` and normalizes structured domain errors to consistent HTTP responses.
+- [x] A run whose failure originates outside an orchestrator's own try block still ends in `RunStatus.Failed` with an `error` event emitted and the SSE stream closed.
+- [x] A global exception filter is registered in `main.ts` and normalizes structured domain errors to consistent HTTP responses.
 - [ ] New test(s) cover the "error thrown before orchestrator's try block" scenario for at least one phase.
 - [ ] Manual test: kill the target Playwright browser process (or otherwise force a pre-try failure) mid-run and confirm the progress page shows a failure, not an infinite spinner.
 

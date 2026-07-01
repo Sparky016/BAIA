@@ -4,8 +4,8 @@ Generated from [`CODE_REVIEW.md`](./CODE_REVIEW.md). Each row is one unit of wor
 
 | # | Task | Priority | Focus Area | Findings Addressed | File |
 |---|------|----------|------------|---------------------|------|
-| 1 | Implement the missing `OutputWriterService` / `OutputModule` | **P0** | Output recording | A1, A2 | [REVIEW_TASK_1.md](./REVIEW_TASK_1.md) |
-| 2 | Guarantee every pipeline failure reaches a terminal state + user-visible error | **P0** | Guards | C1, C2 | [REVIEW_TASK_2.md](./REVIEW_TASK_2.md) |
+| 1 | Implement the missing `OutputWriterService` / `OutputModule` | **P0** ✅ | Output recording | A1, A2 | [REVIEW_TASK_1.md](./REVIEW_TASK_1.md) |
+| 2 | Guarantee every pipeline failure reaches a terminal state + user-visible error | **P0** ✅ | Guards | C1, C2 | [REVIEW_TASK_2.md](./REVIEW_TASK_2.md) |
 | 3 | Harden the explore loop for reliable, efficient journey completion | **P1** | Journey efficiency | B1, B2, B3, B4, B5, B6 | [REVIEW_TASK_3.md](./REVIEW_TASK_3.md) |
 | 4 | SSE reliability: heartbeat, stall detection, reconnect, cancel | **P1** | Guards + UI | C3, C4, D6 | [REVIEW_TASK_4.md](./REVIEW_TASK_4.md) |
 | 5 | Extend redaction coverage to all persisted artifacts | **P1** | Output recording / Security | A4 | [REVIEW_TASK_5.md](./REVIEW_TASK_5.md) |

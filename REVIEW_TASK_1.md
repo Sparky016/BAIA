@@ -33,12 +33,12 @@ Reverse-engineered from every call site in the codebase (these are the exact met
 
 ## Acceptance Criteria
 
-- [ ] `baia-server/src/output/output-writer.service.ts` and `output.module.ts` exist and export the 7 methods above with matching signatures.
-- [ ] `npm run build` succeeds in `baia-server` (currently fails/cannot be verified because the module is missing).
-- [ ] `npm run start:dev` boots the server without a Nest "cannot resolve dependency" error.
-- [ ] All existing spec files that mock `OutputWriterService` (`runs.service.spec.ts`, `runs.events.spec.ts`, `explore.orchestrator.spec.ts`, `analyze.orchestrator.spec.ts`, `reconcile.orchestrator.spec.ts`) pass unchanged (their mocks already match the required interface above).
+- [x] `baia-server/src/output/output-writer.service.ts` and `output.module.ts` exist and export the 7 methods above with matching signatures.
+- [x] `npm run build` succeeds in `baia-server` (currently fails/cannot be verified because the module is missing).
+- [x] `npm run start:dev` boots the server without a Nest "cannot resolve dependency" error.
+- [x] All existing spec files that mock `OutputWriterService` (`runs.service.spec.ts`, `runs.events.spec.ts`, `explore.orchestrator.spec.ts`, `analyze.orchestrator.spec.ts`, `reconcile.orchestrator.spec.ts`) pass unchanged (their mocks already match the required interface above).
 - [ ] Manually running the flow in `MANUAL_TEST_GUIDE.md` Phase 3–5 with Mock LLM produces a populated `output/<runId>/` directory with a summary, an event log, per-step screenshots, and the phase-end documents.
-- [ ] `output/` remains git-ignored (already the case — `.gitignore:48`).
+- [x] `output/` remains git-ignored (.gitignore updated to `baia-server/output/` to avoid matching `src/output/` source module).
 
 ## Affected Files
 
